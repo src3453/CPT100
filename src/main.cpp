@@ -1,8 +1,10 @@
 #include <iostream>
 #include <stdio.h>
-#include "SDL2-2.28.5\SDL2-2.28.5\include\SDL.h"
+#include "SDL.h"
 
-int main() {
+#include "core/include.hpp"
+
+int main(int argv, char** args) {
     SDL_Window* window;
     SDL_Renderer* renderer;
     
@@ -11,6 +13,9 @@ int main() {
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     bool isRunning = true;
+
+    Screen scr;
+
     while (isRunning) {
         SDL_Event event;
         while (SDL_PollEvent(&event) != 0) {
@@ -21,7 +26,7 @@ int main() {
 
         SDL_RenderClear(renderer);
         // ここにコードを追加してください
-        
+
         SDL_RenderPresent(renderer);
     }
 
