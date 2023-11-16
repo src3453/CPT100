@@ -6,7 +6,7 @@
 #include <map>
 #include <algorithm>
 
-#include "res/font8x8.hpp"
+#include "res/font8x12.hpp"
 
 class Font {
 public:
