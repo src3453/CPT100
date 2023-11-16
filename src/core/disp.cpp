@@ -9,22 +9,28 @@ public:
         // Any initialization code if needed
     }
 
-    void blit() {
+    uint8_t *blit(uint8_t *tmp_pixels) {
+        
         std::vector<Byte> tmp = vram_peek2array(vram, 0, SCREEN_WIDTH * SCREEN_HEIGHT - 1);
+        int i = 0;
         for (int y = 0; y < SCREEN_HEIGHT-1; y++){
             for (int x = 0; x < SCREEN_WIDTH-1; x++){
-                pix(x,y,tmp[y*SCREEN_WIDTH+x]);
+                tmp_pixels[i*3+0] = CLUT_DEF[tmp[i].toInt()*3+0];
+                tmp_pixels[i*3+1] = CLUT_DEF[tmp[i].toInt()*3+1];
+                tmp_pixels[i*3+2] = CLUT_DEF[tmp[i].toInt()*3+2];
+                i+=1;
             }
         }
+        return tmp_pixels;
         // Assuming clut is defined elsewhere
         // Replace this with your actual pixel drawing logic
         // You might need to handle the surface creation differently
         // and copy the pixel data from `tmp` to your drawing surface
     }
 
-    void update() {
+    uint8_t *update(uint8_t *tmp_pixels) {
         // TODO Implement blit
-        blit();
+        return blit(tmp_pixels);
         // Update logic for the screen
     }
 

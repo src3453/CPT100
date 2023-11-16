@@ -5,6 +5,7 @@
 #include "core/include.hpp"
 
 CPT_Screen scr(vram);
+Font font(scr);
 
 void cpt_init() {
     ram_boot(ram, vram);
@@ -20,14 +21,41 @@ void cpt_init() {
    
 }
 
+void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pixels) {
+    
+    
+    // update texture with new data
+    int texture_pitch = 0;
+    void* texture_pixels = NULL;
+    if (SDL_LockTexture(texture, NULL, &texture_pixels, &texture_pitch) != 0) {
+        SDL_Log("Unable to lock texture: %s", SDL_GetError());
+    }
+    else {
+        memcpy(texture_pixels, pixels, texture_pitch * SCREEN_HEIGHT);
+    }
+    SDL_UnlockTexture(texture);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
+}
+
 int main(int argv, char** args) {
     SDL_Window* window;
     SDL_Renderer* renderer;
     
     SDL_Init(SDL_INIT_VIDEO);
-    window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Texture *texture = SDL_CreateTexture(
+        renderer,
+        SDL_PIXELFORMAT_RGB24,
+        SDL_TEXTUREACCESS_STREAMING,
+        SCREEN_WIDTH,
+        SCREEN_HEIGHT);
+    if (texture == NULL) {
+        SDL_Log("Unable to create texture: %s", SDL_GetError());
+        return 1;
+    }
 
+    
     bool isRunning = true;
 
     cpt_init();
@@ -41,8 +69,12 @@ int main(int argv, char** args) {
         }
 
         SDL_RenderClear(renderer);
-        // ここにコードを追加してください
-        scr.update();
+
+        #include "tick.cpp"
+
+        uint8_t finalPixels[SCREEN_WIDTH * SCREEN_HEIGHT * 3] = {0};
+        scr.update(finalPixels);
+        blitToMainWindow(texture, renderer, finalPixels);
         SDL_RenderPresent(renderer);
     }
 
