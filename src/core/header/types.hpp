@@ -12,6 +12,10 @@ public:
         }
     }
 
+    int toInt() {
+        return value;
+    }
+
 private:
     int value;
 };

@@ -3,17 +3,12 @@
 	"tasks": [
 		{
 			"type": "cppbuild",
-			"label": "C/C++: g++.exe アクティブなファイルのビルド",
-			"command": "D:\\msys64\\mingw64\\bin\\g++.exe",
+			"label": "C/C++: プロジェクトのビルド (デバッグ)",
+			"command": "doDebugBuild.bat",
 			"args": [
-				"-fdiagnostics-color=always",
-				"-g",
-				"${file}",
-				"-o",
-				"${fileDirname}\\${fileBasenameNoExtension}.exe"
 			],
 			"options": {
-				"cwd": "${fileDirname}"
+				"cwd": "${workspaceFolder}"
 			},
 			"problemMatcher": [
 				"$gcc"
@@ -22,7 +17,7 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"detail": "コンパイラ: D:\\msys64\\mingw64\\bin\\g++.exe"
+			"detail": "Build project with debug configuration."
 		}
 	]
 }

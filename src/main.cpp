@@ -4,6 +4,22 @@
 
 #include "core/include.hpp"
 
+CPT_Screen scr(vram);
+
+void cpt_init() {
+    ram_boot(ram, vram);
+    
+    std::string opening_msg = 
+    "+------------------------------------------------+\n"
+    "|  CPT100 High-spec Fantasy Console              |\n"
+    "|                                                |\n"
+    "|  (c) src3453 2023 Released under MIT Licence.  |\n"
+    "+------------------------------------------------+\n"
+    ;
+    std::cout << opening_msg << std::endl;
+   
+}
+
 int main(int argv, char** args) {
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -14,7 +30,7 @@ int main(int argv, char** args) {
 
     bool isRunning = true;
 
-    Screen scr;
+    cpt_init();
 
     while (isRunning) {
         SDL_Event event;
@@ -26,7 +42,7 @@ int main(int argv, char** args) {
 
         SDL_RenderClear(renderer);
         // ここにコードを追加してください
-
+        scr.update();
         SDL_RenderPresent(renderer);
     }
 
