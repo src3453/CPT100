@@ -20,6 +20,9 @@ void api_print(std::string text, int x, int y, int color) {
 void api_pix(int x, int y, int color) {
     scr.pix(x, y, color);
 }
+void api_trace(std::string text) {
+    printf((text+"\n").c_str());
+}
 
 void register_functions() {
     lua.set_function("peek",api_peek);
@@ -28,6 +31,7 @@ void register_functions() {
     lua.set_function("vpoke",api_vpoke);
     lua.set_function("print",api_print);
     lua.set_function("pix",api_pix);
+    lua.set_function("trace",api_trace);
 }
 
 void init_lua() {
@@ -39,5 +43,9 @@ void init_lua() {
     sol::lib::table);
     register_functions();
     lua.script_file("./src/main.lua");
+    lua["BOOT"]();
 }
 
+void Lua_MainLoop() {
+    lua["LOOP"]();
+}

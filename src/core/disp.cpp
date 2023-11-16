@@ -13,8 +13,8 @@ public:
         
         std::vector<Byte> tmp = vram_peek2array(vram, 0, SCREEN_WIDTH * SCREEN_HEIGHT - 1);
         int i = 0;
-        for (int y = 0; y < SCREEN_HEIGHT-1; y++){
-            for (int x = 0; x < SCREEN_WIDTH-1; x++){
+        for (int y = 0; y < SCREEN_HEIGHT; y++){
+            for (int x = 0; x < SCREEN_WIDTH; x++){
                 tmp_pixels[i*3+0] = CLUT_DEF[tmp[i].toInt()*3+0];
                 tmp_pixels[i*3+1] = CLUT_DEF[tmp[i].toInt()*3+1];
                 tmp_pixels[i*3+2] = CLUT_DEF[tmp[i].toInt()*3+2];

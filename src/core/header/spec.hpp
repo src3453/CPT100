@@ -8,6 +8,7 @@
 #define RAM_SIZE 0x20000  // 128KB
 #define VRAM_SIZE 0x20000 // 128KB
 
+#define CALLBACK_FPS 60
 #define SCREEN_WIDTH 384
 #define SCREEN_HEIGHT 288
 

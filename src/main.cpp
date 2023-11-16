@@ -21,7 +21,7 @@ void cpt_init() {
     std::cout << opening_msg << std::endl;
     ram_boot(ram, vram);
     init_lua();
-
+    //Set callback
 }
 
 void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pixels) {
@@ -64,6 +64,9 @@ int main(int argv, char** args) {
     cpt_init();
 
     while (isRunning) {
+
+        Lua_MainLoop();
+
         SDL_Event event;
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
@@ -73,12 +76,11 @@ int main(int argv, char** args) {
 
         SDL_RenderClear(renderer);
 
-
-
         uint8_t finalPixels[SCREEN_WIDTH * SCREEN_HEIGHT * 3] = {0};
         scr.update(finalPixels);
         blitToMainWindow(texture, renderer, finalPixels);
         SDL_RenderPresent(renderer);
+        SDL_Delay(1000/CALLBACK_FPS);
     }
 
     SDL_DestroyRenderer(renderer);

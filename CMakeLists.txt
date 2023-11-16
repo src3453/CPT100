@@ -17,8 +17,8 @@ add_executable(${EXECUTABLE_NAME} src/main.cpp)
 
 target_include_directories(${EXECUTABLE_NAME} 
 PUBLIC ${SDL2_INCLUDE_DIRS}
-PUBLIC ${LUA_DIR}
 PUBLIC ${SOL_DIR}
+PUBLIC ${LUA_DIR}
 )
 
 # SDL2のライブラリをリンク
