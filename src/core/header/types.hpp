@@ -102,18 +102,3 @@ public:
 private:
     int value;
 };
-
-class Char {
-public:
-    // 単一文字型(ex."a")
-    Char(char val) {
-        if (val >= 0 && val <= 255) {
-            character = val;
-        } else {
-            throw std::out_of_range("char type can store only 1 character");
-        }
-    }
-
-private:
-    char character;
-};

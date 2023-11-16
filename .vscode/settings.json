@@ -49,6 +49,11 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "bitset": "cpp",
+        "ctime": "cpp",
+        "forward_list": "cpp",
+        "optional": "cpp",
+        "variant": "cpp"
     }
 }

@@ -7,9 +7,10 @@
 CPT_Screen scr(vram);
 Font font(scr);
 
+#include "lua_api.cpp"
+
 void cpt_init() {
-    ram_boot(ram, vram);
-    
+
     std::string opening_msg = 
     "+------------------------------------------------+\n"
     "|  CPT100 High-spec Fantasy Console              |\n"
@@ -18,7 +19,9 @@ void cpt_init() {
     "+------------------------------------------------+\n"
     ;
     std::cout << opening_msg << std::endl;
-   
+    ram_boot(ram, vram);
+    init_lua();
+
 }
 
 void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pixels) {
@@ -70,7 +73,7 @@ int main(int argv, char** args) {
 
         SDL_RenderClear(renderer);
 
-        #include "tick.cpp"
+
 
         uint8_t finalPixels[SCREEN_WIDTH * SCREEN_HEIGHT * 3] = {0};
         scr.update(finalPixels);
