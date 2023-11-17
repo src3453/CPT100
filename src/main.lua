@@ -8,7 +8,7 @@
 end]]
 
 j=0
-k=0
+k=16
 poke(0x10002,255)
 poke(0x10003,16)
 poke(0x10004,0)
@@ -40,6 +40,6 @@ function LOOP()
     poke(0x10000,j//256)
     poke(0x10001,j)
     poke(0x10004,math.floor(k))
-    k=k+1
+    --k=k+1
     j=j+1
 end
