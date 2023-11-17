@@ -11,13 +11,13 @@ public:
 
     uint8_t *blit(uint8_t *tmp_pixels) {
         
-        std::vector<Byte> tmp = vram_peek2array(vram, 0, SCREEN_WIDTH * SCREEN_HEIGHT - 1);
+        std::vector<Byte> tmp = vram_peek2array(vram, 0, CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT);
         int i = 0;
-        for (int y = 0; y < SCREEN_HEIGHT; y++){
-            for (int x = 0; x < SCREEN_WIDTH; x++){
-                tmp_pixels[i*3+0] = CLUT_DEF[tmp[i].toInt()*3+0];
-                tmp_pixels[i*3+1] = CLUT_DEF[tmp[i].toInt()*3+1];
-                tmp_pixels[i*3+2] = CLUT_DEF[tmp[i].toInt()*3+2];
+        for (int y = 0; y < CPT_SCREEN_HEIGHT; y++){
+            for (int x = 0; x < CPT_SCREEN_WIDTH; x++){
+                tmp_pixels[i*3+0] = CLUT_DEF.at(tmp.at(i).toInt()*3+0);
+                tmp_pixels[i*3+1] = CLUT_DEF.at(tmp.at(i).toInt()*3+1);
+                tmp_pixels[i*3+2] = CLUT_DEF.at(tmp.at(i).toInt()*3+2);
                 i+=1;
             }
         }
@@ -47,7 +47,7 @@ public:
     }
 
     void pix(int x, int y, Byte color) {
-        vram_poke(vram, y * SCREEN_WIDTH + x, color);
+        vram_poke(vram, y * CPT_SCREEN_WIDTH + x, color);
     }
 
     void pixarr(int x, int y, std::vector<int> &colors) {
@@ -57,6 +57,17 @@ public:
                 pix(posX, posY, colors[i]);
                 ++i;
             }
+        }
+    }
+
+    Byte fromRGB(int r, int g, int b) {
+        r = (int)(r%256/42.666666666666666);
+        g = (int)(g%256/42.666666666666666);
+        b = (int)(b%256/42.666666666666666);
+        if (r+g+b == 15) {
+            return Byte(255);
+        } else {
+            return (Byte)((r*36+g*6+b)%215);
         }
     }
 };

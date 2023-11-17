@@ -1,2 +1,2 @@
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles"
-cmake --build build
+cmake -S . -B build -G "MinGW Makefiles" 
+cmake --build build 

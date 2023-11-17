@@ -10,6 +10,8 @@ set(LUA_DIR ${PROJECT_SOURCE_DIR}/lib/lua/include)
 set(SOL_DIR ${PROJECT_SOURCE_DIR}/lib/sol)
 set(SDL2_DIR ${PROJECT_SOURCE_DIR}/lib/SDL2/x86_64-w64-mingw32/lib/cmake/SDL2)
 
+#add_compile_options(-O2)
+
 find_package(SDL2 CONFIG REQUIRED)
 link_directories(${PROJECT_SOURCE_DIR}/lib/lua)
 #実行ファイルを作成

@@ -29,7 +29,7 @@ public:
                 int dataIndex = i * 8 + j;
                 char data = '0';
                 if (dataIndex < charData.size()) {
-                    data = (char)charData.substr(dataIndex,dataIndex)[0];
+                    data = (char)charData[dataIndex];
                 }
                 if (data == '1') {
                     screen.pix(x + j, y + i, color);
@@ -40,7 +40,7 @@ public:
 
     void print(const std::string &text, int x = 0, int y = 0, int color = 255) {
         for (size_t i = 0; i < text.length(); ++i) {
-            drawChar(text[i], (x + 8 * i) % SCREEN_WIDTH, y + (i / 48) * 12, color);
+            drawChar(text[i], (x + 8 * i) % CPT_SCREEN_WIDTH, y + (i / 48) * 12, color);
         }
     }
 

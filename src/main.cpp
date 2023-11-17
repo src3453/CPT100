@@ -20,6 +20,7 @@ void cpt_init() {
     ;
     std::cout << opening_msg << std::endl;
     ram_boot(ram, vram);
+    initSound();
     init_lua();
     //Set callback
 }
@@ -34,7 +35,7 @@ void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pix
         SDL_Log("Unable to lock texture: %s", SDL_GetError());
     }
     else {
-        memcpy(texture_pixels, pixels, texture_pitch * SCREEN_HEIGHT);
+        memcpy(texture_pixels, pixels, texture_pitch * CPT_SCREEN_HEIGHT);
     }
     SDL_UnlockTexture(texture);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
@@ -44,15 +45,15 @@ int main(int argv, char** args) {
     SDL_Window* window;
     SDL_Renderer* renderer;
     
-    SDL_Init(SDL_INIT_VIDEO);
-    window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    SDL_Init(SDL_INIT_EVERYTHING);
+    window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_Texture *texture = SDL_CreateTexture(
         renderer,
         SDL_PIXELFORMAT_RGB24,
         SDL_TEXTUREACCESS_STREAMING,
-        SCREEN_WIDTH,
-        SCREEN_HEIGHT);
+        CPT_SCREEN_WIDTH,
+        CPT_SCREEN_HEIGHT);
     if (texture == NULL) {
         SDL_Log("Unable to create texture: %s", SDL_GetError());
         return 1;
@@ -76,16 +77,16 @@ int main(int argv, char** args) {
 
         SDL_RenderClear(renderer);
 
-        uint8_t finalPixels[SCREEN_WIDTH * SCREEN_HEIGHT * 3] = {0};
+        uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
         scr.update(finalPixels);
         blitToMainWindow(texture, renderer, finalPixels);
         SDL_RenderPresent(renderer);
-        playSound();
         SDL_Delay(1000/CALLBACK_FPS);
     }
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    SDL_CloseAudioDevice(dev);
     SDL_Quit();
     
     return 0;
