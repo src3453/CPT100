@@ -80,6 +80,7 @@ int main(int argv, char** args) {
         scr.update(finalPixels);
         blitToMainWindow(texture, renderer, finalPixels);
         SDL_RenderPresent(renderer);
+        playSound();
         SDL_Delay(1000/CALLBACK_FPS);
     }
 

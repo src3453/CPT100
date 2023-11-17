@@ -4,7 +4,7 @@
 		{
 			"type": "cppbuild",
 			"label": "C/C++: プロジェクトのビルド (デバッグ)",
-			"command": "doDebugBuild.bat",
+			"command": "build-scripts/doDebugBuild.bat",
 			"args": [
 			],
 			"options": {
