@@ -5,7 +5,9 @@ jobs:
   check-bats-version:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: |
-        cd CPT100
-        sh build-scripts/doDebugBuild.sh
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: |
+          cd CPT100
+          sh build-scripts/doDebugBuild.sh
