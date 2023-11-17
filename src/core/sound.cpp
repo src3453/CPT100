@@ -38,7 +38,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
         for(int ch=0; ch < 4; ch++) {
             int addr = 16*ch;
             double f1 = ((double)reg.at(addr+0).toInt()*256+reg.at(addr+1).toInt());
-            t1[ch] = f1/SAMPLE_FREQ;
+            t1[ch] += f1/SAMPLE_FREQ;
             double v1 = ((double)reg.at(addr+2).toInt())/255;
             t2[ch] += ((double)(f1*reg.at(addr+3).toInt()))/16/SAMPLE_FREQ;
             double v2 = ((double)reg.at(addr+4).toInt())/64;

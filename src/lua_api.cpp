@@ -34,6 +34,9 @@ int api_from_rgb(int r, int g, int b) {
 int api_time() {
     return clock()-timerStart;
 }
+int api_int(float num) {
+    return (int)num;
+}
 
 void register_functions() {
     lua.set_function("peek",api_peek);
@@ -46,6 +49,7 @@ void register_functions() {
     lua.set_function("cls",api_cls);
     lua.set_function("from_rgb",api_from_rgb);
     lua.set_function("time",api_time);
+    lua.set_function("int",api_int);
 }
 
 void init_lua() {

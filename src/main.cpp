@@ -41,24 +41,27 @@ void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pix
     SDL_RenderCopy(renderer, texture, NULL, NULL);
 }
 
+
+void MainTick(SDL_Texture* texture, SDL_Renderer* renderer) {
+    
+    Lua_MainLoop();
+    uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
+    scr.update(finalPixels);
+    blitToMainWindow(texture, renderer, finalPixels);
+
+}
+
+
+
 int main(int argv, char** args) {
-    SDL_Window* window;
-    SDL_Renderer* renderer;
+    
     
     SDL_Init(SDL_INIT_EVERYTHING);
+    
+    SDL_Window* window;
+    SDL_Renderer* renderer;
     window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    SDL_Texture *texture = SDL_CreateTexture(
-        renderer,
-        SDL_PIXELFORMAT_RGB24,
-        SDL_TEXTUREACCESS_STREAMING,
-        CPT_SCREEN_WIDTH,
-        CPT_SCREEN_HEIGHT);
-    if (texture == NULL) {
-        SDL_Log("Unable to create texture: %s", SDL_GetError());
-        return 1;
-    }
-
     
     bool isRunning = true;
 
@@ -66,7 +69,16 @@ int main(int argv, char** args) {
 
     while (isRunning) {
 
-        Lua_MainLoop();
+        SDL_Texture *texture = SDL_CreateTexture(
+        renderer,
+        SDL_PIXELFORMAT_RGB24,
+        SDL_TEXTUREACCESS_STREAMING,
+        CPT_SCREEN_WIDTH,
+        CPT_SCREEN_HEIGHT);
+        if (texture == NULL) {
+            SDL_Log("Unable to create texture: %s", SDL_GetError());
+            return 1;
+        }
 
         SDL_Event event;
         while (SDL_PollEvent(&event) != 0) {
@@ -76,12 +88,11 @@ int main(int argv, char** args) {
         }
 
         SDL_RenderClear(renderer);
+        
+        MainTick(texture,renderer);
 
-        uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
-        scr.update(finalPixels);
-        blitToMainWindow(texture, renderer, finalPixels);
         SDL_RenderPresent(renderer);
-        SDL_Delay(1000/CALLBACK_FPS);
+        //SDL_Delay(1000/CALLBACK_FPS);
     }
 
     SDL_DestroyRenderer(renderer);
