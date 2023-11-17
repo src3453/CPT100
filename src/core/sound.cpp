@@ -28,7 +28,7 @@ void callback(void *unused, Uint8 *stream, int len)
     Uint16 *frames = (Uint16 *) stream;
     int framesize = len / 2;
     for (i = Total_time; i < framesize + Total_time; i++, Total_time++) {
-        frames[i]= generateFMWave(Total_time / Obtained.freq);
+        frames[i]= generateFMWave(Total_time / Obtained.freq,0x10000);
     }
 }
 
