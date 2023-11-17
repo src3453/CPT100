@@ -19,6 +19,7 @@ double generateFMWave(double t, int addr)
     float f4 = ((float)ram_peek(ram, addr+7).toInt())/16;
     float v4 = ((float)ram_peek(ram, addr+8).toInt())/255;
     double value = sind(t*f1+sind(t*f1*f2+sind(t*f1*f3+sind(t*f1*f4)*v4)*v3)*v2)*v1*127+127;
+    return value;
 }
 
 void callback(void *unused, Uint8 *stream, int len)
