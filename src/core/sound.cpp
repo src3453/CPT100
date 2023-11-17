@@ -14,11 +14,11 @@ long long Total_time = 0;
 CRingBuffer samples;
 
 float sind(float theta) {
-    return sin(theta*2*M_PI);
+    return sin(theta*4*M_PI);
 }
 
 double generateFMWave(double t, float f1, float v1, float f2, float v2, float f3, float v3, float f4, float v4) {
-    
+
     double value = sind(t*f1+sind(t*f1*f2+sind(t*f1*f3+sind(t*f1*f4)*v4)*v3)*v2)*v1*127;
     return value;
 }
@@ -29,7 +29,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
     Uint16 *frames = (Uint16 *) stream;
     int framesize = len;
     std::vector<Byte> reg = ram_peek2array(ram,0x10000,63);
-
+    
     for (i = 0; i < framesize; i++) {
         double result = 0;
         for(int ch=0; ch < 4; ch++) {
