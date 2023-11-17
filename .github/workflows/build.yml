@@ -1,0 +1,11 @@
+name: build
+run-name: Main build by ${{ github.actor }}
+on: [push]
+jobs:
+  check-bats-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+        cd CPT100
+        sh build-scripts/doDebugBuild.sh
