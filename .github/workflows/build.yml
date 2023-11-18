@@ -7,7 +7,7 @@ jobs:
     steps:
       - name: Install Toolchains
         run: |
-          sudo apt install mingw-w64-binutils-symlinks mingw-w64-gcc mingw-w64-cmake
+          sudo apt install mingw-w64
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
