@@ -1,2 +1,2 @@
-cmake -S . -B build -DTOOLCHAIN_PREFIX=/usr/bin/x86_64-w64-mingw32 -DCMAKE_BUILD_TYPE=Debug -G "Ninja"
-cmake --build build
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=./cmake/mingw-w64-x86_64.cmake -DCMAKE_BUILD_TYPE=Debug -G "Ninja"
+ninja -C build
