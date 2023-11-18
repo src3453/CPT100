@@ -5,7 +5,7 @@
     "type": "cppdbg",
     "request": "launch",
     "program": "${workspaceFolder}/build/cpt100.exe",
-    "args": [ ],
+    "args": [ ".\\src\\main.lua" ],
     "stopAtEntry": false,
     "cwd": "${workspaceFolder}",
     "environment": [],

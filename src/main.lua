@@ -22,10 +22,11 @@ label = {
 }
 
 freq=200
-j=0
+ptr=0
 
 function LOOP()
     cls(0)
+    rect(int(60+ptr//16*80),int(30+ptr%16*15),80,15,248)
     for ch=0,3 do
         print("CH"..ch,60+ch*80,0,255)
         print(""..peek(0x10000+ch*16)*256+peek(0x10001+ch*16),60+ch*80,15,255)
@@ -35,23 +36,19 @@ function LOOP()
             print(""..peek(0x10000+ch*16+i),60+ch*80,30+i*15,255)
         end
     end
-    
-    for i=1,15 do
-        if (j%60)==0 then 
-            poke(0x10000+i,math.random(0,255))        
-        end
-    end
-    j=j+1
-    --[[
-    poke(0x10000,int(freq//256))
-    poke(0x10001,int(freq%256))
-    poke(0x10002,255)
-    poke(0x10003,16)
-    poke(0x10004,64)
-    poke(0x10005,16)
-    poke(0x10006,16)
-    poke(0x10007,192)
-    poke(0x10008,4)
-    ]]
     --freq=freq+2
+    mx,my=mouse()
+    print("mouse:("..mx..","..my..")",mx-3,my,255)
+end
+
+function ONKEYDOWN(k)
+    if to_key_name(k) == "Up" then
+        poke(0x10000+ptr,(peek(0x10000+ptr)+1)%256)   
+    elseif to_key_name(k) == "Down" then
+        poke(0x10000+ptr,(peek(0x10000+ptr)-1)%256) 
+    elseif to_key_name(k) == "Left" then
+        ptr=(ptr-1)%64
+    elseif to_key_name(k) == "Right" then
+        ptr=(ptr+1)%64
+    end
 end

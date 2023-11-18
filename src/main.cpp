@@ -9,8 +9,10 @@ Font font(scr);
 
 #include "lua_api.cpp"
 
-void cpt_init() {
-
+void cpt_init(int argv, char** args) {
+    if (argv == 1) {
+        throw "Please specify lua source path.";
+    }
     std::string opening_msg = 
     "+------------------------------------------------+\n"
     "|  CPT100 High-spec Fantasy Console              |\n"
@@ -21,7 +23,7 @@ void cpt_init() {
     std::cout << opening_msg << std::endl;
     ram_boot(ram, vram);
     initSound();
-    init_lua();
+    init_lua(args[1]);
     //Set callback
 }
 
@@ -65,7 +67,8 @@ int main(int argv, char** args) {
     
     bool isRunning = true;
 
-    cpt_init();
+    cpt_init(argv,args);
+    
 
     while (isRunning) {
 
@@ -84,6 +87,12 @@ int main(int argv, char** args) {
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
+            }
+            if (event.type == SDL_KEYDOWN) {
+                Lua_OnKeyDown((int)SDL_GetScancodeFromKey(event.key.keysym.sym));
+            }
+            if (event.type == SDL_KEYUP) {
+                Lua_OnKeyUp((int)SDL_GetScancodeFromKey(event.key.keysym.sym));
             }
         }
 

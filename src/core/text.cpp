@@ -40,7 +40,7 @@ public:
 
     void print(const std::string &text, int x = 0, int y = 0, int color = 255) {
         for (size_t i = 0; i < text.length(); ++i) {
-            drawChar(text[i], (x + 8 * i) % CPT_SCREEN_WIDTH, y + (i / 48) * 12, color);
+            drawChar((char)text[i], (x + 8 * i) % CPT_SCREEN_WIDTH, y + (i / 48) * 12, color);
         }
     }
 

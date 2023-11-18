@@ -39,6 +39,7 @@ public:
         // placeholder
         int x=0;
         int y=0;
+        SDL_GetMouseState(&x,&y);
         return std::make_tuple(x, y);
     }
 
@@ -47,7 +48,9 @@ public:
     }
 
     void pix(int x, int y, Byte color) {
+        if (x < 384 && y < 288) {
         vram_poke(vram, y * CPT_SCREEN_WIDTH + x, color);
+        }
     }
 
     void pixarr(int x, int y, std::vector<int> &colors) {
@@ -56,6 +59,14 @@ public:
             for (int posX = x; posX < x + 384; ++posX) {
                 pix(posX, posY, colors[i]);
                 ++i;
+            }
+        }
+    }
+
+    void rect(int x, int y, int w, int h, Byte color) {
+        for (int posY = y; posY <= y + h; ++posY) {
+            for (int posX = x; posX <= x + w; ++posX) {
+                pix(posX, posY, color);
             }
         }
     }

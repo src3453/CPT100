@@ -1,9 +1,9 @@
 name: build
 run-name: Debug build by ${{ github.actor }}
-on: [push]
+on: []
 jobs:
-  debug-build-for-windows-using-mingw:
-    runs-on: ubuntu-latest
+  debug-build-for-windows:
+    runs-on: windows-2019
     steps:
       - name: Install Toolchains
         run: |
@@ -13,4 +13,4 @@ jobs:
       - name: Build
         run: |
           cd ${{ github.workspace }}
-          sh build-scripts/doDebugBuild.sh
+          build-scripts\doDebugBuild.bat
