@@ -1,13 +1,13 @@
 name: build
-run-name: Main build by ${{ github.actor }}
+run-name: Debug build by ${{ github.actor }}
 on: [push]
 jobs:
-  build-for-windows-using-mingw:
+  debug-build-for-windows-using-mingw:
     runs-on: ubuntu-latest
     steps:
       - name: Install Toolchains
         run: |
-          sudo apt install mingw-w64
+          sudo apt install mingw-w64 ninja-build
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
