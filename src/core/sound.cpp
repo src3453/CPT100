@@ -1,7 +1,7 @@
 #include <math.h>
 
 #define SAMPLE_FREQ 48000
-#define SOUND_CHUNK 2
+#define SOUND_CHUNK 4
 
 #include "ringBuffer.cpp"
 
@@ -16,12 +16,12 @@ std::vector<double> t3 = {0,0,0,0};
 std::vector<double> t4 = {0,0,0,0};
 
 double sind(double theta) {
-    return sin(theta*2*M_PI);
+    return sin(theta*M_PI);
 }
 
 double generateFMWave(double t1, double v1, double t2, double v2, double t3, double v3, double t4, double v4) {
 
-    double value = sind(t1+sind(t2+sind(t3+sind(t4)*v4)*v3)*v2)*v1*127*255;
+    double value = sind(t1+sind(t2+sind(t3+sind(t4)*v4)*v3)*v2)*v1*96*255;
     return value;
 
 }
