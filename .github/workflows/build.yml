@@ -5,6 +5,9 @@ jobs:
   check-bats-version:
     runs-on: ubuntu-latest
     steps:
+      - name: Install Toolchains
+        run: |
+          sudo apt install mingw-w64-binutils-symlinks mingw-w64-gcc mingw-w64-cmake
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
