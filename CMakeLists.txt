@@ -5,7 +5,10 @@ project(CPT100 CXX)
 set(EXECUTABLE_NAME cpt100)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
 set(CMAKE_CXX_FLAGS "-mconsole")
-add_compile_options(-std=c++17)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+add_compile_options(-std:c++17)
+endif()
 
 set(LUA_DIR ${PROJECT_SOURCE_DIR}/lib/lua/include)
 set(SOL_DIR ${PROJECT_SOURCE_DIR}/lib/sol)
