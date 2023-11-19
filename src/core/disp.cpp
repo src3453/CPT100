@@ -8,29 +8,31 @@ public:
     CPT_Screen(std::vector<Byte>& vram) {
         // Any initialization code if needed
     }
-
-    uint8_t *blit(uint8_t *tmp_pixels) {
+    void init() {
+        vram_poke2array(vram, 0x1b000, CLUT_DEF);
+    }
+    void blit(uint8_t *tmp_pixels) {
         
         std::vector<Byte> tmp = vram_peek2array(vram, 0, CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT);
+        std::vector<Byte> CLUT = vram_peek2array(vram, 0x1b000, 0x300);
         int i = 0;
         for (int y = 0; y < CPT_SCREEN_HEIGHT; y++){
             for (int x = 0; x < CPT_SCREEN_WIDTH; x++){
-                tmp_pixels[i*3+0] = CLUT_DEF.at(tmp.at(i).toInt()*3+0);
-                tmp_pixels[i*3+1] = CLUT_DEF.at(tmp.at(i).toInt()*3+1);
-                tmp_pixels[i*3+2] = CLUT_DEF.at(tmp.at(i).toInt()*3+2);
+                tmp_pixels[i*3+0] = CLUT.at(tmp.at(i).toInt()*3+0).toInt();
+                tmp_pixels[i*3+1] = CLUT.at(tmp.at(i).toInt()*3+1).toInt();
+                tmp_pixels[i*3+2] = CLUT.at(tmp.at(i).toInt()*3+2).toInt();
                 i+=1;
             }
         }
-        return tmp_pixels;
         // Assuming clut is defined elsewhere
         // Replace this with your actual pixel drawing logic
         // You might need to handle the surface creation differently
         // and copy the pixel data from `tmp` to your drawing surface
     }
 
-    uint8_t *update(uint8_t *tmp_pixels) {
+    void update(uint8_t *tmp_pixels) {
         // TODO Implement blit
-        return blit(tmp_pixels);
+        blit(tmp_pixels);
         // Update logic for the screen
     }
 
@@ -44,7 +46,7 @@ public:
     }
 
     void cls(int color = 0) {
-        vram_pokefill(vram, 0, VRAM_SIZE, color);
+        vram_pokefill(vram, 0, CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT, color);
     }
 
     void pix(int x, int y, Byte color) {
@@ -53,10 +55,10 @@ public:
         }
     }
 
-    void pixarr(int x, int y, std::vector<int> &colors) {
+    void pixarr(int x, int y, int w, int h, std::vector<int> &colors) {
         int i = 0;
-        for (int posY = y; posY < y + 256; ++posY) {
-            for (int posX = x; posX < x + 384; ++posX) {
+        for (int posY = y; posY < y + h; ++posY) {
+            for (int posX = x; posX < x + w; ++posX) {
                 pix(posX, posY, colors[i]);
                 ++i;
             }
@@ -64,8 +66,8 @@ public:
     }
 
     void rect(int x, int y, int w, int h, Byte color) {
-        for (int posY = y; posY <= y + h; ++posY) {
-            for (int posX = x; posX <= x + w; ++posX) {
+        for (int posY = y; posY < y + h; ++posY) {
+            for (int posX = x; posX < x + w; ++posX) {
                 pix(posX, posY, color);
             }
         }

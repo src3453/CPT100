@@ -1,11 +1,5 @@
 
---[[function LOOP()
-    for y=0,100 do
-        for x=0,100 do
-            pix(x,y,from_rgb(int(x*(math.cos(time()/1000)*2+2)),int(y*(math.sin(time()/1000)*2+2)),int(math.sqrt(x*x+y*y))*4))
-        end
-    end
-end]]
+
 
 --[]
 label = {
@@ -22,33 +16,50 @@ label = {
 }
 
 freq=200
-ptr=0
+ptr=0x10000
 
 function LOOP()
     cls(0)
-    rect(int(60+ptr//16*80),int(30+ptr%16*15),80,15,248)
-    for ch=0,3 do
-        print("CH"..ch,60+ch*80,0,255)
-        print(""..peek(0x10000+ch*16)*256+peek(0x10001+ch*16),60+ch*80,15,255)
-        print(label[1],0,15,255)
-        for i=0,8 do
-            print(label[i+2],0,30+i*15,255)
-            print(""..peek(0x10000+ch*16+i),60+ch*80,30+i*15,255)
+    --[[
+            for y=0,288 do
+        for x=0,384 do
+            pix(x,y,int(math.sqrt(x*x+y*y))%256)
+        end
+    end
+    ]]
+    rect(int(64+(ptr%16)*20),int(12+(ptr//16)%16*12),16,12,248)
+    for j=0,15 do
+        print(string.format("0x%05X",(ptr//256)*256+j*16),0,12+j*12,255)
+        for i=0,15 do
+            print(string.format("%02X",peek((ptr//256)*256+j*16+i)),64+i*20,12+j*12,255)
         end
     end
     --freq=freq+2
     mx,my=mouse()
-    print("mouse:("..mx..","..my..")",mx-3,my,255)
+    --print("mouse:("..mx..","..my..")",mx,my,255)
+    --(^._.^) like a cat 
+    poke(0x10000,2*mx//256)
+    poke(0x10001,2*mx)
+    
 end
+
+for i=0,4,4 do
+poke(0x10041+i,255)
+poke(0x10043+i,255)
+end
+poke(0x10002,48)
+poke(0x10009,255)
+poke(0x1000a,64)
 
 function ONKEYDOWN(k)
     if to_key_name(k) == "Up" then
-        poke(0x10000+ptr,(peek(0x10000+ptr)+1)%256)   
+        poke(ptr,(peek(ptr)+1)%256)   
     elseif to_key_name(k) == "Down" then
-        poke(0x10000+ptr,(peek(0x10000+ptr)-1)%256) 
+        poke(ptr,(peek(ptr)-1)%256) 
     elseif to_key_name(k) == "Left" then
-        ptr=(ptr-1)%64
+        ptr=(ptr-1)
     elseif to_key_name(k) == "Right" then
-        ptr=(ptr+1)%64
+        ptr=(ptr+1)
     end
 end
+

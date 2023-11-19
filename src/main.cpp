@@ -22,6 +22,7 @@ void cpt_init(int argv, char** args) {
     ;
     std::cout << opening_msg << std::endl;
     ram_boot(ram, vram);
+    scr.init();
     initSound();
     init_lua(args[1]);
     //Set callback
@@ -43,11 +44,11 @@ void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pix
     SDL_RenderCopy(renderer, texture, NULL, NULL);
 }
 
+uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
 
 void MainTick(SDL_Texture* texture, SDL_Renderer* renderer) {
     
     Lua_MainLoop();
-    uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
     scr.update(finalPixels);
     blitToMainWindow(texture, renderer, finalPixels);
 
@@ -69,10 +70,7 @@ int main(int argv, char** args) {
 
     cpt_init(argv,args);
     
-
-    while (isRunning) {
-
-        SDL_Texture *texture = SDL_CreateTexture(
+    SDL_Texture *texture = SDL_CreateTexture(
         renderer,
         SDL_PIXELFORMAT_RGB24,
         SDL_TEXTUREACCESS_STREAMING,
@@ -82,6 +80,8 @@ int main(int argv, char** args) {
             SDL_Log("Unable to create texture: %s", SDL_GetError());
             return 1;
         }
+
+    while (isRunning) {
 
         SDL_Event event;
         while (SDL_PollEvent(&event) != 0) {

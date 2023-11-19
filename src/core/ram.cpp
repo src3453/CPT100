@@ -21,7 +21,7 @@ void vram_poke(std::vector<Byte>& vram, int addr, Byte val) {
     if (addr < 0) {
         return;
     }   
-    if (addr < RAM_SIZE) {
+    if (addr < VRAM_SIZE) {
         vram.at(addr) = val;
     }
 }
@@ -47,7 +47,7 @@ Byte ram_peek(std::vector<Byte>& ram, int addr) {
     if (addr < 0) {
         return Byte(0);
     }
-    if (addr < VRAM_SIZE) {
+    if (addr < RAM_SIZE) {
         return ram.at(addr);
     }
 }

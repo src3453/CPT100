@@ -1,16 +1,15 @@
 name: build
 run-name: Debug build by ${{ github.actor }}
-on: []
+on: [push]
 jobs:
   debug-build-for-windows:
     runs-on: windows-2019
     steps:
-      - name: Install Toolchains
-        run: |
-          sudo apt install mingw-w64 ninja-build
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
         run: |
           cd ${{ github.workspace }}
-          build-scripts\doDebugBuild.bat
+          cd build
+          cmake -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=MinSizeRel ..
+          cmake --build . --config MinSizeRel --parallel
