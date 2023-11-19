@@ -10,6 +10,7 @@ jobs:
       - name: Build
         run: |
           cd ${{ github.workspace }}
+          mkdir build
           cd build
           cmake -G "Visual Studio 16 2019" -DCMAKE_BUILD_TYPE=MinSizeRel ..
           cmake --build . --config MinSizeRel --parallel
