@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-
+#include <math.h>
 
 class CPT_Screen {
 public:
@@ -46,7 +46,7 @@ public:
         return std::make_tuple(x, y, mouseState);
     }
 
-    void cls(int color = 0) {
+    void cls(Byte color = 0) {
         vram_pokefill(vram, 0, CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT, color);
     }
 
@@ -56,7 +56,7 @@ public:
         }
     }
 
-    void pixarr(int x, int y, int w, int h, std::vector<int> &colors) {
+    void pixarr(int x, int y, int w, int h, std::vector<Byte> &colors) {
         int i = 0;
         for (int posY = y; posY < y + h; ++posY) {
             for (int posX = x; posX < x + w; ++posX) {
@@ -131,9 +131,8 @@ public:
             y = ys + l * sin(rad);
 
             /* ビットマップ外の点は描画しない */
-            if((x >=0 && x < width) && (y >= 0 && y < height)){
-                pix((int)x,(int)y,(Byte)color);
-            }
+            pix((int)x,(int)y,(Byte)color);
+
         }
     }
 };

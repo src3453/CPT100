@@ -1,8 +1,19 @@
 mode=0
 cur0=0
 
-function LOOP()
+function PatternEditor()
+    for y=0,15 do
+        for x=0,5 do
+            print(string.format("%02X",peek(int(0x0F000+cur//96*96+y*6+x))),24+x*24,16+y*16,255)
+        end
+    end
+end
 
+function LOOP()
+    cls(0)
+    if mode == 0 then
+        PatternEditor()
+    end
 end
 
 function ONKEYDOWN(k)

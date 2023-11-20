@@ -17,16 +17,16 @@ void api_vpoke(int addr, int value) {
     vram_poke(vram, (int)addr, (Byte)(value%256));
 }
 void api_print(std::string text, int x, int y, int color) {
-    font.print((std::string)text, (int)x, (int)y, (int)color);
+    font.print((std::string)text, (int)x, (int)y, (Byte)color);
 }
 void api_pix(int x, int y, int color) {
-    scr.pix((int)x, (int)y, (int)color);
+    scr.pix((int)x, (int)y, (Byte)color);
 }
 void api_trace(std::string text) {
     printf(((std::string)text+"\n").c_str());
 }
 void api_cls(int color) {
-    scr.cls((int)color);
+    scr.cls((Byte)color);
 }
 int api_from_rgb(int r, int g, int b) {
     return scr.fromRGB(r,g,b).toInt();
@@ -53,7 +53,7 @@ int api_from_key_name(std::string keyname) {
 void api_rect(int x, int y, int w, int h, int color) {
     scr.rect((int)x, (int)y, (int)w, (int)h, (Byte)color);
 }
-std::tuple<int, int> api_mouse() {
+std::tuple<int, int, int> api_mouse() {
     return scr.mouse();
 }
 std::vector<int> api_peekarr(int addr, int block) {
@@ -88,6 +88,12 @@ std::vector<int> api_vpokearr(int addr, std::vector<int> vals) {
     }
     vram_poke2array(vram,addr,values);
 }
+void api_rectb(int x, int y, int w, int h, int color) {
+    scr.rectb((int)x, (int)y, (int)w, (int)h, (Byte)color);
+}
+void api_line(int xs, int ys, int xe, int ye, int color) {
+    scr.line((int)xs, (int)ys, (int)xe, (int)ye, (Byte)color);
+}
 
 void register_functions() {
     lua.set_function("peek",api_peek);
@@ -110,6 +116,8 @@ void register_functions() {
     lua.set_function("vpeekarr",api_vpeekarr);
     lua.set_function("pokearr",api_pokearr);
     lua.set_function("vpokearr",api_vpokearr);
+    lua.set_function("rectb",api_rectb);
+    lua.set_function("line",api_line);
 }
 
 void init_lua(std::string LuaSrcPath) {
@@ -133,3 +141,6 @@ void Lua_OnKeyUp(int key) {
     lua["ONKEYUP"](key);
 }
 
+void Lua_MainLoop() {
+    lua["LOOP"]();
+}

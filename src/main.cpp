@@ -9,12 +9,13 @@ int mouseState = 0;
 #include "core/ram.cpp"
 #include "core/disp.cpp"
 #include "core/text.cpp"
+#include "core/sound.cpp"
 
 CPT_Screen scr(vram);
 Font font(scr);
 
 #include "lua_api.cpp"
-#include "core/sound.cpp"
+
 
 void cpt_init(int argv, char** args) {
     if (argv == 1) {
@@ -31,7 +32,10 @@ void cpt_init(int argv, char** args) {
     ram_boot(ram, vram);
     scr.init();
     initSound();
+
     init_lua(args[1]);
+
+    
     //Set callback
 }
 
@@ -54,6 +58,7 @@ void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pix
 uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
 
 void MainTick(SDL_Texture* texture, SDL_Renderer* renderer) {
+    Lua_MainLoop(); //60Hz
     scr.update(finalPixels);
     blitToMainWindow(texture, renderer, finalPixels);
 }
