@@ -33,13 +33,13 @@ void cpt_init(int argv, char** args) {
     scr.init();
     initSound();
 
-    init_lua(args[1]);
+    init_lua((std::string)args[1]);
 
     
     //Set callback
 }
 
-void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pixels) {
+std::tuple<int,int,int,int> blitToMainWindow(SDL_Window *window, SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pixels) {
     
     
     // update texture with new data
@@ -52,17 +52,30 @@ void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pix
         memcpy(texture_pixels, pixels, texture_pitch * CPT_SCREEN_HEIGHT);
     }
     SDL_UnlockTexture(texture);
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
+    int w,h = 0;
+    SDL_GetWindowSize(window,&w,&h);
+    SDL_Rect _rect;
+    _rect.h=h;
+    _rect.w=(int)((double)h*((double)CPT_SCREEN_WIDTH/(double)CPT_SCREEN_HEIGHT));
+    _rect.x=(int)((double)w-((double)h*((double)CPT_SCREEN_WIDTH/(double)CPT_SCREEN_HEIGHT)))/2;
+    _rect.y=0;
+    SDL_Rect *rect = &_rect;
+
+    SDL_RenderCopy(renderer, texture, NULL,(const SDL_Rect*)rect);
+    return std::make_tuple(_rect.x,_rect.y,_rect.w,_rect.h);
 }
 
 uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
 
-void MainTick(SDL_Texture* texture, SDL_Renderer* renderer) {
+void MainTick(SDL_Window *window, SDL_Texture* texture, SDL_Renderer* renderer) {
     Lua_MainLoop(); //60Hz
     scr.update(finalPixels);
-    blitToMainWindow(texture, renderer, finalPixels);
+    std::tuple<int,int,int,int> winRect = blitToMainWindow(window, texture, renderer, finalPixels);
+    wx = std::get<0>(winRect);
+    wy = std::get<1>(winRect);
+    ww = std::get<2>(winRect);
+    wh = std::get<3>(winRect);
 }
-
 
 
 int main(int argv, char** args) {
@@ -72,7 +85,7 @@ int main(int argv, char** args) {
     
     SDL_Window* window;
     SDL_Renderer* renderer;
-    window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     
     bool isRunning = true;
@@ -131,7 +144,7 @@ int main(int argv, char** args) {
 
         SDL_RenderClear(renderer);
         
-        MainTick(texture,renderer);
+        MainTick(window,texture,renderer);
 
         SDL_RenderPresent(renderer);
         //SDL_Delay(1000/CALLBACK_FPS);

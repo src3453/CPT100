@@ -2,6 +2,8 @@
 #include <vector>
 #include <math.h>
 
+int wx,wy,ww,wh = 0;
+
 class CPT_Screen {
 public:
 
@@ -42,7 +44,8 @@ public:
         int x=0;
         int y=0;
         SDL_GetMouseState(&x,&y);
-        
+        x = (int)((double)x/((double)ww/CPT_SCREEN_WIDTH))-((double)(wx)/((double)ww/CPT_SCREEN_WIDTH));
+        y = (int)((double)y/((double)wh/CPT_SCREEN_HEIGHT))-((double)(wy)/((double)wh/CPT_SCREEN_HEIGHT));
         return std::make_tuple(x, y, mouseState);
     }
 
@@ -51,7 +54,7 @@ public:
     }
 
     void pix(int x, int y, Byte color) {
-        if (x < 384 && y < 288) {
+        if (x >= 0 && y >= 0 && x < 384 && y < 288) {
         vram_poke(vram, y * CPT_SCREEN_WIDTH + x, color);
         }
     }
@@ -84,7 +87,7 @@ public:
         for(int X=x;X<x+w;X++){
             pix(X, y+h, color);
         }
-        for(int Y=y;Y<y+h;Y++){
+        for(int Y=y;Y<=y+h;Y++){
             pix(x+w, Y, color);
         }
     }

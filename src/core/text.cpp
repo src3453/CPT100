@@ -38,7 +38,7 @@ public:
         }
     }
 
-    void print(const std::string &text, int x = 0, int y = 0, Byte color = 255) {
+    void print(const std::string text, int x = 0, int y = 0, Byte color = 255) {
         for (size_t i = 0; i < text.length(); ++i) {
             drawChar((char)text[i], (x + 8 * i) % CPT_SCREEN_WIDTH, y + (i / 48) * 12, color);
         }

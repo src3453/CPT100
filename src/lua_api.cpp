@@ -28,7 +28,7 @@ void api_trace(std::string text) {
 void api_cls(int color) {
     scr.cls((Byte)color);
 }
-int api_from_rgb(int r, int g, int b) {
+int api_rgb(int r, int g, int b) {
     return scr.fromRGB(r,g,b).toInt();
 }
 int api_time() {
@@ -104,7 +104,7 @@ void register_functions() {
     lua.set_function("pix",api_pix);
     lua.set_function("trace",api_trace);
     lua.set_function("cls",api_cls);
-    lua.set_function("from_rgb",api_from_rgb);
+    lua.set_function("rgb",api_rgb);
     lua.set_function("time",api_time);
     lua.set_function("int",api_int);
     lua.set_function("key",api_key);
