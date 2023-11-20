@@ -3,8 +3,11 @@ run-name: Debug build by ${{ github.actor }}
 on: []
 jobs:
   debug-build-for-windows:
-    runs-on: windows-2022
+    runs-on: windows-latest
     steps:
+      - name: Install Latest MinGW
+        run: |
+          choco install mingw
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
@@ -12,5 +15,5 @@ jobs:
           cd ${{ github.workspace }}
           mkdir build
           cd build
-          cmake -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=MinSizeRel ..
-          cmake --build . --config MinSizeRel --parallel
+          cmake -S .. -B . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          mingw32-make -j4          

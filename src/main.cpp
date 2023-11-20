@@ -4,12 +4,17 @@
 
 int mouseState = 0;
 
-#include "core/include.hpp"
+#include "core/header/types.hpp"
+#include "core/header/spec.hpp"
+#include "core/ram.cpp"
+#include "core/disp.cpp"
+#include "core/text.cpp"
 
 CPT_Screen scr(vram);
 Font font(scr);
 
 #include "lua_api.cpp"
+#include "core/sound.cpp"
 
 void cpt_init(int argv, char** args) {
     if (argv == 1) {
@@ -49,11 +54,8 @@ void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pix
 uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
 
 void MainTick(SDL_Texture* texture, SDL_Renderer* renderer) {
-    
-    Lua_MainLoop();
     scr.update(finalPixels);
     blitToMainWindow(texture, renderer, finalPixels);
-
 }
 
 
