@@ -6,6 +6,10 @@ set(EXECUTABLE_NAME cpt100)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
 set(CMAKE_CXX_FLAGS "-mconsole")
 
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
 # Print processor and compiler 
 message(STATUS "Detected processor is " ${CMAKE_SYSTEM_PROCESSOR})
 message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER})
