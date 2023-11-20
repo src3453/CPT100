@@ -24,6 +24,8 @@ link_directories(${PROJECT_SOURCE_DIR}/lib/lua)
 #実行ファイルを作成
 add_executable(${EXECUTABLE_NAME} src/main.cpp)
 
+target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_17)
+
 target_include_directories(${EXECUTABLE_NAME} 
 PUBLIC ${SDL2_INCLUDE_DIRS}
 PUBLIC ${SOL_DIR}
@@ -36,7 +38,6 @@ PUBLIC ${SDL2_LIBRARIES}
 PUBLIC lua54
 )
 
-target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_17)
 
 # SDL2.dllを実行ファイルと同じディレクトリにコピー
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
