@@ -1,16 +1,17 @@
 # CMakeのバージョンを設定
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.16)
 # プロジェクト名と使用する言語を設定
 project(CPT100 CXX)
 set(EXECUTABLE_NAME cpt100)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
 set(CMAKE_CXX_FLAGS "-mconsole")
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-add_compile_options(-std:c++17)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-add_compile_options(-std=c++17)
-endif()
+# Print processor and compiler 
+message(STATUS "Detected processor is " ${CMAKE_SYSTEM_PROCESSOR})
+message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER})
+message(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})
+message(STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID})
+
 
 set(LUA_DIR ${PROJECT_SOURCE_DIR}/lib/lua/include)
 set(SOL_DIR ${PROJECT_SOURCE_DIR}/lib/sol)
@@ -34,6 +35,8 @@ target_link_libraries(${EXECUTABLE_NAME}
 PUBLIC ${SDL2_LIBRARIES}
 PUBLIC lua54
 )
+
+target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_17)
 
 # SDL2.dllを実行ファイルと同じディレクトリにコピー
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
