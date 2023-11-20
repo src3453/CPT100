@@ -2,12 +2,17 @@
 #include <stdio.h>
 #include "SDL.h"
 
-#include "core/include.hpp"
+#include "core/header/types.hpp"
+#include "core/header/spec.hpp"
+#include "core/ram.cpp"
+#include "core/disp.cpp"
+#include "core/text.cpp"
 
 CPT_Screen scr(vram);
 Font font(scr);
 
 #include "lua_api.cpp"
+#include "core/sound.cpp"
 
 void cpt_init(int argv, char** args) {
     if (argv == 1) {
