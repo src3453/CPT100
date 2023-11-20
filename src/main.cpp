@@ -55,10 +55,10 @@ std::tuple<int,int,int,int> blitToMainWindow(SDL_Window *window, SDL_Texture *te
     int w,h = 0;
     SDL_GetWindowSize(window,&w,&h);
     SDL_Rect _rect;
-    _rect.h=h;
-    _rect.w=(int)((double)h*((double)CPT_SCREEN_WIDTH/(double)CPT_SCREEN_HEIGHT));
-    _rect.x=(int)((double)w-((double)h*((double)CPT_SCREEN_WIDTH/(double)CPT_SCREEN_HEIGHT)))/2;
-    _rect.y=0;
+    _rect.h=(int)((double)w*std::max((double)1,((double)w/(double)h))*((double)CPT_SCREEN_WIDTH/(double)CPT_SCREEN_HEIGHT));
+    _rect.w=(int)((double)h*std::max((double)1,((double)w/(double)h))*((double)CPT_SCREEN_WIDTH/(double)CPT_SCREEN_HEIGHT));
+    _rect.x=(int)((double)std::max((double)0,w-(double)h*((double)CPT_SCREEN_WIDTH/(double)CPT_SCREEN_HEIGHT)))/2;
+    _rect.y=(int)((double)std::max((double)0,h-(double)w*((double)CPT_SCREEN_WIDTH/(double)CPT_SCREEN_HEIGHT)))/2;
     SDL_Rect *rect = &_rect;
 
     SDL_RenderCopy(renderer, texture, NULL,(const SDL_Rect*)rect);
