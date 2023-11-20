@@ -1,64 +1,62 @@
 #include "sol.hpp"
 #include <time.h>
 
-using std::any;
-
 sol::state lua;
 int timerStart = 0;
 
-int api_peek(any addr) {
+int api_peek(std::any addr) {
     return ram_peek(ram, (int)addr).toInt();
 }
-void api_poke(any addr, any value) {
+void api_poke(std::any addr, std::any value) {
     ram_poke(ram, (int)addr, (Byte)(value%256));
 }
-int api_vpeek(any addr) {
+int api_vpeek(std::any addr) {
     return vram_peek(vram, (int)addr).toInt();
 }
-void api_vpoke(any addr, any value) {
+void api_vpoke(std::any addr, std::any value) {
     vram_poke(vram, (int)addr, (Byte)(value%256));
 }
-void api_print(any text, any x, any y, any color) {
+void api_print(std::any text, std::any x, std::any y, std::any color) {
     font.print((std::string)text, (int)x, (int)y, (int)color);
 }
-void api_pix(any x, any y, any color) {
+void api_pix(std::any x, std::any y, std::any color) {
     scr.pix((int)x, (int)y, (int)color);
 }
-void api_trace(any text) {
+void api_trace(std::any text) {
     printf(((std::string)text+"\n").c_str());
 }
-void api_cls(any color) {
+void api_cls(std::any color) {
     scr.cls((int)color);
 }
-int api_rgb(any r, any g, any b) {
+int api_rgb(std::any r, std::any g, std::any b) {
     return scr.fromRGB(r,g,b).toInt();
 }
 int api_time() {
     return clock()-timerStart;
 }
-int api_int(any num) {
+int api_int(std::any num) {
     return (int)num;
 }
-int api_key(any keycode) {
+int api_key(std::any keycode) {
     int length = 0;
     const Uint8* buf = SDL_GetKeyboardState(&length);
     const std::vector<Uint8> keystates(buf,buf+length);
     std::cout << buf;
     return keystates.at(keycode);
 }
-std::string api_to_key_name(any keycode) {
+std::string api_to_key_name(std::any keycode) {
     return (std::string)SDL_GetKeyName(SDL_GetKeyFromScancode((SDL_Scancode)keycode));
 }
-int api_from_key_name(any keyname) {
+int api_from_key_name(std::any keyname) {
     return (int)SDL_GetScancodeFromName(keyname.c_str());
 }
-void api_rect(any x, any y, any w, any h, any color) {
+void api_rect(std::any x, std::any y, std::any w, std::any h, std::any color) {
     scr.rect((int)x, (int)y, (int)w, (int)h, (Byte)color);
 }
 std::tuple<int, int> api_mouse() {
     return scr.mouse();
 }
-std::vector<int> api_peekarr(any addr, any block) {
+std::vector<int> api_peekarr(std::any addr, std::any block) {
     std::vector<int> out;
     for (int i = (int)addr; i < (int)addr + (int)block; i++)
     {
@@ -66,7 +64,7 @@ std::vector<int> api_peekarr(any addr, any block) {
     }
     return out;
 }
-std::vector<int> api_vpeekarr(any addr, any block) {
+std::vector<int> api_vpeekarr(std::any addr, std::any block) {
     std::vector<int> out;
     for (int i = (int)addr; i < (int)addr + (int)block; i++)
     {
@@ -74,7 +72,7 @@ std::vector<int> api_vpeekarr(any addr, any block) {
     }
     return out;
 }
-std::vector<int> api_pokearr(any addr, any vals) {
+std::vector<int> api_pokearr(std::any addr, std::any vals) {
     std::vector<Byte> values;
     for (int i = (int)addr; i < (int)addr + vals.size(); i++)
     {
@@ -82,7 +80,7 @@ std::vector<int> api_pokearr(any addr, any vals) {
     }
     ram_poke2array(ram,addr,values);
 }
-std::vector<int> api_vpokearr(any addr, any vals) {
+std::vector<int> api_vpokearr(std::any addr, std::any vals) {
     std::vector<Byte> values;
     for (int i = (int)addr; i < (int)addr + vals.size(); i++)
     {
