@@ -1,88 +1,90 @@
 #include "sol.hpp"
 #include <time.h>
 
+using std::any;
+
 sol::state lua;
 int timerStart = 0;
 
-int api_peek(int addr) {
+int api_peek(any addr) {
     return ram_peek(ram, (int)addr).toInt();
 }
-void api_poke(int addr, int value) {
+void api_poke(any addr, any value) {
     ram_poke(ram, (int)addr, (Byte)(value%256));
 }
-int api_vpeek(int addr) {
+int api_vpeek(any addr) {
     return vram_peek(vram, (int)addr).toInt();
 }
-void api_vpoke(int addr, int value) {
+void api_vpoke(any addr, any value) {
     vram_poke(vram, (int)addr, (Byte)(value%256));
 }
-void api_print(std::string text, int x, int y, int color) {
+void api_print(any text, any x, any y, any color) {
     font.print((std::string)text, (int)x, (int)y, (int)color);
 }
-void api_pix(int x, int y, int color) {
+void api_pix(any x, any y, any color) {
     scr.pix((int)x, (int)y, (int)color);
 }
-void api_trace(std::string text) {
+void api_trace(any text) {
     printf(((std::string)text+"\n").c_str());
 }
-void api_cls(int color) {
+void api_cls(any color) {
     scr.cls((int)color);
 }
-int api_from_rgb(int r, int g, int b) {
+int api_rgb(any r, any g, any b) {
     return scr.fromRGB(r,g,b).toInt();
 }
 int api_time() {
     return clock()-timerStart;
 }
-int api_int(float num) {
+int api_int(any num) {
     return (int)num;
 }
-int api_key(int keycode) {
+int api_key(any keycode) {
     int length = 0;
     const Uint8* buf = SDL_GetKeyboardState(&length);
     const std::vector<Uint8> keystates(buf,buf+length);
     std::cout << buf;
     return keystates.at(keycode);
 }
-std::string api_to_key_name(int keycode) {
+std::string api_to_key_name(any keycode) {
     return (std::string)SDL_GetKeyName(SDL_GetKeyFromScancode((SDL_Scancode)keycode));
 }
-int api_from_key_name(std::string keyname) {
+int api_from_key_name(any keyname) {
     return (int)SDL_GetScancodeFromName(keyname.c_str());
 }
-void api_rect(int x, int y, int w, int h, int color) {
+void api_rect(any x, any y, any w, any h, any color) {
     scr.rect((int)x, (int)y, (int)w, (int)h, (Byte)color);
 }
 std::tuple<int, int> api_mouse() {
     return scr.mouse();
 }
-std::vector<int> api_peekarr(int addr, int block) {
+std::vector<int> api_peekarr(any addr, any block) {
     std::vector<int> out;
-    for (int i = addr; i < addr + block; i++)
+    for (int i = (int)addr; i < (int)addr + (int)block; i++)
     {
         out.push_back(ram_peek(ram, i).toInt());
     }
     return out;
 }
-std::vector<int> api_vpeekarr(int addr, int block) {
+std::vector<int> api_vpeekarr(any addr, any block) {
     std::vector<int> out;
-    for (int i = addr; i < addr + block; i++)
+    for (int i = (int)addr; i < (int)addr + (int)block; i++)
     {
         out.push_back(vram_peek(vram, i).toInt());
     }
     return out;
 }
-std::vector<int> api_pokearr(int addr, std::vector<int> vals) {
+std::vector<int> api_pokearr(any addr, any vals) {
     std::vector<Byte> values;
-    for (int i = addr; i < addr + vals.size(); i++)
+    for (int i = (int)addr; i < (int)addr + vals.size(); i++)
     {
         values.push_back((Byte)vals.at(i-addr));
     }
     ram_poke2array(ram,addr,values);
 }
-std::vector<int> api_vpokearr(int addr, std::vector<int> vals) {
+std::vector<int> api_vpokearr(any addr, any vals) {
     std::vector<Byte> values;
-    for (int i = addr; i < addr + vals.size(); i++)
+    for (int i = (int)addr; i < (int)addr + vals.size(); i++)
     {
         values.push_back((Byte)vals.at(i-addr));
     }
@@ -98,7 +100,7 @@ void register_functions() {
     lua.set_function("pix",api_pix);
     lua.set_function("trace",api_trace);
     lua.set_function("cls",api_cls);
-    lua.set_function("from_rgb",api_from_rgb);
+    lua.set_function("rgb",api_rgb);
     lua.set_function("time",api_time);
     lua.set_function("int",api_int);
     lua.set_function("key",api_key);
