@@ -56,6 +56,38 @@ void api_rect(int x, int y, int w, int h, int color) {
 std::tuple<int, int> api_mouse() {
     return scr.mouse();
 }
+std::vector<int> api_peekarr(int addr, int block) {
+    std::vector<int> out;
+    for (int i = addr; i < addr + block; i++)
+    {
+        out.push_back(ram_peek(ram, i).toInt());
+    }
+    return out;
+}
+std::vector<int> api_vpeekarr(int addr, int block) {
+    std::vector<int> out;
+    for (int i = addr; i < addr + block; i++)
+    {
+        out.push_back(vram_peek(vram, i).toInt());
+    }
+    return out;
+}
+std::vector<int> api_pokearr(int addr, std::vector<int> vals) {
+    std::vector<Byte> values;
+    for (int i = addr; i < addr + vals.size(); i++)
+    {
+        values.push_back((Byte)vals.at(i-addr));
+    }
+    ram_poke2array(ram,addr,values);
+}
+std::vector<int> api_vpokearr(int addr, std::vector<int> vals) {
+    std::vector<Byte> values;
+    for (int i = addr; i < addr + vals.size(); i++)
+    {
+        values.push_back((Byte)vals.at(i-addr));
+    }
+    vram_poke2array(vram,addr,values);
+}
 
 void register_functions() {
     lua.set_function("peek",api_peek);
@@ -74,6 +106,10 @@ void register_functions() {
     lua.set_function("from_key_name",api_from_key_name);
     lua.set_function("rect",api_rect);
     lua.set_function("mouse",api_mouse);
+    lua.set_function("peekarr",api_peekarr);
+    lua.set_function("vpeekarr",api_vpeekarr);
+    lua.set_function("pokearr",api_pokearr);
+    lua.set_function("vpokearr",api_vpokearr);
 }
 
 void init_lua(std::string LuaSrcPath) {
