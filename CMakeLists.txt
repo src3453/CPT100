@@ -8,6 +8,8 @@ set(CMAKE_CXX_FLAGS "-mconsole")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 add_compile_options(-std:c++17)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+add_compile_options(-std=c++17)
 endif()
 
 set(LUA_DIR ${PROJECT_SOURCE_DIR}/lib/lua/include)
