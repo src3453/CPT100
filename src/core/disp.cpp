@@ -73,6 +73,21 @@ public:
         }
     }
 
+    void rectb(int x, int y, int w, int h, Byte color) {
+        for(int X=x;X<x+w;X++){
+            pix(X, y, color);
+        }
+        for(int Y=y;Y<y+h;Y++){
+            pix(x, Y, color);
+        }
+        for(int X=x;X<x+w;X++){
+            pix(X, y+h, color);
+        }
+        for(int Y=y;Y<y+h;Y++){
+            pix(x+w, Y, color);
+        }
+    }
+
     Byte fromRGB(int r, int g, int b) {
         r = (int)(r%256/42.666666666666666);
         g = (int)(g%256/42.666666666666666);
@@ -81,6 +96,43 @@ public:
             return Byte(255);
         } else {
             return (Byte)((r*36+g*6+b)%215);
+        }
+    }
+
+    void line(
+    int xs, /* 線の始点のx座標 */
+    int ys, /* 線の始点のy座標 */
+    int xe, /* 線の終点のx座標 */
+    int ye, /* 線の終点のy座標 */
+    Byte color
+    ){
+        int x, y;
+        int dx, dy;
+        double rad;
+        unsigned int length;
+        unsigned int l;
+        int sigx, sigy;
+
+        /* 始点と終点のx座標とy座標の差を計算 */
+        dx = xe - xs;
+        dy = ye - ys;
+
+        /* 線の長さを計算 */
+        length = sqrt(dx * dx + dy * dy);
+
+        /* 横軸との成す角を計算 */
+        rad = atan2(dy, dx);
+
+        /* 長さ分の線を描画 */
+        for(l = 0; l < length; l++){
+            /* x座標とy座標を計算 */
+            x = xs + l * cos(rad);
+            y = ys + l * sin(rad);
+
+            /* ビットマップ外の点は描画しない */
+            if((x >=0 && x < width) && (y >= 0 && y < height)){
+                pix((int)x,(int)y,(Byte)color);
+            }
         }
     }
 };
