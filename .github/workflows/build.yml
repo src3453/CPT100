@@ -1,6 +1,6 @@
 name: build
 run-name: Debug build by ${{ github.actor }}
-on: [push]
+on: []
 jobs:
   debug-build-for-windows:
     runs-on: windows-2022

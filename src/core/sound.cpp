@@ -73,11 +73,11 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             t1[ch] = t1[ch] + (f1/SAMPLE_FREQ);
             double v1 = ((double)reg.at(addr+5).toInt())/255;
             t2[ch] = t2[ch] + ((double)(f1*reg.at(addr+2).toInt()))/16/SAMPLE_FREQ;
-            double v2 = ((double)reg.at(addr+6).toInt())/64;
+            double v2 = ((double)reg.at(addr+6).toInt())/128;
             t3[ch] = t3[ch] + ((double)(f1*reg.at(addr+3).toInt()))/16/SAMPLE_FREQ;
-            double v3 = ((double)reg.at(addr+7).toInt())/64;
+            double v3 = ((double)reg.at(addr+7).toInt())/128;
             t4[ch] = t4[ch] + ((double)(f1*reg.at(addr+4).toInt()))/16/SAMPLE_FREQ;
-            double v4 = ((double)reg.at(addr+8).toInt())/64;
+            double v4 = ((double)reg.at(addr+8).toInt())/128;
             result /= 2;
             result += generateFMWave(t1[ch],v1,t2[ch],v2,t3[ch],v3,t4[ch],v4);
         }

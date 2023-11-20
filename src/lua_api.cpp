@@ -53,7 +53,7 @@ int api_from_key_name(std::string keyname) {
 void api_rect(int x, int y, int w, int h, int color) {
     scr.rect((int)x, (int)y, (int)w, (int)h, (Byte)color);
 }
-std::tuple<int, int> api_mouse() {
+std::tuple<int, int, int> api_mouse() {
     return scr.mouse();
 }
 

@@ -36,13 +36,14 @@ public:
         // Update logic for the screen
     }
 
-    std::tuple<int, int> mouse() {
+    std::tuple<int, int, int> mouse() {
         // Get the mouse position
         // placeholder
         int x=0;
         int y=0;
         SDL_GetMouseState(&x,&y);
-        return std::make_tuple(x, y);
+        
+        return std::make_tuple(x, y, mouseState);
     }
 
     void cls(int color = 0) {

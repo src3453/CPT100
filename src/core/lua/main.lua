@@ -35,17 +35,17 @@ function LOOP()
         end
     end
     --freq=freq+2
-    mx,my=mouse()
-    --print("mouse:("..mx..","..my..")",mx,my,255)
+    mx,my,mb=mouse()
+    print("mouse:("..mx..","..my..","..mb..")",mx,my,255)
     --(^._.^) like a cat 
     poke(0x10000,2*mx//256)
     poke(0x10001,2*mx)
     
 end
 
-for i=0,4,4 do
-poke(0x10041+i,255)
-poke(0x10043+i,255)
+for i=0,12,4 do
+poke(0x10041+i,40)
+poke(0x10043+i,40)
 end
 poke(0x10002,48)
 poke(0x10009,255)

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "SDL.h"
 
+int mouseState = 0;
+
 #include "core/include.hpp"
 
 CPT_Screen scr(vram);
@@ -93,6 +95,30 @@ int main(int argv, char** args) {
             }
             if (event.type == SDL_KEYUP) {
                 Lua_OnKeyUp((int)SDL_GetScancodeFromKey(event.key.keysym.sym));
+            }
+            if (event.type == SDL_MOUSEBUTTONDOWN) 
+            {
+                if(event.button.button == SDL_BUTTON_LEFT){
+                    mouseState += 1;
+                }
+                else if(event.button.button == SDL_BUTTON_RIGHT){
+                    mouseState += 2;
+                }
+                else if(event.button.button == SDL_BUTTON_MIDDLE){
+                    mouseState += 4;
+                }
+            }
+            if (event.type == SDL_MOUSEBUTTONUP) 
+            {
+                if(event.button.button == SDL_BUTTON_LEFT){
+                    mouseState -= 1;
+                }
+                else if(event.button.button == SDL_BUTTON_RIGHT){
+                    mouseState -= 2;
+                }
+                else if(event.button.button == SDL_BUTTON_MIDDLE){
+                    mouseState -= 4;
+                }
             }
         }
 

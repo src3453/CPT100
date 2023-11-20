@@ -4,4 +4,4 @@
 #include "disp.cpp"
 #include "text.cpp"
 #include "sound.cpp"
-
+#include "music.cpp"
