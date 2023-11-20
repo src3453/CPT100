@@ -18,7 +18,11 @@ message(STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID})
 set(LUA_DIR ${PROJECT_SOURCE_DIR}/lib/lua/include)
 set(SOL_DIR ${PROJECT_SOURCE_DIR}/lib/sol)
 set(SDL2_DIR ${PROJECT_SOURCE_DIR}/lib/SDL2/x86_64-w64-mingw32/lib/cmake/SDL2)
+set(AnyRef_DIR ${PROJECT_SOURCE_DIR}/lib/AnyRef)
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+add_compile_options(-std=c++17)
+endif()
 #add_compile_options(-O2)
 
 find_package(SDL2 CONFIG REQUIRED)
@@ -32,6 +36,7 @@ target_include_directories(${EXECUTABLE_NAME}
 PUBLIC ${SDL2_INCLUDE_DIRS}
 PUBLIC ${SOL_DIR}
 PUBLIC ${LUA_DIR}
+PUBLIC ${AnyRef_DIR}
 )
 
 # SDL2のライブラリをリンク
