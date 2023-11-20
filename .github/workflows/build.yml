@@ -14,5 +14,6 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           mkdir build
-          build-scripts\\doDebugBuild.bat
+          cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          mingw32-make -j4
           
