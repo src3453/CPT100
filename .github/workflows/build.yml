@@ -14,6 +14,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           mkdir build
-          cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          mingw32-make build -j4
+          cd build
+          cmake -S .. -B . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          mingw32-make . -j4
           
