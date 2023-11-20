@@ -8,6 +8,9 @@ jobs:
       - name: Install Latest MinGW
         run: |
           choco install mingw
+      - name: Install Toolchains
+        run: |
+          pacman -S --needed git base-devel mingw-w64-x86_64-toolchain
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build
@@ -17,4 +20,5 @@ jobs:
           cd build
           cmake -S .. -B . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
           mingw32-make -j4
+        shell: bash
           
