@@ -3,7 +3,8 @@
 #include "envelove.cpp"
 
 #define SAMPLE_FREQ 48000
-#define SOUND_CHUNK 64
+#define SOUND_CLOCK 120
+#define SOUND_CHUNK SAMPLE_FREQ/SOUND_CLOCK
 
 SDL_AudioSpec want, have;
 SDL_AudioStream *stream = SDL_NewAudioStream(AUDIO_S16, 1, SAMPLE_FREQ, AUDIO_F32, 2, SAMPLE_FREQ);
@@ -59,6 +60,9 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
     int i;
     Uint16 *frames = (Uint16 *) stream;
     int framesize = len/2;
+    if(Total_time%2 == 0) {
+        lua["LOOP"](); //60Hz
+    }
     reg = ram_peek2array(ram,0x10000,63);
     regenvl = ram_peek2array(ram,0x10040,68);
     for (i = 0; i < framesize; i++) {
@@ -67,7 +71,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             int addr = 16*ch;
             for (int opNum=0; opNum < 4; opNum++) {
                 applyEnveloveToRegisters(&envl,reg,regenvl,opNum,ch,((double)clock()/1000-prev)/SOUND_CHUNK);
-                ram_poke(ram,0x10000+addr+opNum+5,reg.at(addr+opNum+5));
+                
             }
             double f1 = ((double)reg.at(addr+0).toInt()*256+reg.at(addr+1).toInt());
             t1[ch] = t1[ch] + (f1/SAMPLE_FREQ);
@@ -82,11 +86,19 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             result += generateFMWave(t1[ch],v1,t2[ch],v2,t3[ch],v3,t4[ch],v4);
         }
         frames[i] = (Sint16)result;
-        Total_time++;
+    }
+    lua["SOUNDTICK"](); //120Hz
+    reg = ram_peek2array(ram,0x10000,63);
+    regenvl = ram_peek2array(ram,0x10040,68);
+    for(int ch=0; ch < 4; ch++) {
+        for (int opNum=0; opNum < 4; opNum++) {
+            ram_poke(ram,0x10000+ch*16+opNum+5,reg.at(ch*16+opNum+5));
+        }
     }
     reg.clear();
     regenvl.clear();
     prev = (double)clock()/1000;
+    Total_time++;
 }
 
 void initSound() {

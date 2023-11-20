@@ -52,11 +52,8 @@ void blitToMainWindow(SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pix
 uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
 
 void MainTick(SDL_Texture* texture, SDL_Renderer* renderer) {
-    
-    Lua_MainLoop();
     scr.update(finalPixels);
     blitToMainWindow(texture, renderer, finalPixels);
-
 }
 
 

@@ -125,10 +125,6 @@ void init_lua(std::string LuaSrcPath) {
     lua["BOOT"]();
 }
 
-void Lua_MainLoop() {
-    lua["LOOP"]();
-}
-
 void Lua_OnKeyDown(int key) {
     lua["ONKEYDOWN"](key);
 }
