@@ -3,6 +3,7 @@
 #include <SDL.h>
 
 int mouseState = 0;
+char* inputText = "";
 
 #include "core/header/types.hpp"
 #include "core/header/spec.hpp"
@@ -148,6 +149,10 @@ int main(int argv, char** args) {
                 else if(event.button.button == SDL_BUTTON_MIDDLE){
                     mouseState -= 4;
                 }
+            }
+            if (event.type == SDL_TEXTINPUT) {
+                strcat(inputText, event.text.text);
+                Lua_OnTextInput((std::string)event.text.text);
             }
         }
 

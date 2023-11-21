@@ -4,31 +4,31 @@
 sol::state lua;
 int timerStart = 0;
 
-int api_peek(int addr) {
+int api_peek(float addr) {
     return ram_peek(ram, (int)addr).toInt();
 }
-void api_poke(int addr, int value) {
-    ram_poke(ram, (int)addr, (Byte)(int)(value%256));
+void api_poke(float addr, float value) {
+    ram_poke(ram, (int)addr, (Byte)((int)value%256));
 }
-int api_vpeek(int addr) {
+int api_vpeek(float addr) {
     return vram_peek(vram, (int)addr).toInt();
 }
-void api_vpoke(int addr, int value) {
-    vram_poke(vram, (int)addr, (Byte)(int)(value%256));
+void api_vpoke(float addr, float value) {
+    vram_poke(vram, (int)addr, (Byte)((int)value%256));
 }
-void api_print(std::string text, int x, int y, int color) {
+void api_print(std::string text, float x, float y, float color) {
     font.print((std::string)text, (int)x, (int)y, (Byte)(int)color);
 }
-void api_pix(int x, int y, int color) {
+void api_pix(float x, float y, float color) {
     scr.pix((int)x, (int)y, (Byte)(int)color);
 }
 void api_trace(std::string text) {
     printf(((std::string)text+"\n").c_str());
 }
-void api_cls(int color) {
+void api_cls(float color) {
     scr.cls((Byte)(int)color);
 }
-int api_rgb(int r, int g, int b) {
+int api_rgb(float r, float g, float b) {
     return scr.fromRGB((int)r,(int)g,(int)b).toInt();
 }
 int api_time() {
@@ -37,26 +37,26 @@ int api_time() {
 int api_int(float num) {
     return (int)num;
 }
-int api_key(int keycode) {
+int api_key(float keycode) {
     int length = 0;
     const Uint8* buf = SDL_GetKeyboardState(&length);
     const std::vector<Uint8> keystates(buf,buf+length);
     std::cout << buf;
     return keystates.at((int)keycode);
 }
-std::string api_to_key_name(int keycode) {
+std::string api_to_key_name(float keycode) {
     return (std::string)SDL_GetKeyName(SDL_GetKeyFromScancode((SDL_Scancode)(int)keycode));
 }
 int api_from_key_name(std::string keyname) {
     return (int)SDL_GetScancodeFromName(keyname.c_str());
 }
-void api_rect(int x, int y, int w, int h, int color) {
+void api_rect(float x, float y, float w, float h, float color) {
     scr.rect((int)x, (int)y, (int)w, (int)h, (Byte)color);
 }
 std::tuple<int, int, int> api_mouse() {
     return scr.mouse();
 }
-std::vector<int> api_peekarr(int addr, int block) {
+std::vector<int> api_peekarr(float addr, float block) {
     std::vector<int> out;
     for (int i = (int)addr; i < (int)addr + (int)block; i++)
     {
@@ -64,7 +64,7 @@ std::vector<int> api_peekarr(int addr, int block) {
     }
     return out;
 }
-std::vector<int> api_vpeekarr(int addr, int block) {
+std::vector<int> api_vpeekarr(float addr, float block) {
     std::vector<int> out;
     for (int i = (int)addr; i < (int)addr + (int)block; i++)
     {
@@ -72,7 +72,7 @@ std::vector<int> api_vpeekarr(int addr, int block) {
     }
     return out;
 }
-std::vector<int> api_pokearr(int addr, std::vector<int> vals) {
+std::vector<int> api_pokearr(float addr, std::vector<float> vals) {
     std::vector<Byte> values;
     for (int i = (int)addr; i < (int)addr + vals.size(); i++)
     {
@@ -80,7 +80,7 @@ std::vector<int> api_pokearr(int addr, std::vector<int> vals) {
     }
     ram_poke2array(ram,(int)addr,values);
 }
-std::vector<int> api_vpokearr(int addr, std::vector<int> vals) {
+std::vector<int> api_vpokearr(float addr, std::vector<float> vals) {
     std::vector<Byte> values;
     for (int i = (int)addr; i < (int)addr + vals.size(); i++)
     {
@@ -88,17 +88,29 @@ std::vector<int> api_vpokearr(int addr, std::vector<int> vals) {
     }
     vram_poke2array(vram,(int)addr,values);
 }
-void api_rectb(int x, int y, int w, int h, int color) {
+void api_rectb(float x, float y, float w, float h, float color) {
     scr.rectb((int)x, (int)y, (int)w, (int)h, (Byte)(int)color);
 }
-void api_line(int xs, int ys, int xe, int ye, int color) {
+void api_line(float xs, float ys, float xe, float ye, float color) {
     scr.line((int)xs, (int)ys, (int)xe, (int)ye, (Byte)(int)color);
 }
-void api_spr(int num, int x, int y, int w=1, int h=1) {
+void api_spr(float num, float x, float y, float w=1, float h=1) {
     scr.spr((int)num,(int)x,(int)y,(int)w,(int)h);
 }
-int api_showcur(int toggle=-1) {
-    int SDL_ShowCursor((int)toggle);
+int api_showcur(float toggle=-1) {
+    SDL_ShowCursor((int)toggle);
+}
+void api_startinput() {
+    SDL_StartTextInput()
+}
+void api_stopinput() {
+    SDL_StartTextInput()
+}
+void api_resetinput() {
+    *inputText = "";
+}
+std::string api_getinput() {
+    return (std::string)inputText;
 }
 
 void register_functions() {
@@ -126,6 +138,10 @@ void register_functions() {
     lua.set_function("line",api_line);
     lua.set_function("spr",api_spr);
     lua.set_function("showcur",api_showcur);
+    lua.set_function("startinput",api_startinput);
+    lua.set_function("stopinput",api_stopinput);
+    lua.set_function("resetinput",api_resetinput);
+    lua.set_function("getinput",api_getinput);
 }
 
 void init_lua(std::string LuaSrcPath) {
@@ -151,4 +167,8 @@ void Lua_OnKeyUp(int key) {
 
 void Lua_MainLoop() {
     lua["LOOP"]();
+}
+
+void Lua_OnTextInput(std::string inputChar) {
+    lua["ONINPUT"](inputChar);
 }

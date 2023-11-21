@@ -22,6 +22,9 @@ function LOOP()
     if mode == 0 then
         PatternEditor()
     end
+    if mode == 1 then
+        PatternEditor()
+    end
     line(mx,my,mx+8,my,255)
     line(mx,my,mx,my+8,255)
     line(mx,my,mx+16,my+16,255)
