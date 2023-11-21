@@ -101,13 +101,13 @@ int api_showcur(float toggle=-1) {
     SDL_ShowCursor((int)toggle);
 }
 void api_startinput() {
-    SDL_StartTextInput()
+    SDL_StartTextInput();
 }
 void api_stopinput() {
-    SDL_StartTextInput()
+    SDL_StartTextInput();
 }
 void api_resetinput() {
-    *inputText = "";
+    inputText = "";
 }
 std::string api_getinput() {
     return (std::string)inputText;
@@ -170,5 +170,5 @@ void Lua_MainLoop() {
 }
 
 void Lua_OnTextInput(std::string inputChar) {
-    lua["ONINPUT"](inputChar);
+    lua["ONINPUT"]((std::string)inputChar);
 }

@@ -3,7 +3,7 @@
 #include <SDL.h>
 
 int mouseState = 0;
-char* inputText = "";
+std::string inputText = "";
 
 #include "core/header/types.hpp"
 #include "core/header/spec.hpp"
@@ -151,8 +151,8 @@ int main(int argv, char** args) {
                 }
             }
             if (event.type == SDL_TEXTINPUT) {
-                strcat(inputText, event.text.text);
-                Lua_OnTextInput((std::string)event.text.text);
+                inputText += (std::string)(event.text.text);
+                Lua_OnTextInput((std::string)(event.text.text));
             }
         }
 
