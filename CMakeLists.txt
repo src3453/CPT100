@@ -1,11 +1,12 @@
 # CMakeのバージョンを設定
 cmake_minimum_required(VERSION 3.16)
 # プロジェクト名と使用する言語を設定
-project(CPT100 CXX)
+project(CPT100 LANGUAGES C CXX)
 set(EXECUTABLE_NAME cpt100)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
+if(WIN32)
 set(CMAKE_CXX_FLAGS "-mconsole")
-
+endif()
 set(CMAKE_CXX_STANDARD 17)
 
 # Print processor and compiler 
@@ -26,6 +27,7 @@ endif()
 
 set(SOL_SRC)
 
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 add_subdirectory(${SDL2_DIR})
 set(LUA_SRC
     ${LUA_DIR}/lapi.c
@@ -64,10 +66,10 @@ set(LUA_SRC
 
 add_library(lua STATIC ${LUA_SRC})
 
-file(GLOB, SOL_SRC, ${SOL_DIR}/include/sol/*.hpp)
+file(GLOB SOL_SRC ${SOL_DIR}/include/sol/*.hpp)
 
 add_library(sol STATIC ${SOL_SRC})
-
+set_target_properties(sol PROPERTIES LINKER_LANGUAGE CXX)
 
 #実行ファイルを作成
 add_executable(${EXECUTABLE_NAME} src/main.cpp)
