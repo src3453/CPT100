@@ -1,3 +1,9 @@
+#define VERSION_MAJOR "@VERSION_MAJOR@"
+#define VERSION_MINOR "@VERSION_MINOR@"
+#define VERSION_REVISION "@VERSION_REVISION@"
+#define VERSION_STATUS "@VERSION_STATUS@"
+#define VERSION_HASH "@VERSION_HASH@"
+
 #include <iostream>
 #include <stdio.h>
 #include <SDL.h>
@@ -19,9 +25,7 @@ Font font(scr);
 
 
 void cpt_init(int argv, char** args) {
-    if (argv == 1) {
-        throw "Please specify lua source path.";
-    }
+
     std::string opening_msg = 
     "+------------------------------------------------+\n"
     "|  CPT100 High-spec Fantasy Console              |\n"
@@ -34,7 +38,7 @@ void cpt_init(int argv, char** args) {
     scr.init();
     initSound();
 
-    init_lua((std::string)args[1]);
+    init_lua();
 
     
     //Set callback
@@ -95,7 +99,7 @@ int main(int argv, char** args) {
     
     SDL_Window* window;
     SDL_Renderer* renderer;
-    window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("CPTTracker v" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS "(" VERSION_HASH ")", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     
     bool isRunning = true;

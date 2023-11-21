@@ -144,7 +144,7 @@ void register_functions() {
     lua.set_function("getinput",api_getinput);
 }
 
-void init_lua(std::string LuaSrcPath) {
+void init_lua() {
     lua.open_libraries(
     sol::lib::base,
     sol::lib::package,
@@ -153,7 +153,8 @@ void init_lua(std::string LuaSrcPath) {
     sol::lib::table);
     register_functions();
     timerStart = clock();
-    lua.script_file(LuaSrcPath);
+    #include "lua/tracker.lua.hpp"
+    lua.script(source.c_str());
     lua["BOOT"]();
 }
 

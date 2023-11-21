@@ -15,10 +15,9 @@ jobs:
           cd ${{ github.workspace }}
           mkdir build
           cd build
-          cmake -S .. -B . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          mingw32-make -j4          
+          ../build-scripts/doDebugBuild.bat
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: cpt100
-          path: ${{ github.workspace }}/build/cpt100.exe
+          name: CPTTracker.exe
+          path: ${{ github.workspace }}/build/CPTTracker.exe
