@@ -17,3 +17,8 @@ jobs:
           cd build
           cmake -S .. -B . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
           mingw32-make -j4          
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpt100
+          path: ${{ github.workspace }}/build/cpt100.exe
