@@ -97,6 +97,9 @@ void api_line(int xs, int ys, int xe, int ye, int color) {
 void api_spr(int num, int x, int y, int w=1, int h=1) {
     scr.spr((int)num,(int)x,(int)y,(int)w,(int)h);
 }
+int api_showcur(int toggle=-1) {
+    int SDL_ShowCursor((int)toggle);
+}
 
 void register_functions() {
     lua.set_function("peek",api_peek);
@@ -122,6 +125,7 @@ void register_functions() {
     lua.set_function("rectb",api_rectb);
     lua.set_function("line",api_line);
     lua.set_function("spr",api_spr);
+    lua.set_function("showcur",api_showcur);
 }
 
 void init_lua(std::string LuaSrcPath) {

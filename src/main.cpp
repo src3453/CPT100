@@ -55,15 +55,15 @@ std::tuple<int,int,int,int> blitToMainWindow(SDL_Window *window, SDL_Texture *te
     int w,h = 0;
     SDL_GetWindowSize(window,&w,&h);
     SDL_Rect _rect;
-    double aspect_ratio = (double)w / (double)h;
+    double aspect_ratio = (double)CPT_SCREEN_WIDTH / (double)CPT_SCREEN_HEIGHT;
 
     // 新しいサイズを縦横比を維持して計算
-    if ((double)w / aspect_ratio <= h) {
+    if ((double)w / aspect_ratio <= (double)h) {
         _rect.w = w;
         _rect.h = (int)((double)w / aspect_ratio);
     } else {
         _rect.h = h;
-        _rect.w = (int)((double)w * aspect_ratio);
+        _rect.w = (int)((double)h * aspect_ratio);
     }
     _rect.x = (w - _rect.w) / 2;
     _rect.y = (h - _rect.h) / 2;

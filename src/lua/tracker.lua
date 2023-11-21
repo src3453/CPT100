@@ -14,6 +14,8 @@ function PatternEditor()
     --print("mouse:("..mx..","..my..","..mb..")",mx,my,255)
 end
 
+showcur(0)
+
 function LOOP()
     mx,my,mb=mouse()
     cls(0)
