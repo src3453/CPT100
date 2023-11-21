@@ -28,7 +28,9 @@ endif()
 set(SOL_SRC)
 
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+
 add_subdirectory(${SDL2_DIR})
+
 set(LUA_SRC
     ${LUA_DIR}/lapi.c
     ${LUA_DIR}/lcode.c
@@ -64,15 +66,31 @@ set(LUA_SRC
     ${LUA_DIR}/linit.c
 )
 
+
+file(GLOB_RECURSE SOL_SRC ${SOL_DIR}/include/sol/*.hpp)
+
+file(GLOB_RECURSE SDL2_SRC ${SDL2_DIR}/include/*.h)
+
 add_library(lua STATIC ${LUA_SRC})
 
-file(GLOB SOL_SRC ${SOL_DIR}/include/sol/*.hpp)
-
 add_library(sol STATIC ${SOL_SRC})
+
+add_library(SDL2 STATIC ${SDL2_SRC})
+
 set_target_properties(sol PROPERTIES LINKER_LANGUAGE CXX)
 
+set_target_properties(SDL2 PROPERTIES LINKER_LANGUAGE CXX)
+
+
 #実行ファイルを作成
-add_executable(${EXECUTABLE_NAME} src/main.cpp)
+add_executable(${EXECUTABLE_NAME} ${CMAKE_PROJECT_DIR}src/main.cpp)
 
-target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_17)
+target_compile_features(${EXECUTABLE_NAME} PRIVATE cxx_std_17)
 
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LUA_DIR})
+
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_DIR}/include)
+
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SOL_DIR}/include)
+
+target_link_libraries(${EXECUTABLE_NAME} lua sol SDL2main SDL2-static)

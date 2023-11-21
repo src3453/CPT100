@@ -1,6 +1,6 @@
 #include <iostream>
 #include <stdio.h>
-#include "SDL.h"
+#include <SDL.h>
 
 int mouseState = 0;
 

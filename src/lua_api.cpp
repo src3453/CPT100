@@ -1,4 +1,4 @@
-#include "sol.hpp"
+#include <sol/sol.hpp>
 #include <time.h>
 
 sol::state lua;
