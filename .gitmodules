@@ -1,0 +1,10 @@
+[submodule "lib/lua"]
+	path = lib/lua
+	url = https://github.com/lua/lua
+[submodule "lib/SDL2"]
+	path = lib/SDL2
+	url = https://github.com/libsdl-org/SDL
+	branch = SDL2
+[submodule "lib/sol2"]
+	path = lib/sol2
+	url = https://github.com/ThePhD/sol2
