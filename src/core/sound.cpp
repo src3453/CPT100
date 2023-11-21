@@ -90,8 +90,19 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             double ft = ((double)regwt.at(ch*2+0).toInt()*256+regwt.at(ch*2+1).toInt());
             twt[ch] = twt[ch] + (ft/SAMPLE_FREQ)*32;
             double vt = ((double)regwt.at(ch+4).toInt())/255;
-            result /= 2;
-            result += (double)(regwt.at(12+32*ch+((int)twt[ch]%32)).toInt()-128)*96*vt;
+            result /= 2; 
+            if (regwt.at(ch+6).toInt() == 1) {
+                int val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
+                if ((int)(twt[ch]*2)%2 == 0) {
+                    val /= 16;
+                } else {
+                    val %= 16;
+                }
+                val *= 16;
+            } else {
+                int val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
+            }
+            result += (double)(-128)*96*vt;
         }
         frames[i] = (Sint16)result;
     }

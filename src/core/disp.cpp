@@ -68,6 +68,11 @@ public:
             }
         }
     }
+    
+    void spr(int num, int x, int y, int w=1, int h=1) {
+        std::vector<Byte> data = vram_peek2array(vram,num*64,64);
+        pixarr(x,y,8,8,data);
+    }
 
     void rect(int x, int y, int w, int h, Byte color) {
         for (int posY = y; posY < y + h; ++posY) {
