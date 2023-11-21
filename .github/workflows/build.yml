@@ -5,11 +5,11 @@ jobs:
   debug-build-for-windows:
     runs-on: windows-latest
     steps:
-      - name: Install Latest MinGW
-        run: |
-          choco install mingw
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
       - name: Build
         run: |
           cd ${{ github.workspace }}
