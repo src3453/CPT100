@@ -15,50 +15,62 @@ message(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})
 message(STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID})
 
 
-set(LUA_DIR ${PROJECT_SOURCE_DIR}/lib/lua/include)
-set(SOL_DIR ${PROJECT_SOURCE_DIR}/lib/sol)
-set(SDL2_DIR ${PROJECT_SOURCE_DIR}/lib/SDL2/x86_64-w64-mingw32/lib/cmake/SDL2)
-set(AnyRef_DIR ${PROJECT_SOURCE_DIR}/lib/AnyRef)
+set(LUA_DIR ${PROJECT_SOURCE_DIR}/lib/lua)
+set(SOL_DIR ${PROJECT_SOURCE_DIR}/lib/sol2)
+set(SDL2_DIR ${PROJECT_SOURCE_DIR}/lib/SDL2)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 add_compile_options(-std=c++17)
 endif()
 #add_compile_options(-O2)
 
-find_package(SDL2 CONFIG REQUIRED)
-link_directories(${PROJECT_SOURCE_DIR}/lib/lua)
+set(SOL_SRC)
+
+add_subdirectory(${SDL2_DIR})
+set(LUA_SRC
+    ${LUA_DIR}/lapi.c
+    ${LUA_DIR}/lcode.c
+    ${LUA_DIR}/lctype.c
+    ${LUA_DIR}/ldebug.c
+    ${LUA_DIR}/ldo.c
+    ${LUA_DIR}/ldump.c
+    ${LUA_DIR}/lfunc.c
+    ${LUA_DIR}/lgc.c
+    ${LUA_DIR}/llex.c
+    ${LUA_DIR}/lmem.c
+    ${LUA_DIR}/lobject.c
+    ${LUA_DIR}/lopcodes.c
+    ${LUA_DIR}/lparser.c
+    ${LUA_DIR}/lstate.c
+    ${LUA_DIR}/lstring.c
+    ${LUA_DIR}/ltable.c
+    ${LUA_DIR}/ltm.c
+    ${LUA_DIR}/lundump.c
+    ${LUA_DIR}/lvm.c
+    ${LUA_DIR}/lzio.c
+    ${LUA_DIR}/lauxlib.c
+    ${LUA_DIR}/lbaselib.c
+    ${LUA_DIR}/lcorolib.c
+    ${LUA_DIR}/ldblib.c
+    ${LUA_DIR}/liolib.c
+    ${LUA_DIR}/lmathlib.c
+    ${LUA_DIR}/loslib.c
+    ${LUA_DIR}/lstrlib.c
+    ${LUA_DIR}/ltablib.c
+    ${LUA_DIR}/lutf8lib.c
+    ${LUA_DIR}/loadlib.c
+    ${LUA_DIR}/linit.c
+)
+
+add_library(lua STATIC ${LUA_SRC})
+
+file(GLOB, SOL_SRC, ${SOL_DIR}/include/sol/*.hpp)
+
+add_library(sol STATIC ${SOL_SRC})
+
+
 #実行ファイルを作成
 add_executable(${EXECUTABLE_NAME} src/main.cpp)
 
 target_compile_features(${EXECUTABLE_NAME} PUBLIC cxx_std_17)
 
-target_include_directories(${EXECUTABLE_NAME} 
-PUBLIC ${SDL2_INCLUDE_DIRS}
-PUBLIC ${SOL_DIR}
-PUBLIC ${LUA_DIR}
-PUBLIC ${AnyRef_DIR}
-)
-
-# SDL2のライブラリをリンク
-target_link_libraries(${EXECUTABLE_NAME} 
-PUBLIC ${SDL2_LIBRARIES}
-PUBLIC lua54
-)
-
-
-# SDL2.dllを実行ファイルと同じディレクトリにコピー
-add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${PROJECT_SOURCE_DIR}/lib/SDL2/x86_64-w64-mingw32/bin/SDL2.dll"        # コピー元のファイルパス
-        $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>    # コピー先のディレクトリ
-)
-add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${PROJECT_SOURCE_DIR}/lib/libstdc++-6.dll"        # コピー元のファイルパス
-        $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>    # コピー先のディレクトリ
-)
-add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${PROJECT_SOURCE_DIR}/lib/lua/lua54.dll"        # コピー元のファイルパス
-        $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>    # コピー先のディレクトリ
-)
