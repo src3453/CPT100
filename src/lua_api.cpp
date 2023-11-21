@@ -8,28 +8,28 @@ int api_peek(int addr) {
     return ram_peek(ram, (int)addr).toInt();
 }
 void api_poke(int addr, int value) {
-    ram_poke(ram, (int)addr, (Byte)(value%256));
+    ram_poke(ram, (int)addr, (Byte)(int)(value%256));
 }
 int api_vpeek(int addr) {
     return vram_peek(vram, (int)addr).toInt();
 }
 void api_vpoke(int addr, int value) {
-    vram_poke(vram, (int)addr, (Byte)(value%256));
+    vram_poke(vram, (int)addr, (Byte)(int)(value%256));
 }
 void api_print(std::string text, int x, int y, int color) {
-    font.print((std::string)text, (int)x, (int)y, (Byte)color);
+    font.print((std::string)text, (int)x, (int)y, (Byte)(int)color);
 }
 void api_pix(int x, int y, int color) {
-    scr.pix((int)x, (int)y, (Byte)color);
+    scr.pix((int)x, (int)y, (Byte)(int)color);
 }
 void api_trace(std::string text) {
     printf(((std::string)text+"\n").c_str());
 }
 void api_cls(int color) {
-    scr.cls((Byte)color);
+    scr.cls((Byte)(int)color);
 }
 int api_rgb(int r, int g, int b) {
-    return scr.fromRGB(r,g,b).toInt();
+    return scr.fromRGB((int)r,(int)g,(int)b).toInt();
 }
 int api_time() {
     return clock()-timerStart;
@@ -42,10 +42,10 @@ int api_key(int keycode) {
     const Uint8* buf = SDL_GetKeyboardState(&length);
     const std::vector<Uint8> keystates(buf,buf+length);
     std::cout << buf;
-    return keystates.at(keycode);
+    return keystates.at((int)keycode);
 }
 std::string api_to_key_name(int keycode) {
-    return (std::string)SDL_GetKeyName(SDL_GetKeyFromScancode((SDL_Scancode)keycode));
+    return (std::string)SDL_GetKeyName(SDL_GetKeyFromScancode((SDL_Scancode)(int)keycode));
 }
 int api_from_key_name(std::string keyname) {
     return (int)SDL_GetScancodeFromName(keyname.c_str());
@@ -58,7 +58,7 @@ std::tuple<int, int, int> api_mouse() {
 }
 std::vector<int> api_peekarr(int addr, int block) {
     std::vector<int> out;
-    for (int i = addr; i < addr + block; i++)
+    for (int i = (int)addr; i < (int)addr + (int)block; i++)
     {
         out.push_back(ram_peek(ram, i).toInt());
     }
@@ -66,7 +66,7 @@ std::vector<int> api_peekarr(int addr, int block) {
 }
 std::vector<int> api_vpeekarr(int addr, int block) {
     std::vector<int> out;
-    for (int i = addr; i < addr + block; i++)
+    for (int i = (int)addr; i < (int)addr + (int)block; i++)
     {
         out.push_back(vram_peek(vram, i).toInt());
     }
@@ -74,25 +74,28 @@ std::vector<int> api_vpeekarr(int addr, int block) {
 }
 std::vector<int> api_pokearr(int addr, std::vector<int> vals) {
     std::vector<Byte> values;
-    for (int i = addr; i < addr + vals.size(); i++)
+    for (int i = (int)addr; i < (int)addr + vals.size(); i++)
     {
-        values.push_back((Byte)vals.at(i-addr));
+        values.push_back((Byte)(int)vals.at(i-(int)addr));
     }
-    ram_poke2array(ram,addr,values);
+    ram_poke2array(ram,(int)addr,values);
 }
 std::vector<int> api_vpokearr(int addr, std::vector<int> vals) {
     std::vector<Byte> values;
-    for (int i = addr; i < addr + vals.size(); i++)
+    for (int i = (int)addr; i < (int)addr + vals.size(); i++)
     {
-        values.push_back((Byte)vals.at(i-addr));
+        values.push_back((Byte)(int)vals.at(i-(int)addr));
     }
-    vram_poke2array(vram,addr,values);
+    vram_poke2array(vram,(int)addr,values);
 }
 void api_rectb(int x, int y, int w, int h, int color) {
-    scr.rectb((int)x, (int)y, (int)w, (int)h, (Byte)color);
+    scr.rectb((int)x, (int)y, (int)w, (int)h, (Byte)(int)color);
 }
 void api_line(int xs, int ys, int xe, int ye, int color) {
-    scr.line((int)xs, (int)ys, (int)xe, (int)ye, (Byte)color);
+    scr.line((int)xs, (int)ys, (int)xe, (int)ye, (Byte)(int)color);
+}
+void api_spr(int num, int x, int y, int w=1, int h=1) {
+    scr.spr((int)num,(int)x,(int)y,(int)w,(int)h);
 }
 
 void register_functions() {
@@ -118,6 +121,7 @@ void register_functions() {
     lua.set_function("vpokearr",api_vpokearr);
     lua.set_function("rectb",api_rectb);
     lua.set_function("line",api_line);
+    lua.set_function("spr",api_spr);
 }
 
 void init_lua(std::string LuaSrcPath) {
