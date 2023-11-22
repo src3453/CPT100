@@ -72,7 +72,7 @@ std::vector<int> api_vpeekarr(float addr, float block) {
     }
     return out;
 }
-std::vector<int> api_pokearr(float addr, std::vector<float> vals) {
+void api_pokearr(float addr, std::vector<float> vals) {
     std::vector<Byte> values;
     for (int i = (int)addr; i < (int)addr + vals.size(); i++)
     {
@@ -80,7 +80,7 @@ std::vector<int> api_pokearr(float addr, std::vector<float> vals) {
     }
     ram_poke2array(ram,(int)addr,values);
 }
-std::vector<int> api_vpokearr(float addr, std::vector<float> vals) {
+void api_vpokearr(float addr, std::vector<float> vals) {
     std::vector<Byte> values;
     for (int i = (int)addr; i < (int)addr + vals.size(); i++)
     {
@@ -98,7 +98,7 @@ void api_spr(float num, float x, float y, float w=1, float h=1) {
     scr.spr((int)num,(int)x,(int)y,(int)w,(int)h);
 }
 int api_showcur(float toggle=-1) {
-    SDL_ShowCursor((int)toggle);
+    return SDL_ShowCursor((int)toggle);
 }
 void api_startinput() {
     SDL_StartTextInput();
