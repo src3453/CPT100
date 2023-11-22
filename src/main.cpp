@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <iostream>
 #include <stdio.h>
 #include <SDL.h>
@@ -19,21 +21,24 @@ Font font(scr);
 
 #include "lua_api.cpp"
 
-void padTo(std::string &str, const size_t num, const char paddingChar = ' ')
+std::string padTo(std::string str, const size_t num, const char paddingChar = ' ')
 {
+    std::string out = str;
     if(num > str.size())
-        str.insert(0, num - str.size(), paddingChar);
+        out.insert(str.size(), num - str.size(), paddingChar);
+    return out;
 }
 
 void cpt_init(int argv, char** args) {
-
+    std::string version = "Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
+    version = padTo(version,44);
     std::string opening_msg = 
+    (std::string)
     "+------------------------------------------------+\n"
     "|  CPTTracker Fantasy Chiptune tracker           |\n"
-    "|  " padTo("Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS "(" VERSION_HASH ")",47) "  |\n"
+    "|  " padTo("Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS "(" VERSION_HASH ")",46) (std::string)"  |\n"
     "|  (c) src3453 2023 Released under MIT Licence.  |\n"
-    "+------------------------------------------------+\n"
-    ;
+    "+------------------------------------------------+\n";
     std::cout << opening_msg << std::endl;
     ram_boot(ram, vram);
     scr.init();

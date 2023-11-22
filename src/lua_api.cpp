@@ -154,7 +154,7 @@ void init_lua() {
     register_functions();
     timerStart = clock();
     #include "lua/tracker.lua.hpp"
-    lua.script(source.c_str());
+    lua.script(source);
     lua["BOOT"]();
 }
 

@@ -9,15 +9,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          fetch-depth: 0
       - name: Build
         run: |
           cd ${{ github.workspace }}
           mkdir build
-          cd build
-          ../build-scripts/doDebugBuild.bat
+          cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake --build build --parallel         
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: CPTTracker.exe
+          name: CPTTracker
           path: ${{ github.workspace }}/build/CPTTracker.exe
