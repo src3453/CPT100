@@ -18,5 +18,5 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: cpt100
-          path: ${{ github.workspace }}/build/cpt100.exe
+          name: CPTTracker
+          path: ${{ github.workspace }}/build/CPTTracker.exe
