@@ -18,7 +18,7 @@ end
 function PatternEditor()
     notes="C-C#D-D#E-F-F#G-G#A-A#B-"
     print("ROW NOTE INST EFFECT",16,4,rgb(192,255,192))
-    rectb(15,19+(cur1//4%16)*16,193,12,250)
+    rectb(15,19+(cur1//4%16)*16,185,12,250)
     rect(47+(cur1%4)*40,19+(cur1//4%16)*16,33,12,250)
     for y=0,15 do
         print(string.format("%02X",int(math.floor(cur1//64)*16+y)),16,20+y*16,rgb(192,192,255))
