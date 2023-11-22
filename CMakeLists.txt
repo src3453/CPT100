@@ -53,6 +53,13 @@ endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/src/config.h.in ${CMAKE_SOURCE_DIR}/src/config.h @ONLY)
 
+message("Configured version strings:")
+message("- VERSION_MAJOR: ${VERSION_MAJOR}")
+message("- VERSION_MINOR: ${VERSION_MINOR}")
+message("- VERSION_REVISION: ${VERSION_REVISION}")
+message("- VERSION_STATUS: ${VERSION_STATUS}")
+message("- VERSION_HASH: ${VERSION_HASH}")
+
 find_package(PythonInterp REQUIRED)
 if(PythonInterp_FOUND)
     message("Python3 found: ${PYTHON_EXECUTABLE}")
