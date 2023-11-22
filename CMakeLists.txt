@@ -53,16 +53,15 @@ endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/src/config.h.in ${CMAKE_SOURCE_DIR}/src/config.h @ONLY)
 
-find_program(PYTHON NAMES python3 python)
-if(PYTHON)
-message("Python3 found: ${PYTHON}")
-add_custom_command(
-OUTPUT output
-COMMAND ${PYTHON}
-ARGS ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${CMAKE_SOURCE_DIR}/src/lua/tracker.lua
-)
+find_package(PythonInterp REQUIRED)
+if(PythonInterp_FOUND)
+    message("Python3 found: ${PYTHON_EXECUTABLE}")
+    execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${CMAKE_SOURCE_DIR}/src/lua/tracker.lua
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 else()
-message("Python3 not found.")
+    message("Python3 not found.")
 endif()
 
 project(CPTTracker LANGUAGES C CXX)
