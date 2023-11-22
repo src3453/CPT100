@@ -9,3 +9,4 @@ for i in txt:
     res += "\""+re.sub('\"','\\\"',i)+"\\n\"\n"
 res = res[:-1] + ";"
 open(path+".hpp","w").write(res)
+print(f"Formatted {path}.")

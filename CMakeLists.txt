@@ -41,6 +41,18 @@ endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/src/config.h.in ${CMAKE_SOURCE_DIR}/src/config.h @ONLY)
 
+find_program(PYTHON NAMES python3 python)
+if(PYTHON)
+message("Python3 found: ${PYTHON}")
+add_custom_command(
+OUTPUT output
+COMMAND ${PYTHON}
+ARGS ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${CMAKE_SOURCE_DIR}/src/lua/tracker.lua
+)
+else()
+message("Python3 not found.")
+endif()
+
 project(CPTTracker LANGUAGES C CXX)
 set(EXECUTABLE_NAME CPTTracker)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
