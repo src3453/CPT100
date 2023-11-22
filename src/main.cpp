@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <iostream>
 #include <stdio.h>
 #include <SDL.h>
@@ -17,24 +19,30 @@ Font font(scr);
 
 #include "lua_api.cpp"
 
+std::string padTo(std::string str, const size_t num, const char paddingChar = ' ')
+{
+    std::string out = str;
+    if(num > str.size())
+        out.insert(str.size(), num - str.size(), paddingChar);
+    return out;
+}
 
 void cpt_init(int argv, char** args) {
-    if (argv == 1) {
-        throw "Please specify lua source path.";
-    }
+    std::string version = "Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
+    version = padTo(version,44);
     std::string opening_msg = 
+    (std::string)
     "+------------------------------------------------+\n"
-    "|  CPT100 High-spec Fantasy Console              |\n"
-    "|                                                |\n"
+    "|  CPTTracker Fantasy Chiptune tracker           |\n"
+    "|  " + version + (std::string)"  |\n"
     "|  (c) src3453 2023 Released under MIT Licence.  |\n"
-    "+------------------------------------------------+\n"
-    ;
+    "+------------------------------------------------+\n";
     std::cout << opening_msg << std::endl;
     ram_boot(ram, vram);
     scr.init();
     initSound();
 
-    init_lua((std::string)args[1]);
+    init_lua();
 
     
     //Set callback
