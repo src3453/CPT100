@@ -1,5 +1,6 @@
 #include "config.h"
 
+#include <emscripten.h>
 #include <iostream>
 #include <stdio.h>
 #include <SDL.h>
@@ -41,7 +42,6 @@ void cpt_init(int argv, char** args) {
     ram_boot(ram, vram);
     scr.init();
     initSound();
-
     init_lua();
 
     
@@ -104,8 +104,15 @@ int main(int argv, char** args) {
     SDL_Window* window;
     SDL_Renderer* renderer;
     window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
+    if (!window)
+    {
+        printf("SDL Window could not be initialized. SDL_Error: %s\n", SDL_GetError());
+    }
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    
+    if (!renderer)
+    {
+        printf("SDL Renderer could not be initialized. SDL_Error: %s\n", SDL_GetError());
+    }
     bool isRunning = true;
 
     cpt_init(argv,args);
