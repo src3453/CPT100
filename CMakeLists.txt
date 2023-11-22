@@ -1,6 +1,7 @@
 # CMakeのバージョンを設定
 cmake_minimum_required(VERSION 3.16)
 
+option(WASM_BUILD "Build wasm" OFF) 
 
 if(EMSCRIPTEN)
 # 共有ライブラリのサポートを有効にする
@@ -9,44 +10,6 @@ set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
 # 余計なフラグをつけないように全部リセット
 set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "")
 set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "")
-endif()
-
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 1)
-set(VERSION_STATUS "-alpha")
-
-find_package(Git)
-if(Git_FOUND)
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} status
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        ERROR_VARIABLE RESULT_STRING
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-
-
-    string(LENGTH "${RESULT_STRING}" LENGTH_RESULT_STRING)
-
-    if(${LENGTH_RESULT_STRING} EQUAL 0)
-
-        execute_process(
-            COMMAND ${GIT_EXECUTABLE} log -1 --format=%H
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-            OUTPUT_VARIABLE GIT_COMMIT_HASH
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-
-        string(SUBSTRING ${GIT_COMMIT_HASH} 0 7 GIT_COMMIT_HASH)
-        set(VERSION_HASH ${GIT_COMMIT_HASH} )
-
-        execute_process(
-            COMMAND ${GIT_EXECUTABLE} rev-list HEAD --count
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-            OUTPUT_VARIABLE VERSION_REVISION
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-
-    endif()
 endif()
 
 # プロジェクト名と使用する言語を設定

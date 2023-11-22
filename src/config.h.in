@@ -7,4 +7,6 @@
 #define VERSION_STATUS "@VERSION_STATUS@"
 #define VERSION_HASH "@VERSION_HASH@"
 
+#cmakedefine WASM_BUILD
+
 #endif

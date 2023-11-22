@@ -1,6 +1,8 @@
 #include "config.h"
 
+#ifdef WASM_BUILD
 #include <emscripten.h>
+#endif
 #include <iostream>
 #include <stdio.h>
 #include <SDL.h>
@@ -88,12 +90,7 @@ std::tuple<int,int,int,int> blitToMainWindow(SDL_Window *window, SDL_Texture *te
 uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
 SDL_Window* window;
 SDL_Renderer* renderer;
-SDL_Texture *texture = SDL_CreateTexture(
-        renderer,
-        SDL_PIXELFORMAT_RGB24,
-        SDL_TEXTUREACCESS_STREAMING,
-        CPT_SCREEN_WIDTH,
-        CPT_SCREEN_HEIGHT);
+SDL_Texture *texture;
 void MainTick() {
     Lua_MainLoop(); //60Hz
     scr.update(finalPixels);
@@ -105,11 +102,11 @@ void MainTick() {
 }
 
 
-void MainLoop(SDL_Window *window, SDL_Texture* texture, SDL_Renderer* renderer) {
+void MainLoop() {
     SDL_Event event;
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
-                isRunning = false;
+                exit(0);
             }
             if (event.type == SDL_KEYDOWN) {
                 Lua_OnKeyDown((int)SDL_GetScancodeFromKey(event.key.keysym.sym));
@@ -149,7 +146,7 @@ void MainLoop(SDL_Window *window, SDL_Texture* texture, SDL_Renderer* renderer) 
 
         SDL_RenderClear(renderer);
         
-        MainTick(window,texture,renderer);
+        MainTick();
 
         SDL_RenderPresent(renderer);
 }
@@ -170,6 +167,12 @@ int main(int argv, char** args) {
     {
         printf("SDL Renderer could not be initialized. SDL_Error: %s\n", SDL_GetError());
     }
+    texture = SDL_CreateTexture(
+        renderer,
+        SDL_PIXELFORMAT_RGB24,
+        SDL_TEXTUREACCESS_STREAMING,
+        CPT_SCREEN_WIDTH,
+        CPT_SCREEN_HEIGHT);
     bool isRunning = true;
 
     cpt_init(argv,args);
@@ -179,9 +182,14 @@ int main(int argv, char** args) {
             SDL_Log("Unable to create texture: %s", SDL_GetError());
             return 1;
         }
-
+    #ifdef WASM_BUILD
     emscripten_set_main_loop(MainLoop, 60, 1);
-
+    #endif
+    #ifndef WASM_BUILD
+    while(1) {
+        MainLoop();
+    }
+    #endif
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_CloseAudioDevice(dev);
