@@ -1,15 +1,11 @@
-#define VERSION_MAJOR "@VERSION_MAJOR@"
-#define VERSION_MINOR "@VERSION_MINOR@"
-#define VERSION_REVISION "@VERSION_REVISION@"
-#define VERSION_STATUS "@VERSION_STATUS@"
-#define VERSION_HASH "@VERSION_HASH@"
-
 #include <iostream>
 #include <stdio.h>
 #include <SDL.h>
 
 int mouseState = 0;
 std::string inputText = "";
+
+#include "config.h"
 
 #include "core/header/types.hpp"
 #include "core/header/spec.hpp"
@@ -23,13 +19,18 @@ Font font(scr);
 
 #include "lua_api.cpp"
 
+void padTo(std::string &str, const size_t num, const char paddingChar = ' ')
+{
+    if(num > str.size())
+        str.insert(0, num - str.size(), paddingChar);
+}
 
 void cpt_init(int argv, char** args) {
 
     std::string opening_msg = 
     "+------------------------------------------------+\n"
-    "|  CPT100 High-spec Fantasy Console              |\n"
-    "|                                                |\n"
+    "|  CPTTracker Fantasy Chiptune tracker           |\n"
+    "|  " padTo("Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS "(" VERSION_HASH ")",47) "  |\n"
     "|  (c) src3453 2023 Released under MIT Licence.  |\n"
     "+------------------------------------------------+\n"
     ;
