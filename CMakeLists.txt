@@ -1,42 +1,15 @@
 # CMakeのバージョンを設定
 cmake_minimum_required(VERSION 3.16)
 
-set(VERSION_MAJOR 0)
-set(VERSION_MINOR 1)
-set(VERSION_STATUS "-alpha")
+option(WASM_BUILD "Build wasm" OFF) 
 
-find_package(Git)
-if(Git_FOUND)
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} status
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        ERROR_VARIABLE RESULT_STRING
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
+if(EMSCRIPTEN)
+# 共有ライブラリのサポートを有効にする
+set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
 
-
-    string(LENGTH "${RESULT_STRING}" LENGTH_RESULT_STRING)
-
-    if(${LENGTH_RESULT_STRING} EQUAL 0)
-
-        execute_process(
-            COMMAND ${GIT_EXECUTABLE} log -1 --format=%H
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-            OUTPUT_VARIABLE GIT_COMMIT_HASH
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-
-        string(SUBSTRING ${GIT_COMMIT_HASH} 0 7 GIT_COMMIT_HASH)
-        set(VERSION_HASH ${GIT_COMMIT_HASH} )
-
-        execute_process(
-            COMMAND ${GIT_EXECUTABLE} rev-list HEAD --count
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-            OUTPUT_VARIABLE VERSION_REVISION
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-
-    endif()
+# 余計なフラグをつけないように全部リセット
+set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "")
+set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "")
 endif()
 
 # プロジェクト名と使用する言語を設定
@@ -80,16 +53,15 @@ endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/src/config.h.in ${CMAKE_SOURCE_DIR}/src/config.h @ONLY)
 
-find_program(PYTHON NAMES python3 python)
-if(PYTHON)
-message("Python3 found: ${PYTHON}")
-add_custom_command(
-OUTPUT output
-COMMAND ${PYTHON}
-ARGS ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${CMAKE_SOURCE_DIR}/src/lua/tracker.lua
-)
+find_package(PythonInterp REQUIRED)
+if(PythonInterp_FOUND)
+    message("Python3 found: ${PYTHON_EXECUTABLE}")
+    execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${CMAKE_SOURCE_DIR}/src/lua/tracker.lua
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 else()
-message("Python3 not found.")
+    message("Python3 not found.")
 endif()
 
 project(CPTTracker LANGUAGES C CXX)
@@ -97,10 +69,6 @@ set(EXECUTABLE_NAME CPTTracker)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
 if(WIN32)
 set(CMAKE_CXX_FLAGS "-mconsole")
-endif()
-
-if (EMSCRIPTEN)
-    set(CMAKE_EXECUTABLE_SUFFIX ".html") # デフォルトでは.js
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -185,6 +153,17 @@ set_target_properties(SDL2 PROPERTIES LINKER_LANGUAGE CXX)
 #実行ファイルを作成
 add_executable(${EXECUTABLE_NAME} ${CMAKE_PROJECT_DIR}src/main.cpp)
 
+if (EMSCRIPTEN)
+    set(CMAKE_EXECUTABLE_SUFFIX ".html") # デフォルトでは.js
+    target_link_options(${EXECUTABLE_NAME} PRIVATE
+    "SHELL:-s WASM=1"
+    "SHELL:-s ENVIRONMENT=web"
+    "SHELL:-s USE_SDL=2"
+    "SHELL:-s USE_SDL_IMAGE=2"
+    "SHELL:-s ALLOW_MEMORY_GROWTH=1")
+    add_compile_options(--debug)
+endif()
+
 target_compile_features(${EXECUTABLE_NAME} PRIVATE cxx_std_17)
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LUA_DIR})
@@ -194,3 +173,4 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_DIR}/include)
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SOL_DIR}/include)
 
 target_link_libraries(${EXECUTABLE_NAME} lua sol SDL2main SDL2-static)
+

@@ -48,7 +48,7 @@ function LOOP()
         PatternEditor()
     end
     rect(0,275,384,13,255)
-    print("Mode:"..modeLabel[mode+1],1,276,0)
+    print(""..modeLabel[mode+1],1,276,0)
     drawcur()
 end
 
