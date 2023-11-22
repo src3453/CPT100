@@ -36,7 +36,7 @@ void cpt_init(int argv, char** args) {
     (std::string)
     "+------------------------------------------------+\n"
     "|  CPTTracker Fantasy Chiptune tracker           |\n"
-    "|  " padTo("Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS "(" VERSION_HASH ")",46) (std::string)"  |\n"
+    "|  " + padTo("Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS "(" VERSION_HASH ")",44) + (std::string)"  |\n"
     "|  (c) src3453 2023 Released under MIT Licence.  |\n"
     "+------------------------------------------------+\n";
     std::cout << opening_msg << std::endl;
