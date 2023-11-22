@@ -8,6 +8,8 @@
 int mouseState = 0;
 std::string inputText = "";
 
+#include "config.h"
+
 #include "core/header/types.hpp"
 #include "core/header/spec.hpp"
 #include "core/ram.cpp"
@@ -35,7 +37,7 @@ void cpt_init(int argv, char** args) {
     (std::string)
     "+------------------------------------------------+\n"
     "|  CPTTracker Fantasy Chiptune tracker           |\n"
-    "|  " + version + (std::string)"  |\n"
+    "|  " + padTo("Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS "(" VERSION_HASH ")",44) + (std::string)"  |\n"
     "|  (c) src3453 2023 Released under MIT Licence.  |\n"
     "+------------------------------------------------+\n";
     std::cout << opening_msg << std::endl;
@@ -101,6 +103,7 @@ void MainTick() {
     ww = std::get<2>(winRect);
     wh = std::get<3>(winRect);
 }
+
 
 void MainLoop(SDL_Window *window, SDL_Texture* texture, SDL_Renderer* renderer) {
     SDL_Event event;
