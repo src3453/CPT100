@@ -15,7 +15,11 @@ function TrackEditor()
 end
 
 function PatternEditor()
-
+    notes="C-C#D-D#E-F-F#G-G#A-A#B-"
+    print("ROW NOTE INST EFFECT",16,4,rgb(192,255,192))
+    for y=0,15 do
+        print(string.format("%02X",int(math.floor(cur1//16)*16+y)),16,20+y*16,rgb(192,192,255))
+    end
 end
 
 function drawcur()
