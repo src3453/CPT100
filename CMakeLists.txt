@@ -1,5 +1,14 @@
 # CMakeのバージョンを設定
 cmake_minimum_required(VERSION 3.16)
+
+if(EMSCRIPTEN)
+# 共有ライブラリのサポートを有効にする
+set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
+
+# 余計なフラグをつけないように全部リセット
+set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "")
+set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "")
+endif()
 # プロジェクト名と使用する言語を設定
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 1)
@@ -147,7 +156,8 @@ if (EMSCRIPTEN)
     "SHELL:-s WASM=1"
     "SHELL:-s ENVIRONMENT=web"
     "SHELL:-s USE_SDL=2"
-    "SHELL:-s USE_SDL_IMAGE=2")
+    "SHELL:-s USE_SDL_IMAGE=2"
+    "SHELL:-s ALLOW_MEMORY_GROWTH=1")
     add_compile_options(--debug)
 endif()
 

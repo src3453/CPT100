@@ -84,8 +84,15 @@ std::tuple<int,int,int,int> blitToMainWindow(SDL_Window *window, SDL_Texture *te
 }
 
 uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
-
-void MainTick(SDL_Window *window, SDL_Texture* texture, SDL_Renderer* renderer) {
+SDL_Window* window;
+SDL_Renderer* renderer;
+SDL_Texture *texture = SDL_CreateTexture(
+        renderer,
+        SDL_PIXELFORMAT_RGB24,
+        SDL_TEXTUREACCESS_STREAMING,
+        CPT_SCREEN_WIDTH,
+        CPT_SCREEN_HEIGHT);
+void MainTick() {
     Lua_MainLoop(); //60Hz
     scr.update(finalPixels);
     std::tuple<int,int,int,int> winRect = blitToMainWindow(window, texture, renderer, finalPixels);
@@ -95,42 +102,8 @@ void MainTick(SDL_Window *window, SDL_Texture* texture, SDL_Renderer* renderer) 
     wh = std::get<3>(winRect);
 }
 
-
-int main(int argv, char** args) {
-    
-    
-    SDL_Init(SDL_INIT_EVERYTHING);
-    
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
-    if (!window)
-    {
-        printf("SDL Window could not be initialized. SDL_Error: %s\n", SDL_GetError());
-    }
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (!renderer)
-    {
-        printf("SDL Renderer could not be initialized. SDL_Error: %s\n", SDL_GetError());
-    }
-    bool isRunning = true;
-
-    cpt_init(argv,args);
-    
-    SDL_Texture *texture = SDL_CreateTexture(
-        renderer,
-        SDL_PIXELFORMAT_RGB24,
-        SDL_TEXTUREACCESS_STREAMING,
-        CPT_SCREEN_WIDTH,
-        CPT_SCREEN_HEIGHT);
-        if (texture == NULL) {
-            SDL_Log("Unable to create texture: %s", SDL_GetError());
-            return 1;
-        }
-
-    while (isRunning) {
-
-        SDL_Event event;
+void MainLoop(SDL_Window *window, SDL_Texture* texture, SDL_Renderer* renderer) {
+    SDL_Event event;
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
@@ -176,8 +149,35 @@ int main(int argv, char** args) {
         MainTick(window,texture,renderer);
 
         SDL_RenderPresent(renderer);
-        //SDL_Delay(1000/CALLBACK_FPS);
+}
+
+int main(int argv, char** args) {
+    
+    
+    SDL_Init(SDL_INIT_EVERYTHING);
+    
+    
+    window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
+    if (!window)
+    {
+        printf("SDL Window could not be initialized. SDL_Error: %s\n", SDL_GetError());
     }
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer)
+    {
+        printf("SDL Renderer could not be initialized. SDL_Error: %s\n", SDL_GetError());
+    }
+    bool isRunning = true;
+
+    cpt_init(argv,args);
+    
+    
+        if (texture == NULL) {
+            SDL_Log("Unable to create texture: %s", SDL_GetError());
+            return 1;
+        }
+
+    emscripten_set_main_loop(MainLoop, 60, 1);
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
