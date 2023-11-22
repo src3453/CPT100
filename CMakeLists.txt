@@ -59,6 +59,11 @@ set(EXECUTABLE_NAME CPTTracker)
 if(WIN32)
 set(CMAKE_CXX_FLAGS "-mconsole")
 endif()
+
+if (EMSCRIPTEN)
+    set(CMAKE_EXECUTABLE_SUFFIX ".html") # デフォルトでは.js
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 # Print processor and compiler 
