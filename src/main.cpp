@@ -39,7 +39,7 @@ void cpt_init(int argv, char** args) {
     (std::string)
     "+------------------------------------------------+\n"
     "|  CPTTracker Fantasy Chiptune tracker           |\n"
-    "|  " + padTo("Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS "(" VERSION_HASH ")",44) + (std::string)"  |\n"
+    "|  " + padTo("Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")",44) + (std::string)"  |\n"
     "|  (c) src3453 2023 Released under MIT Licence.  |\n"
     "+------------------------------------------------+\n";
     std::cout << opening_msg << std::endl;
@@ -157,7 +157,7 @@ int main(int argv, char** args) {
     SDL_Init(SDL_INIT_EVERYTHING);
     
     
-    window = SDL_CreateWindow("CPTTracker v" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS "(" VERSION_HASH ")", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("CPTTracker v" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
     if (!window)
     {
         printf("SDL Window could not be initialized. SDL_Error: %s\n", SDL_GetError());
