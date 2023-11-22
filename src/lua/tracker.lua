@@ -1,5 +1,6 @@
 mode=0
 cur0=0
+cur1=0
 
 function TrackEditor()
     print("FRM FM1 FM2 FM3 FM4 WT5 WT6",16,4,rgb(192,255,192))
@@ -17,8 +18,10 @@ end
 function PatternEditor()
     notes="C-C#D-D#E-F-F#G-G#A-A#B-"
     print("ROW NOTE INST EFFECT",16,4,rgb(192,255,192))
+    rectb(15,19+(cur1//4%16)*16,193,12,250)
+    rect(47+(cur1%4)*40,19+(cur1//4%16)*16,33,12,250)
     for y=0,15 do
-        print(string.format("%02X",int(math.floor(cur1//16)*16+y)),16,20+y*16,rgb(192,192,255))
+        print(string.format("%02X",int(math.floor(cur1//64)*16+y)),16,20+y*16,rgb(192,192,255))
     end
 end
 
@@ -71,24 +74,32 @@ function ONINPUT(c)
 end
 
 function ONKEYDOWN(k)
-    if to_key_name(k) == "Up" then
-        if mode == 0 then
+    if mode == 0 then
+        if to_key_name(k) == "Up" then
             cur0=(cur0-6)%1536
         end
-    end
-    if to_key_name(k) == "Down" then
-        if mode == 0 then
+        if to_key_name(k) == "Down" then
             cur0=(cur0+6)%1536
         end
-    end
-    if to_key_name(k) == "Left" then
-        if mode == 0 then
+        if to_key_name(k) == "Left" then
             cur0=(cur0-1)%1536
         end
-    end
-    if to_key_name(k) == "Right" then
-        if mode == 0 then
+        if to_key_name(k) == "Right" then
             cur0=(cur0+1)%1536
+        end
+    end
+    if mode == 1 then
+        if to_key_name(k) == "Up" then
+            cur1=(cur1-4)%256
+        end
+        if to_key_name(k) == "Down" then
+            cur1=(cur1+4)%256
+        end
+        if to_key_name(k) == "Left" then
+            cur1=(cur1-1)%256
+        end
+        if to_key_name(k) == "Right" then
+            cur1=(cur1+1)%256
         end
     end
     if to_key_name(k) == "Z" then
