@@ -8,3 +8,6 @@
 [submodule "lib/sol2"]
 	path = lib/sol2
 	url = https://github.com/ThePhD/sol2
+[submodule "lib/emsdk"]
+	path = lib/emsdk
+	url = https://github.com/emscripten-core/emsdk.git
