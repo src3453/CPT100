@@ -155,21 +155,27 @@ void init_lua() {
     timerStart = clock();
     #include "lua/tracker.lua.hpp"
     lua.script(source);
-    lua["BOOT"]();
+    sol::function func = lua["BOOT"];
+    if (func != sol::nil) func();
 }
 
 void Lua_OnKeyDown(int key) {
-    lua["ONKEYDOWN"](key);
+    sol::function func = lua["ONKEYDOWN"];
+    if (func != sol::nil) func(key);
+    
 }
 
 void Lua_OnKeyUp(int key) {
-    lua["ONKEYUP"](key);
+    sol::function func = lua["ONKEYUP"];
+    if (func != sol::nil) func(key);
 }
 
 void Lua_MainLoop() {
-    lua["LOOP"]();
+    sol::function func = lua["LOOP"];
+    if (func != sol::nil) func();
 }
 
 void Lua_OnTextInput(std::string inputChar) {
-    lua["ONINPUT"]((std::string)inputChar);
+    sol::function func = lua["ONINPUT"];
+    if (func != sol::nil) func((std::string)inputChar);
 }
