@@ -1,6 +1,16 @@
 # CMakeのバージョンを設定
 cmake_minimum_required(VERSION 3.16)
 
+
+if(EMSCRIPTEN)
+# 共有ライブラリのサポートを有効にする
+set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
+
+# 余計なフラグをつけないように全部リセット
+set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "")
+set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "")
+endif()
+
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 1)
 set(VERSION_STATUS "-alpha")
@@ -99,10 +109,6 @@ if(WIN32)
 set(CMAKE_CXX_FLAGS "-mconsole")
 endif()
 
-if (EMSCRIPTEN)
-    set(CMAKE_EXECUTABLE_SUFFIX ".html") # デフォルトでは.js
-endif()
-
 set(CMAKE_CXX_STANDARD 17)
 
 # Print processor and compiler 
@@ -185,6 +191,17 @@ set_target_properties(SDL2 PROPERTIES LINKER_LANGUAGE CXX)
 #実行ファイルを作成
 add_executable(${EXECUTABLE_NAME} ${CMAKE_PROJECT_DIR}src/main.cpp)
 
+if (EMSCRIPTEN)
+    set(CMAKE_EXECUTABLE_SUFFIX ".html") # デフォルトでは.js
+    target_link_options(${EXECUTABLE_NAME} PRIVATE
+    "SHELL:-s WASM=1"
+    "SHELL:-s ENVIRONMENT=web"
+    "SHELL:-s USE_SDL=2"
+    "SHELL:-s USE_SDL_IMAGE=2"
+    "SHELL:-s ALLOW_MEMORY_GROWTH=1")
+    add_compile_options(--debug)
+endif()
+
 target_compile_features(${EXECUTABLE_NAME} PRIVATE cxx_std_17)
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LUA_DIR})
@@ -194,3 +211,4 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_DIR}/include)
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SOL_DIR}/include)
 
 target_link_libraries(${EXECUTABLE_NAME} lua sol SDL2main SDL2-static)
+
