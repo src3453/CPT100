@@ -23,7 +23,7 @@ function PatternEditor()
     for y=0,15 do
         print(string.format("%02X",int(math.floor(cur1//64)*16+y)),16,20+y*16,rgb(192,192,255))
         note=peek(cur0*256+y*4)
-        print(string.sub(notes,note*2%24,note*2%24+2)..note//12,48,20+y*16,rgb(255,255,255))
+        print(string.sub(notes,note*2%24+1,note*2%24+2)..note//12,48,20+y*16,rgb(255,255,255))
     end
 end
 
@@ -65,14 +65,24 @@ end
 inputchar = ""
 
 function ONINPUT(c)
-    if tonumber(c,16) ~= nil then
-        inputchar = inputchar .. c
-        poke(int(0x0F000+cur0),tonumber(inputchar,16))
-    else
-
+    if mode == 0 then
+        if tonumber(c,16) ~= nil then
+            inputchar = inputchar .. c
+            poke(int(0x0F000+cur0),tonumber(inputchar,16))
+        else
+        end
+        if #inputchar == 2 then
+            inputchar = ""
+        end
     end
-    if #inputchar == 2 then
-        inputchar = ""
+    if mode == 1 then
+        if string.find("cdefgab",c) then
+            ind = string.find("cdefgab",c)
+            local notes = {0,2,4,5,7,9,11}
+            poke(cur0*256+cur1,peek(cur0*256+cur1)//12+notes[ind])
+        elseif string.find("0123456789",c) then  
+            
+        end
     end
 end
 
