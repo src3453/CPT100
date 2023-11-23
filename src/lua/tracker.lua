@@ -30,6 +30,8 @@ function PatternEditor()
         else
             print(string.sub(notes,note*2%24+1,note*2%24+2)..note//12,48,20+y*16,rgb(255,255,255))
         end
+        note=peek(cur0*256+y*4+1)
+        print(string.format("%02X",note),96,20+y*16,rgb(255,255,255))
     end
 end
 
