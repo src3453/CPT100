@@ -2,6 +2,7 @@ mode=0
 cur0=0
 cur1=0
 
+
 showcur(0)
 startinput()
 modeLabel = {
@@ -10,12 +11,14 @@ modeLabel = {
     "Insturument",
 }
 
+-- 音符を周波数に変換する関数
 function note2freq(n)
     concert_pitch = 440;
     f = concert_pitch * 2 ^ ((n - 69)/12)
     return int(f)
 end
 
+-- トラックエディターの描画関数
 function TrackEditor()
     print("FRM FM1 FM2 FM3 FM4 WT5 WT6",16,4,rgb(192,255,192))
     rectb(15,19+(cur0//6%16)*16,209,12,250)
@@ -29,6 +32,7 @@ function TrackEditor()
     --print("mouse:("..mx..","..my..","..mb..")",mx,my,255)
 end
 
+-- パターンエディターの描画関数
 function PatternEditor()
     notes="C-C#D-D#E-F-F#G-G#A-A#B-"
     print("ROW NOTE INST -EFFECT-",16,4,rgb(192,255,192))
@@ -54,9 +58,11 @@ function PatternEditor()
     end
 end
 
+-- インストゥルメントエディターの描画関数
 function InstEditor()
 end
 
+-- カーソルの描画関数
 function drawcur()
     mx,my,mb=mouse()
     for y=-1,1 do
@@ -72,6 +78,7 @@ function drawcur()
     
 end
 
+-- メインループ関数
 function LOOP()
     cls(0)
     rect(0,275,384,13,255)
@@ -92,6 +99,7 @@ end
 
 inputchar = ""
 
+-- 入力処理関数
 function ONINPUT(c)
     if mode == 0 then
         if tonumber(c,16) ~= nil then
@@ -117,6 +125,7 @@ function ONINPUT(c)
     end
 end
 
+-- キーダウン処理関数
 function ONKEYDOWN(k)
     if mode == 0 then
         if to_key_name(k) == "Up" then
