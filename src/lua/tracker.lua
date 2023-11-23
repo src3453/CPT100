@@ -23,7 +23,13 @@ function PatternEditor()
     for y=0,15 do
         print(string.format("%02X",int(math.floor(cur1//64)*16+y)),16,20+y*16,rgb(192,192,255))
         note=peek(cur0*256+y*4)
-        print(string.sub(notes,note*2%24+1,note*2%24+2)..note//12,48,20+y*16,rgb(255,255,255))
+        if note==0 then
+            print("...",48,20+y*16,rgb(255,255,255))
+        elseif note==255 then
+            print("===",rgb(255,255,255))
+        else
+            print(string.sub(notes,note*2%24+1,note*2%24+2)..note//12,48,20+y*16,rgb(255,255,255))
+        end
     end
 end
 
