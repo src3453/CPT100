@@ -82,12 +82,15 @@ function ONINPUT(c)
         end
     end
     if mode == 1 then
-        if string.find("cdefgab",c) then
-            ind = string.find("cdefgab",c)
-            local notes = {0,2,4,5,7,9,11}
-            poke(cur0*256+cur1,peek(cur0*256+cur1)//12+notes[ind])
-        elseif string.find("0123456789",c) then  
-            
+        if cur1%4 == 0 then
+            if string.find("cdefgab",c) then
+                ind = string.find("cdefgab",c)
+                local notes = {0,2,4,5,7,9,11}
+                poke(cur0*256+cur1,peek(cur0*256+cur1)//12+notes[ind])
+            elseif string.find("0123456789",c) then  
+                ind = string.find("0123456789",c)
+                poke(cur0*256+cur1,peek(cur0*256+cur1)%12+ind*12)
+            end
         end
     end
 end
