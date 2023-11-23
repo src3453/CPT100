@@ -88,7 +88,7 @@ function ONINPUT(c)
                 local notes = {0,2,4,5,7,9,11}
                 poke(cur0*256+cur1,peek(cur0*256+cur1)//12+notes[ind])
             elseif string.find("0123456789",c) then  
-                ind = string.find("0123456789",c)
+                ind = string.find("0123456789",c)-1
                 poke(cur0*256+cur1,peek(cur0*256+cur1)%12+ind*12)
             end
         end
