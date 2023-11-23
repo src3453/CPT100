@@ -46,6 +46,8 @@ function PatternEditor()
         end
         note=peek(cur0*256+y*4+1)
         print(string.format("%02X",note),88,20+y*16,rgb(255,255,255))
+        print(string.format("%02X",note),128,20+y*16,rgb(255,255,255))
+        print(string.format("%02X",note),168,20+y*16,rgb(255,255,255))
     end
 end
 
