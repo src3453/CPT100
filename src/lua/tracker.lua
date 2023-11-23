@@ -36,7 +36,7 @@ function PatternEditor()
     rect(47+(cur1%4)*40,19+(cur1//4%16)*16,33,12,250)
     for y=0,15 do
         print(string.format("%02X",int(math.floor(cur1//64)*16+y)),16,20+y*16,rgb(192,192,255))
-        note=peek(cur0*256+y*4)
+        note=peek(cur0*256+cur1//64*64+y*4)
         if note==0 then
             print("...",48,20+y*16,rgb(255,255,255))
         elseif note==255 then
@@ -44,9 +44,12 @@ function PatternEditor()
         else
             print(string.sub(notes,note*2%24+1,note*2%24+2)..note//12,48,20+y*16,rgb(255,255,255))
         end
-        note=peek(cur0*256+y*4+1)
+        note=peek(cur0*256+cur1//64*64+y*4+1)
         print(string.format("%02X",note),88,20+y*16,rgb(255,255,255))
-        print(string.format("%02X",note),128,20+y*16,rgb(255,255,255))
+        effects="....VOLU"
+        note=peek(cur0*256+cur1//64*64+y*4+2)
+        print(string.sub(effects,note*4+1,note*4+4),128,20+y*16,rgb(255,255,255))
+        note=peek(cur0*256+cur1//64*64+y*4+3)
         print(string.format("%02X",note),168,20+y*16,rgb(255,255,255))
     end
 end
