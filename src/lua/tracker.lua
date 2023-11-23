@@ -9,7 +9,7 @@ function TrackEditor()
     for y=0,15 do
         print(string.format("%02X",int(math.floor(cur0//96)*16+y)),16,20+y*16,rgb(192,192,255))
         for x=0,5 do
-            print(string.format("%02X",peek(int(0x0F000+math.floor(cur0//96)*96+y*6+x))),48+x*32,20+y*16,255)
+            print(string.format("%02X",peek(int(0x0F000+math.floor(cur0//96)*96+y*6+x))),48+x*32,20+y*16,rgb(255,255,255))
         end
     end
     --print("mouse:("..mx..","..my..","..mb..")",mx,my,255)
@@ -22,6 +22,8 @@ function PatternEditor()
     rect(47+(cur1%4)*40,19+(cur1//4%16)*16,33,12,250)
     for y=0,15 do
         print(string.format("%02X",int(math.floor(cur1//64)*16+y)),16,20+y*16,rgb(192,192,255))
+        note=peek(cur0*256+y*4)
+        print(string.sub(notes,note*2%24,note*2%24+2),48,20+y*16,rgb(255,255,255))
     end
 end
 
@@ -48,14 +50,15 @@ modeLabel = {
 }
 function LOOP()
     cls(0)
+    rect(0,275,384,13,255)
     if mode == 0 then
         TrackEditor()
+        print(modeLabel[mode+1],1,276,0)
     end
     if mode == 1 then
         PatternEditor()
-    end
-    rect(0,275,384,13,255)
-    print(""..modeLabel[mode+1],1,276,0)
+        print(modeLabel[mode+1].." "..string.format("%02X",cur0),1,276,0)
+    end  
     drawcur()
 end
 
@@ -100,6 +103,12 @@ function ONKEYDOWN(k)
         end
         if to_key_name(k) == "Right" then
             cur1=(cur1+1)%256
+        end
+        if to_key_name(k) == "S" then
+            cur0=(cur0-1)%128
+        end
+        if to_key_name(k) == "X" then
+            cur0=(cur0+1)%128
         end
     end
     if to_key_name(k) == "Z" then
