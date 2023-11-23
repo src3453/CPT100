@@ -83,8 +83,8 @@ function ONINPUT(c)
     end
     if mode == 1 then
         if cur1%4 == 0 then
-            if string.find("cdefgab",c) then
-                ind = string.find("cdefgab",c)
+            if string.find("qwertyu",c) then
+                ind = string.find("qwertyu",c)
                 local notes = {0,2,4,5,7,9,11}
                 poke(cur0*256+cur1,(peek(cur0*256+cur1)//12)*12+notes[ind])
             elseif string.find("0123456789",c) then  
