@@ -153,19 +153,25 @@ void register_functions() {
 }
 
 std::string opening_source = "_tick=0\n"
+"poke(0x10000,1)\n"
+"poke(0x10009,255)\n"
+"poke(0x10041,32)\n"
+"poke(0x10043,32)\n"
+"poke(0x10080,1)\n"
 "function LOOP()\n"
 "    cls(0)\n"
 "    print(\"CPT100 High-spec Fantasy Console\",0,0,rgb(0,255,0))\n"
 "    print(\"Version \".._CPT_VERSION,0,12,rgb(0,255,0))\n"
 "    print(\"(c)2023 src3453 MIT licence\",0,24,rgb(0,255,0))\n"
-"    print(\"Main  RAM \"..0x80000..\" Bytes OK\",0,36,255)\n"
-"    print(\"Video RAM \"..0x20000..\" Bytes OK\",0,48,255)\n"
+"    print(\"Main  RAM \".. 0x80000 ..\" Bytes OK\",0,36,255)\n"
+"    print(\"Video RAM \".. 0x20000 ..\" Bytes OK\",0,48,255)\n"
 "    print(\"Sound chip was successfully initialized\",0,60,255)\n"
 "    _tick=_tick+1\n"
 "    if _tick>=200 then _maincall() end\n"
+"    poke(0x10080,0)\n"
 "end\n";
 
-void init_lua(std::string LuaSrcPath) {
+void init_lua(std::string luasrcpath) {
     lua.open_libraries(
     sol::lib::base,
     sol::lib::package,
@@ -173,7 +179,8 @@ void init_lua(std::string LuaSrcPath) {
     sol::lib::string,
     sol::lib::table);
     register_functions();
-    lua["_CPT_VERSION"] = (std::string)"" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
+    lua["_CPT_VERSION"] = (std::string)VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
+    LuaSrcPath = luasrcpath;
     lua.script(opening_source);
 }
 

@@ -19,6 +19,7 @@ double twt[2] = {0,0};
 std::vector<int> gateTick = {0,0,0,0};
 std::vector<Byte> reg,regenvl,regwt;
 std::vector<EnvGenerator> envl;
+EnvGenerator _envl;
 double prev = 0;
 double sind(double theta) {
     return sin(theta*4*M_PI);
@@ -26,34 +27,33 @@ double sind(double theta) {
 
 double generateFMWave(double t1, double v1, double t2, double v2, double t3, double v3, double t4, double v4) {
 
-    double value = sind(t1+sind(t2+sind(t3+sind(t4)*v4)*v3)*v2)*v1*96*255;
+    double value = sind(t1+sind(t2+sind(t3+sind(t4)*v4)*v3)*v2)*v1*128*255;
     return value;
 
 }
 
-void applyEnveloveToRegisters(std::vector<EnvGenerator> *envl, std::vector<Byte> &reg, std::vector<Byte> &regenvl, int opNum, int ch, double dt) {
+void applyEnveloveToRegisters(std::vector<Byte> &reg, std::vector<Byte> &regenvl, int opNum, int ch, double dt) {
     ADSRConfig adsr;
-    EnvGenerator *envelove = &envl->at((size_t)(ch*4+opNum));
     adsr.attackTime = ((double)regenvl.at(ch*16+opNum*4+0).toInt())/64;
     adsr.decayTime = ((double)regenvl.at(ch*16+opNum*4+1).toInt())/64;
     adsr.sustainLevel = ((double)regenvl.at(ch*16+opNum*4+2).toInt())/255;
     adsr.releaseTime = ((double)regenvl.at(ch*16+opNum*4+3).toInt())/64;
     if (regenvl.at(64+ch).toInt() == 0 && gateTick.at(ch) == 1) {
-        envelove->noteOff();
+        envl.at((size_t)(ch*4+opNum)).noteOff();
         if(opNum == 3) {
             gateTick.at(ch)=0;
         }
         
     }
     if (regenvl.at(64+ch).toInt() == 1 && gateTick.at(ch) == 0) {
-        envelove->reset(EnvGenerator::State::Attack); 
+        envl.at((size_t)(ch*4+opNum)).reset(EnvGenerator::State::Attack); 
         if(opNum == 3) {
             gateTick.at(ch)=1;
         }
     }
-    //std::cout << envelove->currentLevel() << std::endl;
-    reg.at(ch*16+opNum+5) = (Byte)(envelove->currentLevel()*255*((double)(reg.at(ch*16+opNum+9).toInt())/255));
-    envelove->update(adsr,dt);
+    //std::cout << dt << std::endl; //envl.at((size_t)(ch*4+opNum)).m_elapsed
+    reg.at(ch*16+opNum+5) = (Byte)(envl.at((size_t)(ch*4+opNum)).currentLevel()*255*((double)(reg.at(ch*16+opNum+9).toInt())/255));
+    envl.at((size_t)(ch*4+opNum)).update(adsr,dt);
 }
 
 void AudioCallBack(void *unused, Uint8 *stream, int len)
@@ -65,14 +65,16 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
     reg = ram_peek2array(ram,0x10000,64);
     regenvl = ram_peek2array(ram,0x10040,68);
     regwt = ram_peek2array(ram,0x10084,76);
+    for(int ch=0; ch < 4; ch++) {
+        for (int opNum=0; opNum < 4; opNum++) {
+            applyEnveloveToRegisters(reg,regenvl,opNum,ch,((double)SOUND_CHUNK/(double)SAMPLE_FREQ));
+            ram_poke(ram,0x10000+16*ch+opNum+5,reg.at(16*ch+opNum+5));
+        }
+    }
     for (i = 0; i < framesize; i++) {
         double result = 0;
         for(int ch=0; ch < 4; ch++) {
             int addr = 16*ch;
-            for (int opNum=0; opNum < 4; opNum++) {
-                applyEnveloveToRegisters(&envl,reg,regenvl,opNum,ch,((double)clock()/1000-prev)/SOUND_CHUNK);
-                ram_poke(ram,0x10000+addr+opNum+5,reg.at(addr+opNum+5));
-            }
             double f1 = ((double)reg.at(addr+0).toInt()*256+reg.at(addr+1).toInt());
             t1[ch] = t1[ch] + (f1/SAMPLE_FREQ);
             double v1 = ((double)reg.at(addr+5).toInt())/255;
@@ -102,7 +104,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             } else {
                 int val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
             }
-            result += (double)(-128)*96*vt;
+            result += (double)(-128)*128*vt;
         }
         frames[i] = (Sint16)result;
     }
@@ -116,7 +118,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
 
 void initSound() {
     
-    envl.resize(16);
+    envl.resize(16,_envl);
     
     int count = SDL_GetNumAudioDevices(0);
     want.freq = SAMPLE_FREQ;
