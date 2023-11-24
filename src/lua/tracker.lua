@@ -50,7 +50,7 @@ function PatternEditor()
         end
         note=peek(cur0*256+cur1//64*64+y*4+1)
         print(string.format("%02X",note),88,20+y*16,rgb(255,255,255))
-        effects="....VOLU"
+        effects="....VOLUARPELEGASLIDDELYJUMP"
         note=peek(cur0*256+cur1//64*64+y*4+2)
         print(string.sub(effects,note*4+1,note*4+4),128,20+y*16,rgb(255,255,255))
         note=peek(cur0*256+cur1//64*64+y*4+3)
@@ -60,6 +60,19 @@ end
 
 -- インストゥルメントエディターの描画関数
 function InstEditor()
+    print(" F*  V   A   D   S   R",32,4,rgb(192,255,192))
+    rect(39+(cur1%4)*32,19+(cur1//4%16)*20,25,13,250)
+    for y=0,3 do
+        print("OP"..y+1,8,20+y*20,rgb(192,192,255))
+        for x=0,5 do
+            note=peek(0x0b000+cur0*24+y*6+x)
+            if x==0 and y==0 then
+                print("---",40+x*32,20+y*20,rgb(255,255,255))
+            else
+                print(string.format("%3d",note),40+x*32,20+y*20,rgb(255,255,255))
+            end
+        end
+    end
 end
 
 -- カーソルの描画関数
@@ -122,6 +135,16 @@ function ONINPUT(c)
                 poke(cur0*256+cur1,peek(cur0*256+cur1)%12+ind*12)
             end
         end
+        if cur1%4 == 1 then
+            if tonumber(c,16) ~= nil then
+                inputchar = inputchar .. c
+                poke(int(0x0F000+cur0),tonumber(inputchar,16))
+            else
+            end
+            if #inputchar == 2 then
+                inputchar = ""
+            end
+        end
     end
 end
 
@@ -159,6 +182,26 @@ function ONKEYDOWN(k)
         end
         if to_key_name(k) == "X" then
             cur0=(cur0+1)%256
+        end
+    end
+    if mode == 2 then
+        if to_key_name(k) == "Up" then
+            cur1=(cur1-6)%24
+        end
+        if to_key_name(k) == "Down" then
+            cur1=(cur1+6)%24
+        end
+        if to_key_name(k) == "Left" then
+            cur1=(cur1-1)%24
+        end
+        if to_key_name(k) == "Right" then
+            cur1=(cur1+1)%24
+        end
+        if to_key_name(k) == "S" then
+            cur0=(cur0-1)%64
+        end
+        if to_key_name(k) == "X" then
+            cur0=(cur0+1)%64
         end
     end
     if to_key_name(k) == "Z" then
