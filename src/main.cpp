@@ -94,6 +94,7 @@ SDL_Texture *texture = SDL_CreateTexture(
         SDL_TEXTUREACCESS_STREAMING,
         CPT_SCREEN_WIDTH,
         CPT_SCREEN_HEIGHT);
+
 void MainTick() {
     Lua_MainLoop(); //60Hz
     scr.update(finalPixels);
@@ -104,12 +105,11 @@ void MainTick() {
     wh = std::get<3>(winRect);
 }
 
-
-void MainLoop(SDL_Window *window, SDL_Texture* texture, SDL_Renderer* renderer) {
+void MainLoop() {
     SDL_Event event;
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
-                isRunning = false;
+                exit(0);
             }
             if (event.type == SDL_KEYDOWN) {
                 Lua_OnKeyDown((int)SDL_GetScancodeFromKey(event.key.keysym.sym));
@@ -149,7 +149,7 @@ void MainLoop(SDL_Window *window, SDL_Texture* texture, SDL_Renderer* renderer) 
 
         SDL_RenderClear(renderer);
         
-        MainTick(window,texture,renderer);
+        MainTick();
 
         SDL_RenderPresent(renderer);
 }
@@ -157,7 +157,7 @@ void MainLoop(SDL_Window *window, SDL_Texture* texture, SDL_Renderer* renderer) 
 int main(int argv, char** args) {
     
     
-    SDL_Init(SDL_INIT_EVERYTHING);
+    SDL_Init(SDL_INIT_VIDEO);
     
     
     window = SDL_CreateWindow("CPT100 High-spec Fantasy Console", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);

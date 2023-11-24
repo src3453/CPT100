@@ -194,12 +194,12 @@ add_executable(${EXECUTABLE_NAME} ${CMAKE_PROJECT_DIR}src/main.cpp)
 if (EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".html") # デフォルトでは.js
     target_link_options(${EXECUTABLE_NAME} PRIVATE
-    "SHELL:-s WASM=1"
+    "SHELL:-s WASM=0"
     "SHELL:-s ENVIRONMENT=web"
     "SHELL:-s USE_SDL=2"
     "SHELL:-s USE_SDL_IMAGE=2"
-    "SHELL:-s ALLOW_MEMORY_GROWTH=1")
-    add_compile_options(--debug)
+    "SHELL:-s ALLOW_MEMORY_GROWTH=1"
+    "SHELL:-s ASSERTIONS")
 endif()
 
 target_compile_features(${EXECUTABLE_NAME} PRIVATE cxx_std_17)
