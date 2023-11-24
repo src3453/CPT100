@@ -152,6 +152,19 @@ void register_functions() {
     lua.set_function("getinput",api_getinput);
 }
 
+std::string opening_source = "_tick=0\n"
+"function LOOP()\n"
+"    cls(0)\n"
+"    print(\"CPT100 High-spec Fantasy Console\",0,0,rgb(0,255,0))\n"
+"    print(\"Version \".._CPT_VERSION,0,12,rgb(0,255,0))\n"
+"    print(\"(c)2023 src3453 MIT licence\",0,24,rgb(0,255,0))\n"
+"    print(\"Main  RAM \"..0x80000..\" Bytes OK\",0,36,255)\n"
+"    print(\"Video RAM \"..0x20000..\" Bytes OK\",0,48,255)\n"
+"    print(\"Sound chip was successfully initialized\",0,60,255)\n"
+"    _tick=_tick+1\n"
+"    if _tick>=200 then _maincall() end\n"
+"end\n";
+
 void init_lua(std::string LuaSrcPath) {
     lua.open_libraries(
     sol::lib::base,
@@ -161,6 +174,7 @@ void init_lua(std::string LuaSrcPath) {
     sol::lib::table);
     register_functions();
     lua["_CPT_VERSION"] = (std::string)"" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
+    lua.script(opening_source);
 }
 
 void Lua_OnKeyDown(int key) {
