@@ -71,8 +71,9 @@ else()
     message("Python3 not found.")
 endif()
 
-project(CPTTracker LANGUAGES C CXX)
-set(EXECUTABLE_NAME CPTTracker)
+
+project(cpt100 LANGUAGES C CXX)
+set(EXECUTABLE_NAME cpt100)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
 if(WIN32)
 set(CMAKE_CXX_FLAGS "-mconsole")
@@ -166,8 +167,8 @@ if (EMSCRIPTEN)
     "SHELL:-s WASM=1"
     "SHELL:-s ENVIRONMENT=web"
     "SHELL:-s USE_SDL=2"
+    "SHELL:-s USE_SDL_IMAGE=2"
     "SHELL:-s ALLOW_MEMORY_GROWTH=1")
-    add_compile_options(--debug)
 endif()
 
 target_compile_features(${EXECUTABLE_NAME} PRIVATE cxx_std_17)

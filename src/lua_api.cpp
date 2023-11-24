@@ -153,8 +153,7 @@ void init_lua() {
     sol::lib::table);
     register_functions();
     timerStart = clock();
-    #include "lua/tracker.lua.hpp"
-    lua.script(source);
+    lua.script_file(LuaSrcPath);
     sol::function func = lua["BOOT"];
     if (func != sol::nil) func();
 }
