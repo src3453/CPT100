@@ -75,9 +75,6 @@ endif()
 project(cpt100 LANGUAGES C CXX)
 set(EXECUTABLE_NAME cpt100)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
-if(WIN32)
-set(CMAKE_CXX_FLAGS "-mconsole")
-endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -98,6 +95,7 @@ add_compile_options(-std=c++17)
 endif()
 #add_compile_options(-O2)
 if(MINGW)
+set(CMAKE_CXX_FLAGS "-mconsole")
 set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
 endif()
 

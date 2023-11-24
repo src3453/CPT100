@@ -3,7 +3,14 @@
 
 sol::state lua;
 int timerStart = 0;
+std::string LuaSrcPath = "";
 
+void api__maincall() {
+    timerStart = clock();
+    lua.script_file(LuaSrcPath);
+    sol::function func = lua["BOOT"];
+    if (func != sol::nil) func();
+}
 int api_peek(float addr) {
     return ram_peek(ram, (int)addr).toInt();
 }
@@ -114,6 +121,7 @@ std::string api_getinput() {
 }
 
 void register_functions() {
+    lua.set_function("_maincall",api__maincall);
     lua.set_function("peek",api_peek);
     lua.set_function("poke",api_poke);
     lua.set_function("vpeek",api_vpeek);
@@ -144,7 +152,26 @@ void register_functions() {
     lua.set_function("getinput",api_getinput);
 }
 
-void init_lua() {
+std::string opening_source = "_tick=0\n"
+"poke(0x10000,1)\n"
+"poke(0x10009,255)\n"
+"poke(0x10041,32)\n"
+"poke(0x10043,32)\n"
+"poke(0x10080,1)\n"
+"function LOOP()\n"
+"    cls(0)\n"
+"    print(\"CPT100 High-spec Fantasy Console\",0,0,rgb(0,255,0))\n"
+"    print(\"Version \".._CPT_VERSION,0,12,rgb(0,255,0))\n"
+"    print(\"(c)2023 src3453 MIT licence\",0,24,rgb(0,255,0))\n"
+"    print(\"Main  RAM \".. 0x80000 ..\" Bytes OK\",0,36,255)\n"
+"    print(\"Video RAM \".. 0x20000 ..\" Bytes OK\",0,48,255)\n"
+"    print(\"Sound chip was successfully initialized\",0,60,255)\n"
+"    _tick=_tick+1\n"
+"    if _tick>=200 then _maincall() end\n"
+"    poke(0x10080,0)\n"
+"end\n";
+
+void init_lua(std::string luasrcpath) {
     lua.open_libraries(
     sol::lib::base,
     sol::lib::package,
@@ -152,10 +179,9 @@ void init_lua() {
     sol::lib::string,
     sol::lib::table);
     register_functions();
-    timerStart = clock();
-    lua.script_file(LuaSrcPath);
-    sol::function func = lua["BOOT"];
-    if (func != sol::nil) func();
+    lua["_CPT_VERSION"] = (std::string)VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
+    LuaSrcPath = luasrcpath;
+    lua.script(opening_source);
 }
 
 void Lua_OnKeyDown(int key) {
