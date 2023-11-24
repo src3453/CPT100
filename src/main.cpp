@@ -10,8 +10,6 @@
 int mouseState = 0;
 std::string inputText = "";
 
-#include "config.h"
-
 #include "core/header/types.hpp"
 #include "core/header/spec.hpp"
 #include "core/ram.cpp"
