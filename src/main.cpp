@@ -183,7 +183,7 @@ int main(int argv, char** args) {
             return 1;
         }
     #ifdef WASM_BUILD
-    emscripten_set_main_loop(MainLoop, 60, 1);
+    emscripten_set_main_loop(MainLoop, 0, 1);
     #endif
     #ifndef WASM_BUILD
     while(1) {
