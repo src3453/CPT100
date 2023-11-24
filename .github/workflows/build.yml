@@ -14,11 +14,10 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           mkdir build
-          cd build
-          cmake -S .. -B . -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
-          mingw32-make -j4          
+          cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake --build build --parallel         
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: cpt100
-          path: ${{ github.workspace }}/build/cpt100.exe
+          name: CPTTracker
+          path: ${{ github.workspace }}/build/CPTTracker.exe
