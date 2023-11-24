@@ -87,6 +87,14 @@
         "ios": "cpp",
         "locale": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "strstream": "cpp",
+        "regex": "cpp",
+        "future": "cpp",
+        "shared_mutex": "cpp",
+        "valarray": "cpp",
+        "__std_stream": "cpp",
+        "barrier": "cpp",
+        "*.ipp": "cpp"
     }
 }

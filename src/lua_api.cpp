@@ -3,7 +3,14 @@
 
 sol::state lua;
 int timerStart = 0;
+std::string LuaSrcPath = "";
 
+void api__maincall() {
+    timerStart = clock();
+    lua.script_file(LuaSrcPath);
+    sol::function func = lua["BOOT"];
+    if (func != sol::nil) func();
+}
 int api_peek(float addr) {
     return ram_peek(ram, (int)addr).toInt();
 }
@@ -114,6 +121,7 @@ std::string api_getinput() {
 }
 
 void register_functions() {
+    lua.set_function("_maincall",api__maincall);
     lua.set_function("peek",api_peek);
     lua.set_function("poke",api_poke);
     lua.set_function("vpeek",api_vpeek);
@@ -144,7 +152,7 @@ void register_functions() {
     lua.set_function("getinput",api_getinput);
 }
 
-void init_lua() {
+void init_lua(std::string LuaSrcPath) {
     lua.open_libraries(
     sol::lib::base,
     sol::lib::package,
@@ -152,10 +160,7 @@ void init_lua() {
     sol::lib::string,
     sol::lib::table);
     register_functions();
-    timerStart = clock();
-    lua.script_file(LuaSrcPath);
-    sol::function func = lua["BOOT"];
-    if (func != sol::nil) func();
+    lua["_CPT_VERSION"] = (std::string)"" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
 }
 
 void Lua_OnKeyDown(int key) {
