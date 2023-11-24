@@ -5,9 +5,11 @@ sol::state lua;
 int timerStart = 0;
 std::string LuaSrcPath = "";
 
+#include "lua/tracker.lua.hpp"
+
 void api__maincall() {
     timerStart = clock();
-    lua.script_file(LuaSrcPath);
+    lua.script(source);
     sol::function func = lua["BOOT"];
     if (func != sol::nil) func();
 }
@@ -171,7 +173,7 @@ std::string opening_source = "_tick=0\n"
 "    poke(0x10080,0)\n"
 "end\n";
 
-void init_lua(std::string luasrcpath) {
+void init_lua() {
     lua.open_libraries(
     sol::lib::base,
     sol::lib::package,
@@ -180,7 +182,6 @@ void init_lua(std::string luasrcpath) {
     sol::lib::table);
     register_functions();
     lua["_CPT_VERSION"] = (std::string)VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
-    LuaSrcPath = luasrcpath;
     lua.script(opening_source);
 }
 
