@@ -61,7 +61,7 @@ end
 -- インストゥルメントエディターの描画関数
 function InstEditor()
     print(" F*  V   A   D   S   R",32,4,rgb(192,255,192))
-    rect(39+(cur1%4)*32,19+(cur1//4%16)*20,25,13,250)
+    rect(39+(cur1%6)*32,19+(cur1//6%6)*20,25,13,250)
     for y=0,3 do
         print("OP"..y+1,8,20+y*20,rgb(192,192,255))
         for x=0,5 do
@@ -69,10 +69,26 @@ function InstEditor()
             if x==0 and y==0 then
                 print("---",40+x*32,20+y*20,rgb(255,255,255))
             else
-                print(string.format("%3d",note),40+x*32,20+y*20,rgb(255,255,255))
+                print(string.format("%02X",note),40+x*32,20+y*20,rgb(255,255,255))
             end
         end
     end
+end
+
+function PlayInst(ch,num,freq,gate)
+    resetgate(ch)
+    for i=0,3 do
+        if i ~= 0 then
+            poke(0x10000+1+i+ch*16,peek(0x0b000+num*24+i*6+0))
+        end
+        poke(0x10000+9+i+ch*16,peek(0x0b000+num*24+i*6+1))
+        for j=0,3 do
+            poke(0x10040+i*4+j+ch*16,peek(0x0b000+num*24+i*6+2+j)) 
+        end
+    end
+    poke(0x10000+ch*16,freq//256)
+    poke(0x10001+ch*16,freq%256)
+    poke(0x10080+ch,gate)
 end
 
 -- カーソルの描画関数
@@ -95,6 +111,7 @@ end
 function LOOP()
     cls(0)
     rect(0,275,384,13,255)
+    
     if mode == 0 then
         TrackEditor()
         print(modeLabel[mode+1],1,276,0)
@@ -144,6 +161,16 @@ function ONINPUT(c)
             if #inputchar == 2 then
                 inputchar = ""
             end
+        end
+    end
+    if mode == 2 then
+        if tonumber(c,16) ~= nil then
+            inputchar = inputchar .. c
+            poke(int(0x0b000+cur0*24+cur1),tonumber(inputchar,16))
+        else
+        end
+        if #inputchar == 2 then
+            inputchar = ""
         end
     end
 end
@@ -202,6 +229,9 @@ function ONKEYDOWN(k)
         end
         if to_key_name(k) == "X" then
             cur0=(cur0+1)%64
+        end
+        if to_key_name(k) == "Space" then
+            PlayInst(ch,cur0,note2freq(60),1)
         end
     end
     if to_key_name(k) == "Z" then
