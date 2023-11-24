@@ -20,12 +20,14 @@ Font font(scr);
 
 void cpt_init(int argv, char** args) {
     if (argv == 1) {
-        throw "Please specify lua source path.";
+        throw (std::string)"Please specify lua source path.";
     }
+    std::string version = "Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
+    version = padTo(version,44);
     std::string opening_msg = 
     "+------------------------------------------------+\n"
     "|  CPT100 High-spec Fantasy Console              |\n"
-    "|                                                |\n"
+    "|  " + padTo("Version " VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")",44) + (std::string)"  |\n"
     "|  (c) src3453 2023 Released under MIT Licence.  |\n"
     "+------------------------------------------------+\n"
     ;
@@ -33,7 +35,7 @@ void cpt_init(int argv, char** args) {
     ram_boot(ram, vram);
     scr.init();
     initSound();
-
+    
     init_lua((std::string)args[1]);
 
     
@@ -161,9 +163,47 @@ int main(int argv, char** args) {
         MainTick(window,texture,renderer);
 
         SDL_RenderPresent(renderer);
-        //SDL_Delay(1000/CALLBACK_FPS);
-    }
+}
 
+int main(int argv, char** args) {
+    
+    
+    SDL_Init(SDL_INIT_EVERYTHING);
+    
+    
+    window = SDL_CreateWindow("CPT100 High-spec Fantasy Console v" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
+    if (!window)
+    {
+        printf("SDL Window could not be initialized. SDL_Error: %s\n", SDL_GetError());
+    }
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer)
+    {
+        printf("SDL Renderer could not be initialized. SDL_Error: %s\n", SDL_GetError());
+    }
+    texture = SDL_CreateTexture(
+        renderer,
+        SDL_PIXELFORMAT_RGB24,
+        SDL_TEXTUREACCESS_STREAMING,
+        CPT_SCREEN_WIDTH,
+        CPT_SCREEN_HEIGHT);
+    bool isRunning = true;
+
+    cpt_init(argv,args);
+    
+    
+        if (texture == NULL) {
+            SDL_Log("Unable to create texture: %s", SDL_GetError());
+            return 1;
+        }
+    #ifdef WASM_BUILD
+    emscripten_set_main_loop(MainLoop, 0, 1);
+    #endif
+    #ifndef WASM_BUILD
+    while(1) {
+        MainLoop();
+    }
+    #endif
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_CloseAudioDevice(dev);

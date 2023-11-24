@@ -1,7 +1,65 @@
 # CMakeのバージョンを設定
 cmake_minimum_required(VERSION 3.16)
 # プロジェクト名と使用する言語を設定
-project(CPT100 LANGUAGES C CXX)
+set(VERSION_MAJOR 0)
+set(VERSION_MINOR 1)
+set(VERSION_STATUS "-alpha")
+
+find_package(Git)
+if(Git_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} status
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        ERROR_VARIABLE RESULT_STRING
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+
+    string(LENGTH "${RESULT_STRING}" LENGTH_RESULT_STRING)
+
+    if(${LENGTH_RESULT_STRING} EQUAL 0)
+
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} log -1 --format=%H
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_COMMIT_HASH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        string(SUBSTRING ${GIT_COMMIT_HASH} 0 7 GIT_COMMIT_HASH)
+        set(VERSION_HASH ${GIT_COMMIT_HASH} )
+
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} rev-list HEAD --count
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE VERSION_REVISION
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+    endif()
+endif()
+
+configure_file(${CMAKE_SOURCE_DIR}/src/config.h.in ${CMAKE_SOURCE_DIR}/src/config.h @ONLY)
+
+message("Configured version strings:")
+message("- VERSION_MAJOR: ${VERSION_MAJOR}")
+message("- VERSION_MINOR: ${VERSION_MINOR}")
+message("- VERSION_REVISION: ${VERSION_REVISION}")
+message("- VERSION_STATUS: ${VERSION_STATUS}")
+message("- VERSION_HASH: ${VERSION_HASH}")
+
+find_package(PythonInterp REQUIRED)
+if(PythonInterp_FOUND)
+    message("Python3 found: ${PYTHON_EXECUTABLE}")
+    execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${CMAKE_SOURCE_DIR}/src/lua/tracker.lua
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+else()
+    message("Python3 not found.")
+endif()
+
+project(cpt100 LANGUAGES C CXX)
 set(EXECUTABLE_NAME cpt100)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
 if(WIN32)
@@ -84,6 +142,16 @@ set_target_properties(SDL2 PROPERTIES LINKER_LANGUAGE CXX)
 
 #実行ファイルを作成
 add_executable(${EXECUTABLE_NAME} ${CMAKE_PROJECT_DIR}src/main.cpp)
+
+if (EMSCRIPTEN)
+    set(CMAKE_EXECUTABLE_SUFFIX ".html") # デフォルトでは.js
+    target_link_options(${EXECUTABLE_NAME} PRIVATE
+    "SHELL:-s WASM=1"
+    "SHELL:-s ENVIRONMENT=web"
+    "SHELL:-s USE_SDL=2"
+    "SHELL:-s USE_SDL_IMAGE=2"
+    "SHELL:-s ALLOW_MEMORY_GROWTH=1")
+endif()
 
 target_compile_features(${EXECUTABLE_NAME} PRIVATE cxx_std_17)
 

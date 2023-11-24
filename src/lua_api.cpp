@@ -154,7 +154,8 @@ void init_lua(std::string LuaSrcPath) {
     register_functions();
     timerStart = clock();
     lua.script_file(LuaSrcPath);
-    lua["BOOT"]();
+    sol::function func = lua["BOOT"];
+    if (func != sol::nil) func();
 }
 
 void Lua_OnKeyDown(int key) {
