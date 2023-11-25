@@ -5,9 +5,11 @@ sol::state lua;
 int timerStart = 0;
 std::string LuaSrcPath = "";
 
+#include "lua/tracker.lua.hpp"
+
 void api__maincall() {
     timerStart = clock();
-    lua.script_file(LuaSrcPath);
+    lua.script(source);
     sol::function func = lua["BOOT"];
     if (func != sol::nil) func();
 }
@@ -157,7 +159,8 @@ void register_functions() {
 }
 
 std::string opening_source = "_tick=0\n"
-"poke(0x10000,1)\n"
+"poke(0x10000,1000//256)\n"
+"poke(0x10001,1000%256)\n"
 "poke(0x10009,255)\n"
 "poke(0x10041,32)\n"
 "poke(0x10043,32)\n"
@@ -167,15 +170,20 @@ std::string opening_source = "_tick=0\n"
 "    print(\"CPT100 High-spec Fantasy Console\",0,0,rgb(0,255,0))\n"
 "    print(\"Version \".._CPT_VERSION,0,12,rgb(0,255,0))\n"
 "    print(\"(c)2023 src3453 MIT licence\",0,24,rgb(0,255,0))\n"
-"    print(\"Main  RAM \".. 0x80000 ..\" Bytes OK\",0,36,255)\n"
-"    print(\"Video RAM \".. 0x20000 ..\" Bytes OK\",0,48,255)\n"
+"    print(\"Main  RAM \".. string.format(\"%6d\",math.min(_tick*4096,0x80000)) ..\" Bytes OK\",0,36,255)\n"
+"    print(\"Video RAM \".. string.format(\"%6d\",math.min(_tick*3072,0x20000)) ..\" Bytes OK\",0,48,255)\n"
 "    print(\"Sound chip was successfully initialized\",0,60,255)\n"
 "    _tick=_tick+1\n"
+"    if tick == 5 then\n"
+"        poke(0x10000,500//256)\n"
+"        poke(0x10001,500%256)\n"
+"        resetgate(0)\n"
+"    end\n"
 "    if _tick>=200 then _maincall() end\n"
 "    poke(0x10080,0)\n"
 "end\n";
 
-void init_lua(std::string luasrcpath) {
+void init_lua() {
     lua.open_libraries(
     sol::lib::base,
     sol::lib::package,
@@ -184,7 +192,6 @@ void init_lua(std::string luasrcpath) {
     sol::lib::table);
     register_functions();
     lua["_CPT_VERSION"] = (std::string)VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
-    LuaSrcPath = luasrcpath;
     lua.script(opening_source);
 }
 

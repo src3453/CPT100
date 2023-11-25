@@ -72,8 +72,8 @@ else()
 endif()
 
 
-project(cpt100 LANGUAGES C CXX)
-set(EXECUTABLE_NAME cpt100)
+project(cpttracker LANGUAGES C CXX)
+set(EXECUTABLE_NAME cpttracker)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
 
 set(CMAKE_CXX_STANDARD 17)
