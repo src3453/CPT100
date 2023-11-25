@@ -16,6 +16,10 @@ double t2[4] = {0,0,0,0};
 double t3[4] = {0,0,0,0};
 double t4[4] = {0,0,0,0};
 double twt[2] = {0,0};
+double in1[2]  = {0.0,0.0};
+double in2[2]  = {0.0,0.0};
+double out1[2] = {0.0,0.0};
+double out2[2] = {0.0,0.0};
 std::vector<int> gateTick = {0,0,0,0};
 std::vector<Byte> reg,regenvl,regwt;
 std::vector<EnvGenerator> envl;
@@ -59,7 +63,7 @@ void applyEnveloveToRegisters(std::vector<Byte> &reg, std::vector<Byte> &regenvl
 void AudioCallBack(void *unused, Uint8 *stream, int len)
 {
     int i;
-    Sint16 *frames = (Sint16 *) stream;
+    Uint16 *frames = (Uint16 *) stream;
     int framesize = len/2;
     //lua["SOUNDTICK"](); //120Hz
     reg = ram_peek2array(ram,0x10000,64);
@@ -86,30 +90,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             double v4 = ((double)reg.at(addr+8).toInt())/128;
             result += generateFMWave(t1[ch],v1,t2[ch],v2,t3[ch],v3,t4[ch],v4);
         }
-        result /= 6;
-        //frames[i] += (Sint16)result;
-    }
-    
-    for(int ch=0; ch<2; ch++) {
-        
-        double q = 2.0;
-        double omega = 2.0 * 3.14159265 * (((double)regwt.at(ch+8).toInt())*32) / SAMPLE_FREQ;
-        double alpha = sin(omega) / (2.0 * q);
-    
-        double a0 =  1.0 + alpha;
-        double a1 = -2.0 * cos(omega);
-        double a2 =  1.0 - alpha;
-        double b0 = (1.0 - cos(omega)) / 2.0;
-        double b1 =  1.0 - cos(omega);
-        double b2 = (1.0 - cos(omega)) / 2.0;
-    
-        double in1  = 0.0;
-        double in2  = 0.0;
-        double out1 = 0.0;
-        double out2 = 0.0;
-        
-        for (i = 0; i < framesize; i++) {
-            double result = 0;
+        for(int ch=0; ch<2; ch++) {
             int addr = 32*ch;
             double ft = ((double)regwt.at(ch*2+0).toInt()*256+regwt.at(ch*2+1).toInt());
             twt[ch] = twt[ch] + (ft/SAMPLE_FREQ)*32;
@@ -126,23 +107,26 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             } else {
                 val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
             }
-            result = (double)(val)*255*vt;
-            double _result = result;
-            //double out = b0/a0 * result + b1/a0 * in1 + b2/a0 * in2 - a1/a0 * out1 - a2/a0 * out2;
-
-            //in2  = in1;       
-            //in1  = _result;
-
-            //out2 = out1;    
-            //out1 = out; 
-            //result = out;
-            result /= 3;
-            //frames[i] += (Sint16)result;
+            val -= 128;
+            double omega = 2.0 * 3.14159265 * ((double)regwt.at(ch+8).toInt())*32+1 / SAMPLE_FREQ;
+            double alpha = sin(omega) / (2.0 * 2.0);
+            double a0 =  1.0 + alpha;
+            double a1 = -2.0 * cos(omega);
+            double a2 =  1.0 - alpha;
+            double b0 = (1.0 - cos(omega)) / 2.0;
+            double b1 =  1.0 - cos(omega);
+            double b2 = (1.0 - cos(omega)) / 2.0;
+            double output = b0/a0*(double)val+b1/a0*in1[ch]+b2/a0*in2[ch]-a1/a0*out1[ch]-a2/a0*out2[ch];
+		    in2[ch]  = in1[ch];
+		    in1[ch]  = val; 
+		    out2[ch] = out1[ch];     
+		    out1[ch] = output; 
+            result += (double)(output)*255*vt;
         }
-            
+        result /= 6;
+        frames[i] = (Sint16)result;
     }
-    
-    
+
     reg.clear();
     regenvl.clear();
     regwt.clear();
@@ -155,7 +139,7 @@ void initSound() {
     envl.resize(16,_envl);
     
     for (int addr=0x10090;addr<0x100d0;addr++) {
-        ram_poke(ram,addr,0x80);
+        ram_poke(ram,addr,0x00);
     }
 
     int count = SDL_GetNumAudioDevices(0);
