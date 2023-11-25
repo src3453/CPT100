@@ -1,7 +1,6 @@
 #include <math.h>
 
 #include "envelove.cpp"
-#include "DSPFilter.cpp"
 
 #define SAMPLE_FREQ 48000
 #define SOUND_CLOCK 400
