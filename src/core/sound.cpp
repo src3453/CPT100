@@ -89,9 +89,11 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
         result /= 6;
         frames[i] += (Sint16)result;
     }
+    /*
     for(int ch=0; ch<2; ch++) {
+        
         double q = 2.0;
-        double omega = 2.0 * 3.14159265 * ((double)regwt.at(ch+8).toInt())*32 / SAMPLE_FREQ;
+        double omega = 2.0 * 3.14159265 * (((double)regwt.at(ch+8).toInt())*32) / SAMPLE_FREQ;
         double alpha = sin(omega) / (2.0 * q);
     
         double a0 =  1.0 + alpha;
@@ -105,15 +107,16 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
         double in2  = 0.0;
         double out1 = 0.0;
         double out2 = 0.0;
-
+        
         for (i = 0; i < framesize; i++) {
             double result = 0;
             int addr = 32*ch;
             double ft = ((double)regwt.at(ch*2+0).toInt()*256+regwt.at(ch*2+1).toInt());
             twt[ch] = twt[ch] + (ft/SAMPLE_FREQ)*32;
             double vt = ((double)regwt.at(ch+4).toInt())/255;
+            int val = 0;
             if (regwt.at(ch+6).toInt() == 1) {
-                int val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
+                val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
                 if ((int)(twt[ch]*2)%2 == 0) {
                     val /= 16;
                 } else {
@@ -121,23 +124,24 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
                 }
                 val *= 16;
             } else {
-                int val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
+                val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
             }
-            result += (double)(-128)*255*vt;
+            result = (double)(val)*255*vt;
             double _result = result;
-            result = b0/a0 * result + b1/a0 * in1 + b2/a0 * in2 - a1/a0 * out1 - a2/a0 * out2;
+            //double out = b0/a0 * result + b1/a0 * in1 + b2/a0 * in2 - a1/a0 * out1 - a2/a0 * out2;
 
-            in2  = in1;       
-            in1  = _result;
+            //in2  = in1;       
+            //in1  = _result;
 
-            out2 = out1;    
-            out1 = result; 
+            //out2 = out1;    
+            //out1 = out; 
+            //result = out;
             result /= 3;
-            frames[i] += result;
+            frames[i] += (Sint16)result;
         }
             
     }
-
+    */
     
     reg.clear();
     regenvl.clear();
@@ -150,6 +154,10 @@ void initSound() {
     
     envl.resize(16,_envl);
     
+    for (int addr=0x10090;addr<0x100d0;addr++) {
+        ram_poke(ram,addr,0x80);
+    }
+
     int count = SDL_GetNumAudioDevices(0);
     want.freq = SAMPLE_FREQ;
     want.format = AUDIO_S16;
