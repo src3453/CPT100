@@ -3,7 +3,7 @@
 #include "envelove.cpp"
 
 #define SAMPLE_FREQ 48000
-#define SOUND_CLOCK 200
+#define SOUND_CLOCK 400
 #define SOUND_CHUNK SAMPLE_FREQ/SOUND_CLOCK
 
 SDL_AudioSpec want, have;
@@ -59,7 +59,7 @@ void applyEnveloveToRegisters(std::vector<Byte> &reg, std::vector<Byte> &regenvl
 void AudioCallBack(void *unused, Uint8 *stream, int len)
 {
     int i;
-    Uint16 *frames = (Uint16 *) stream;
+    Sint16 *frames = (Sint16 *) stream;
     int framesize = len/2;
     //lua["SOUNDTICK"](); //120Hz
     reg = ram_peek2array(ram,0x10000,64);
@@ -87,7 +87,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             result += generateFMWave(t1[ch],v1,t2[ch],v2,t3[ch],v3,t4[ch],v4);
         }
         result /= 6;
-        frames[i] += (Sint16)result;
+        //frames[i] += (Sint16)result;
     }
     
     for(int ch=0; ch<2; ch++) {
@@ -137,7 +137,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             //out1 = out; 
             //result = out;
             result /= 3;
-            frames[i] += (Sint16)result;
+            //frames[i] += (Sint16)result;
         }
             
     }
