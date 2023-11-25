@@ -3,7 +3,7 @@
 #include "envelove.cpp"
 
 #define SAMPLE_FREQ 48000
-#define SOUND_CLOCK 400
+#define SOUND_CLOCK 1000
 #define SOUND_CHUNK SAMPLE_FREQ/SOUND_CLOCK
 
 SDL_AudioSpec want, have;

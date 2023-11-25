@@ -131,11 +131,12 @@ function LOOP()
     end  
     drawcur()
     if playing == 1 then 
+        if time()%250 <= 30 then
             PlayInst(0,0,note2freq(peek(time()//250*4%256)),math.min(peek(time()//250*4%256),1))
             if mode == 1 then
                 cur1 = int(time()//250*4%256)
             end
-        
+        end
     end
 end
 

@@ -14,7 +14,7 @@ function LOOP()
     print("Video RAM ".. string.format("%6d",math.min(_tick*3072,0x20000)) .." Bytes OK",0,48,255)
     print("Sound chip was successfully initialized",0,60,255)
     _tick=_tick+1
-    if tick == 5 then
+    if _tick == 5 then
         poke(0x10000,500//256)
         poke(0x10001,500%256)
         resetgate(0)
