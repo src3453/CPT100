@@ -3,7 +3,7 @@
 #include "envelove.cpp"
 
 #define SAMPLE_FREQ 48000
-#define SOUND_CLOCK 400
+#define SOUND_CLOCK 200
 #define SOUND_CHUNK SAMPLE_FREQ/SOUND_CLOCK
 
 SDL_AudioSpec want, have;
@@ -89,7 +89,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
         result /= 6;
         frames[i] += (Sint16)result;
     }
-    /*
+    
     for(int ch=0; ch<2; ch++) {
         
         double q = 2.0;
@@ -141,7 +141,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
         }
             
     }
-    */
+    
     
     reg.clear();
     regenvl.clear();
