@@ -3,7 +3,7 @@
 #include "envelove.cpp"
 
 #define SAMPLE_FREQ 48000
-#define SOUND_CLOCK 120
+#define SOUND_CLOCK 400
 #define SOUND_CHUNK SAMPLE_FREQ/SOUND_CLOCK
 
 SDL_AudioSpec want, have;
@@ -22,12 +22,12 @@ std::vector<EnvGenerator> envl;
 EnvGenerator _envl;
 double prev = 0;
 double sind(double theta) {
-    return sin(theta*4*M_PI);
+    return sin(theta*2*M_PI);
 }
 
 double generateFMWave(double t1, double v1, double t2, double v2, double t3, double v3, double t4, double v4) {
 
-    double value = sind(t1+sind(t2+sind(t3+sind(t4)*v4)*v3)*v2)*v1*128*255;
+    double value = sind(t1+sind(t2+sind(t3+sind(t4)*v4)*v3)*v2)*v1*255*255;
     return value;
 
 }
@@ -84,7 +84,6 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             double v3 = ((double)reg.at(addr+7).toInt())/128;
             t4[ch] = t4[ch] + ((double)(f1*reg.at(addr+4).toInt()))/16/SAMPLE_FREQ;
             double v4 = ((double)reg.at(addr+8).toInt())/128;
-            result /= 2;
             result += generateFMWave(t1[ch],v1,t2[ch],v2,t3[ch],v3,t4[ch],v4);
         }
         for(int ch=0; ch<2; ch++) {
@@ -92,7 +91,6 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             double ft = ((double)regwt.at(ch*2+0).toInt()*256+regwt.at(ch*2+1).toInt());
             twt[ch] = twt[ch] + (ft/SAMPLE_FREQ)*32;
             double vt = ((double)regwt.at(ch+4).toInt())/255;
-            result /= 2; 
             if (regwt.at(ch+6).toInt() == 1) {
                 int val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
                 if ((int)(twt[ch]*2)%2 == 0) {
@@ -104,8 +102,9 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             } else {
                 int val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
             }
-            result += (double)(-128)*128*vt;
+            result += (double)(-128)*255*vt;
         }
+        result /= 6;
         frames[i] = (Sint16)result;
     }
 
@@ -130,4 +129,10 @@ void initSound() {
     dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
 
     SDL_PauseAudioDevice(dev, 0);
+}
+
+void resetGate(int ch) {
+    for (int i=0;i<4;i++) {
+        envl.at((size_t)(ch*4+i)).reset(EnvGenerator::State::Attack); 
+    }
 }
