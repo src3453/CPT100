@@ -40,7 +40,16 @@ function LOOP()
     --(^._.^) like a cat 
     poke(0x10000,2*mx//256)
     poke(0x10001,2*mx)
-    
+    if mb == 1 then 
+        newval=16-my/1.125/16
+        if (math.min(mx,383)/6)%2 <= 1 then
+            val=peek(0x10090+math.min(mx,383)//12)%16+int(newval)*16
+        else
+            val=(peek(0x10090+math.min(mx,383)//12)//16)*16+newval
+        end
+        poke(0x10090+math.min(mx,383)//12,val)
+    end
+    poke(0x1008c,mx)
 end
 
 for i=0,12,4 do
