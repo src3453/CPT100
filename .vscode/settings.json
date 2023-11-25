@@ -95,6 +95,7 @@
         "valarray": "cpp",
         "__std_stream": "cpp",
         "barrier": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "*.inc": "cpp"
     }
 }
