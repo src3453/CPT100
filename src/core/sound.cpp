@@ -22,7 +22,7 @@ std::vector<EnvGenerator> envl;
 EnvGenerator _envl;
 double prev = 0;
 double sind(double theta) {
-    return sin(theta*4*M_PI);
+    return sin(theta*2*M_PI);
 }
 
 double generateFMWave(double t1, double v1, double t2, double v2, double t3, double v3, double t4, double v4) {

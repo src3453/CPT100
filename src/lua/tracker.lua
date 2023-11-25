@@ -76,7 +76,7 @@ function InstEditor()
 end
 
 function PlayInst(ch,num,freq,gate)
-    resetgate(ch)
+    
     for i=0,3 do
         if i ~= 0 then
             poke(0x10000+1+i+ch*16,peek(0x0b000+num*24+i*6+0))
@@ -88,6 +88,9 @@ function PlayInst(ch,num,freq,gate)
     end
     poke(0x10000+ch*16,freq//256)
     poke(0x10001+ch*16,freq%256)
+    if gate==1 then
+        resetgate(ch)
+    end
     poke(0x10080+ch,gate)
 end
 
@@ -107,6 +110,8 @@ function drawcur()
     
 end
 
+playing=0
+
 -- メインループ関数
 function LOOP()
     cls(0)
@@ -125,6 +130,13 @@ function LOOP()
         print(modeLabel[mode+1].." "..string.format("%02X",cur0),1,276,0)
     end  
     drawcur()
+    if playing == 1 then 
+            PlayInst(0,0,note2freq(peek(time()//250*4%256)),math.min(peek(time()//250*4%256),1))
+            if mode == 1 then
+                cur1 = int(time()//250*4%256)
+            end
+        
+    end
 end
 
 inputchar = ""
@@ -210,6 +222,9 @@ function ONKEYDOWN(k)
         if to_key_name(k) == "X" then
             cur0=(cur0+1)%256
         end
+        if to_key_name(k) == "Space" then
+            playing=(playing+1)%2
+        end
     end
     if mode == 2 then
         if to_key_name(k) == "Up" then
@@ -231,7 +246,7 @@ function ONKEYDOWN(k)
             cur0=(cur0+1)%64
         end
         if to_key_name(k) == "Space" then
-            PlayInst(ch,cur0,note2freq(60),1)
+            PlayInst(0,cur0,note2freq(60),1)
         end
     end
     if to_key_name(k) == "Z" then
