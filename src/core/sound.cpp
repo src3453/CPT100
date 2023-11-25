@@ -16,6 +16,10 @@ double t2[4] = {0,0,0,0};
 double t3[4] = {0,0,0,0};
 double t4[4] = {0,0,0,0};
 double twt[2] = {0,0};
+double in1[2]  = {0.0,0.0};
+double in2[2]  = {0.0,0.0};
+double out1[2] = {0.0,0.0};
+double out2[2] = {0.0,0.0};
 std::vector<int> gateTick = {0,0,0,0};
 std::vector<Byte> reg,regenvl,regwt;
 std::vector<EnvGenerator> envl;
@@ -91,8 +95,9 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             double ft = ((double)regwt.at(ch*2+0).toInt()*256+regwt.at(ch*2+1).toInt());
             twt[ch] = twt[ch] + (ft/SAMPLE_FREQ)*32;
             double vt = ((double)regwt.at(ch+4).toInt())/255;
+            int val = 0;
             if (regwt.at(ch+6).toInt() == 1) {
-                int val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
+                val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
                 if ((int)(twt[ch]*2)%2 == 0) {
                     val /= 16;
                 } else {
@@ -100,9 +105,27 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
                 }
                 val *= 16;
             } else {
-                int val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
+                val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
             }
-            result += (double)(-128)*255*vt;
+            val -= 128;
+            double omega = 2.0 * 3.14159265 * ((double)regwt.at(ch+8).toInt()+1)*32 / SAMPLE_FREQ;
+            double alpha = sin(omega) / (2.0 * 2.0);
+            double a0 =  1.0 + alpha;
+            double a1 = -2.0 * cos(omega);
+            double a2 =  1.0 - alpha;
+            double b0 = (1.0 - cos(omega)) / 2.0;
+            double b1 =  1.0 - cos(omega);
+            double b2 = (1.0 - cos(omega)) / 2.0;
+            double output = b0/a0*(double)val+b1/a0*in1[ch]+b2/a0*in2[ch]-a1/a0*out1[ch]-a2/a0*out2[ch];
+		    in2[ch]  = in1[ch];
+		    in1[ch]  = val; 
+		    out2[ch] = out1[ch];     
+		    out1[ch] = output; 
+            if (regwt.at(ch+8).toInt() == 255) {
+                result += (double)(val)*255*vt;
+            } else {
+                result += (double)(output)*255*vt;
+            }
         }
         result /= 6;
         frames[i] = (Sint16)result;
@@ -119,6 +142,10 @@ void initSound() {
     
     envl.resize(16,_envl);
     
+    for (int addr=0x10090;addr<0x100d0;addr++) {
+        ram_poke(ram,addr,0x00);
+    }
+
     int count = SDL_GetNumAudioDevices(0);
     want.freq = SAMPLE_FREQ;
     want.format = AUDIO_S16;
