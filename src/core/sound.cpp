@@ -90,7 +90,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
         frames[i] += (Sint16)result;
     }
     for(int ch=0; ch<2; ch++) {
-
+        double q = 2.0;
         double omega = 2.0 * 3.14159265 * ((double)regwt.at(ch+8).toInt())*32 / SAMPLE_FREQ;
         double alpha = sin(omega) / (2.0 * q);
     
