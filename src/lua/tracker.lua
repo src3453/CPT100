@@ -471,4 +471,27 @@ function ONKEYDOWN(k)
         cur1=0
 
     end
+    if to_key_name(k) == "P" then
+        local songfile=io.open("song.cptm","w+")
+        local memdata={}
+        for i=0,0xffff do
+            memdata[i+1] = peek(i)
+        end
+        local data=""
+        for i=0,0xffff do
+            data=data..string.format("%02x",memdata[i+1])
+        end
+        songfile:write(data)
+        songfile:flush()
+        songfile:close()
+    end
+end
+
+function BOOT()
+    local songfile=io.open("song.cptm","r")
+    data=songfile:read("a")
+    for i=0,0xffff do
+        poke(i,tonumber(string.sub(data,i*2+1,i*2+2),16))
+    end
+    songfile:close()
 end
