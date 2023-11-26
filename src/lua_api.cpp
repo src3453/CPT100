@@ -189,7 +189,8 @@ void init_lua() {
     sol::lib::package,
     sol::lib::math,
     sol::lib::string,
-    sol::lib::table);
+    sol::lib::table,
+    sol::lib::io);
     register_functions();
     lua["_CPT_VERSION"] = (std::string)VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
     lua.script(opening_source);

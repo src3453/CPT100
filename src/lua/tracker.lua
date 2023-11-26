@@ -57,7 +57,11 @@ function PatternEditor()
             print(string.sub(notes,note*2%24+1,note*2%24+2)..note//12,48,20+y*16,rgb(255,255,255))
         end
         note=peek(cur0*256+cur1//64*64+y*4+1)
-        print(string.format("%02X",note),88,20+y*16,rgb(255,255,255))
+        if peek(cur0*256+cur1//64*64+y*4)==0 then
+            print("..",88,20+y*16,rgb(255,255,255))
+        else
+            print(string.format("%02X",note),88,20+y*16,rgb(255,255,255))
+        end
         effects="....VOLUARPELEGASLIDDELYJUMP"
         note=peek(cur0*256+cur1//64*64+y*4+2)
         print(string.sub(effects,note*4+1,note*4+4),128,20+y*16,rgb(255,255,255))
@@ -266,10 +270,10 @@ function ONKEYDOWN(k)
             cur1=(cur1+1)%256
         end
         if to_key_name(k) == "S" then
-            cur0=(cur0-1)%256
+            cur0=(cur0-1)%128
         end
         if to_key_name(k) == "X" then
-            cur0=(cur0+1)%256
+            cur0=(cur0+1)%128
         end
         if to_key_name(k) == "Space" then
             playing=(playing+1)%2
