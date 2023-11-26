@@ -127,7 +127,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
                 result += (double)(output)*255*vt;
             }
         }
-        result /= 6;
+        result /= 8;
         frames[i] = (Sint16)result;
     }
 
