@@ -249,10 +249,8 @@ function LOOP()
                 cur1 = int((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
             end
         end
-    else
-        poke(0x10080,0)
-        poke(0x10088,0)
     end
+
     if g_playing == 1 then 
         if (time()-g_lastplaytime)%((60/tempo/speed)*1000) <= 20 then
             for ch=0,3 do
@@ -291,7 +289,8 @@ function LOOP()
                 cur0 = int((time()-g_lastplaytime)//((60/tempo/speed)*1000)//64*6%1536)
             end
         end
-    else
+    end
+    if palaying==0 and g_playing==0 then
         for i=0,9 do
         poke(0x10080+i,0)
         end
