@@ -187,9 +187,9 @@ track_note={0,0}
 function LOOP()
     cls(0)
     rect(0,275,384,13,255)
-    tempo=peek(0x7fff)
+    tempo=peek(0xefff)
     if tempo==0 then
-        poke(0x7fff,120)
+        poke(0xefff,120)
     end
     if mode == 0 then
         TrackEditor()
@@ -379,6 +379,12 @@ function ONKEYDOWN(k)
         if to_key_name(k) == "Space" then
             g_playing=(g_playing+1)%2
             g_lastplaytime=time()
+        end
+        if to_key_name(k) == "S" then
+            poke(int(0x0EFFF),(peek(int(0x0EFFF))+1)%256)
+        end
+        if to_key_name(k) == "X" then
+            poke(int(0x0EFFF),math.max(1,peek(int(0x0EFFF))-1%256))
         end
     end
     if mode == 1 then
