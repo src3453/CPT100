@@ -194,7 +194,7 @@ function LOOP()
     if mode == 0 then
         TrackEditor()
         print(modeLabel[mode+1],1,276,0)
-        print("Tempo "..peek(0x7fff),304,276,0)
+        print("Tempo "..peek(0xefff),304,276,0)
     end
     if mode == 1 then
         PatternEditor()
