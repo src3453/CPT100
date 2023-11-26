@@ -1,5 +1,5 @@
 #include <math.h>
-
+#include <random>
 #include "envelove.cpp"
 
 #define SAMPLE_FREQ 48000
@@ -9,6 +9,9 @@
 SDL_AudioSpec want, have;
 SDL_AudioStream *stream = SDL_NewAudioStream(AUDIO_S16, 1, SAMPLE_FREQ, AUDIO_F32, 2, SAMPLE_FREQ);
 SDL_AudioDeviceID dev;
+
+std::random_device rd;
+std::mt19937 mt(rd());
 
 long long Total_time = 0;
 double t1[4] = {0,0,0,0};
@@ -22,6 +25,7 @@ double out1[2] = {0.0,0.0};
 double out2[2] = {0.0,0.0};
 std::vector<int> gateTick = {0,0,0,0};
 std::vector<Byte> reg,regenvl,regwt;
+std::vector<int> noise;
 std::vector<EnvGenerator> envl;
 EnvGenerator _envl;
 double prev = 0;
@@ -69,6 +73,10 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
     reg = ram_peek2array(ram,0x10000,64);
     regenvl = ram_peek2array(ram,0x10040,68);
     regwt = ram_peek2array(ram,0x10084,76);
+    for (i=0;i<1024;i++) {
+        noise[i] = mt()%2;
+    }
+    
     for(int ch=0; ch < 4; ch++) {
         for (int opNum=0; opNum < 4; opNum++) {
             applyEnveloveToRegisters(reg,regenvl,opNum,ch,((double)SOUND_CHUNK/(double)SAMPLE_FREQ));
@@ -104,8 +112,10 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
                     val %= 16;
                 }
                 val *= 16;
-            } else {
+            } else if(regwt.at(ch+6).toInt() == 0) {
                 val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
+            } else if(regwt.at(ch+6).toInt() == 2) {
+                val = noise.at(((int)twt[ch]%1024))*255;
             }
             val -= 128;
             double omega = 2.0 * 3.14159265 * ((double)regwt.at(ch+8).toInt()+1)*32 / SAMPLE_FREQ;
@@ -141,6 +151,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
 void initSound() {
     
     envl.resize(16,_envl);
+    noise.resize(1024,0);
     
     for (int addr=0x10090;addr<0x100d0;addr++) {
         ram_poke(ram,addr,0x00);
