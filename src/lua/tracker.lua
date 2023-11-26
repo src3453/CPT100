@@ -236,11 +236,11 @@ function LOOP()
             end
             if val == 255 then
                 pattern_tick=31
-            else
-                if pattern_tick<32 then
-                    PlayWTInst(0,val2,note2freq(pattern_note),pattern_tick)
-                end
             end
+            if pattern_tick<32 then
+                PlayWTInst(0,val2,note2freq(pattern_note),pattern_tick)
+            end
+
             if mode == 1 then
                 cur1 = int((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
             end
