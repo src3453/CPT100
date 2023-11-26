@@ -176,7 +176,7 @@ function drawcur()
 end
 
 playing=0
-tempo=120
+tempo=0
 speed=4
 lastplaytime=0
 currentoctave=4
@@ -187,10 +187,14 @@ track_note={0,0}
 function LOOP()
     cls(0)
     rect(0,275,384,13,255)
-    
+    tempo=peek(0x7fff)
+    if tempo==0 then
+        poke(0x7fff,120)
+    end
     if mode == 0 then
         TrackEditor()
         print(modeLabel[mode+1],1,276,0)
+        print("Tempo "..peek(0x7fff),304,276,0)
     end
     if mode == 1 then
         PatternEditor()
