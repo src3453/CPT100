@@ -182,6 +182,7 @@ lastplaytime=0
 currentoctave=4
 g_playing=0
 g_lastplaytime=0
+track_note={0,0}
 -- メインループ関数
 function LOOP()
     cls(0)
@@ -209,8 +210,8 @@ function LOOP()
         if play_target==0 then
             if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 20 then
                 local gate,val
-                val = peek((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
-                val2 = peek(((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
+                val = peek(cur0*256+(time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+                val2 = peek(cur0*256+((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
                     if val == 255 then
                         poke(0x10080,0)
                     else
@@ -224,12 +225,12 @@ function LOOP()
                 end
             end
         else 
-            local gate,val
-            val=peek((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+            local val
+            val=peek(cur0*256+(time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
             if val ~= 0 then
-            pattern_note = peek((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+            pattern_note = val
             end
-            val2 = peek(((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
+            val2 = peek(cur0*256+((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
             if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 20 and val ~= 0 and playing == 1 then
                 pattern_tick=0
             end
@@ -260,9 +261,27 @@ function LOOP()
                         PlayInst(ch,val2,note2freq(val),gate)
                     end
                 end
-                if mode == 0 then
-                    cur0 = int((time()-g_lastplaytime)//((60/tempo/speed)*1000)//64*6%1536)
+            end
+            for ch=0,1 do
+                local val
+                val=peek(peek(int(0x0F000+math.floor(cur0//6)*6+ch+5))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256))
+                if val ~= 0 then
+                    track_note[ch+1] = val
                 end
+                val2 = peek((peek(int(0x0F000+math.floor(cur0//6)*6+ch+5))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256)+1))
+                if (time()-g_lastplaytime)%((60/tempo/speed)*1000) <= 20 and val ~= 0 and g_playing == 1 then
+                    track_tick[ch+1]=0
+                end
+                if val == 255 then
+                    track_tick[ch+1]=31
+                else
+                    if track_tick<32 then
+                        PlayWTInst(0,val2,note2freq(track_note[ch+1]),track_tick[ch+1])
+                    end
+                end
+            end
+            if mode == 0 then
+                cur0 = int((time()-g_lastplaytime)//((60/tempo/speed)*1000)//64*6%1536)
             end
         end
     end
@@ -448,6 +467,8 @@ function ONKEYDOWN(k)
     if to_key_name(k) == "Z" then
 
         mode=(mode+1)%4
+        cur0=0
+        cur1=0
 
     end
 end
