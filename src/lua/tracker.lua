@@ -92,11 +92,18 @@ function WTInstEditor()
     val=peek(int(0x08000+cur0*128+cur1))
     print(string.sub("8Bit  4Bit  Noise ",val*6+1,val*6+6),48,4,rgb(255,255,255))
     mx,my,mb=mouse()
-    rect(8,24,256,64,248)
-
-    rect(8,104,256,64,248)
-
-    rect(8,184,256,64,248)
+    rect(8,34,256,64,248)
+    if mx>=8 and mx<=8+256 and my>=34 and my<=34+64 and mb==1 then
+    
+    end
+    rect(8,114,256,64,248)
+    if mx>=8 and mx<=8+256 and my>=114 and my<=114+64 and mb==1 then
+    
+    end
+    rect(8,194,256,64,248)
+    if mx>=8 and mx<=8+256 and my>=194 and my<=194+64 and mb==1 then
+    
+    end
 end
 
 function PlayInst(ch,num,freq,gate)
