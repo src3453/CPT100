@@ -8,7 +8,8 @@ startinput()
 modeLabel = {
     "Track",
     "Pattern",
-    "Insturument",
+    "FM Insturument",
+    "WT Insturument",
 }
 function table_contains(tbl, x)
     local found = false
@@ -39,7 +40,7 @@ function TrackEditor()
     end
     --print("mouse:("..mx..","..my..","..mb..")",mx,my,255)
 end
-
+currentinst=0
 -- パターンエディターの描画関数
 function PatternEditor()
     notes="C-C#D-D#E-F-F#G-G#A-A#B-"
@@ -62,7 +63,7 @@ function PatternEditor()
         else
             print(string.format("%02X",note),88,20+y*16,rgb(255,255,255))
         end
-        effects="....VOLUARPELEGASLIDDELYJUMP"
+        effects="....VOLUARPELEGASLIDDELYJUMPTEMP"
         note=peek(cur0*256+cur1//64*64+y*4+2)
         print(string.sub(effects,note*4+1,note*4+4),128,20+y*16,rgb(255,255,255))
         note=peek(cur0*256+cur1//64*64+y*4+3)
@@ -71,7 +72,7 @@ function PatternEditor()
 end
 
 -- インストゥルメントエディターの描画関数
-function InstEditor()
+function FMInstEditor()
     print(" F*  V   A   D   S   R",32,4,rgb(192,255,192))
     rect(39+(cur1%6)*32,19+(cur1//6%6)*20,25,13,250)
     for y=0,3 do
@@ -85,6 +86,17 @@ function InstEditor()
             end
         end
     end
+end
+function WTInstEditor()
+    print("Mode",8,4,rgb(192,255,192))
+    val=peek(int(0x08000+cur0*128+cur1))
+    print(string.sub("8Bit  4Bit  Noise ",val*6+1,val*6+6),48,4,rgb(255,255,255))
+    mx,my,mb=mouse()
+    rect(8,24,256,64,248)
+
+    rect(8,104,256,64,248)
+
+    rect(8,184,256,64,248)
 end
 
 function PlayInst(ch,num,freq,gate)
@@ -143,7 +155,11 @@ function LOOP()
         print(modeLabel[mode+1].." "..string.format("%02X",cur0),1,276,0)
     end
     if mode == 2 then
-        InstEditor()
+        FMInstEditor()
+        print(modeLabel[mode+1].." "..string.format("%02X",cur0),1,276,0)
+    end
+    if mode == 3 then
+        WTInstEditor()
         print(modeLabel[mode+1].." "..string.format("%02X",cur0),1,276,0)
     end  
     drawcur()
@@ -151,13 +167,13 @@ function LOOP()
         if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 20 then
             local gate,val
             val = peek((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
-            val2 = peek(1+(time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+            val2 = peek(((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
             if val == 255 then
                 poke(0x10080,0)
             else
                 gate = 1
                 if val ~= 0 then
-                    PlayInst(val2,0,note2freq(val),gate)
+                    PlayInst(0,val2,note2freq(val),gate)
                 end
             end
             if mode == 1 then
@@ -171,7 +187,7 @@ function LOOP()
                 local gate,val
                 
                 val = peek(peek(int(0x0F000+math.floor(cur0//6)*6+ch))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256))
-                val2 = peek(1+peek(int(0x0F000+math.floor(cur0//6)*6+ch))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256))
+                val2 = peek((peek(int(0x0F000+math.floor(cur0//6)*6+ch))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256)+1))
                 if val == 255 then
                     poke(0x10080+ch,0)
                 else
@@ -189,6 +205,7 @@ function LOOP()
 end
 
 inputchar = ""
+
 
 -- 入力処理関数
 function ONINPUT(c)
@@ -212,22 +229,35 @@ function ONINPUT(c)
                 currentoctave = string.find("0123456789",c)-1
                 poke(cur0*256+cur1,peek(cur0*256+cur1)%12+currentoctave*12)
             end
+            poke(int(cur0*256+cur1+1),currentinst)
         end
         if cur1%4 == 1 then
             if tonumber(c,16) ~= nil then
                 inputchar = inputchar .. c
-                poke(int(0x0F000+cur0),tonumber(inputchar,16))
+                poke(int(cur0*256+cur1),tonumber(inputchar,16))
             else
             end
+            currentinst = tonumber(inputchar,16)
             if #inputchar == 2 then
                 inputchar = ""
             end
+            
         end
     end
     if mode == 2 then
         if tonumber(c,16) ~= nil then
             inputchar = inputchar .. c
             poke(int(0x0b000+cur0*24+cur1),tonumber(inputchar,16))
+        else
+        end
+        if #inputchar == 2 then
+            inputchar = ""
+        end
+    end
+    if mode == 3 then
+        if tonumber(c,16) ~= nil then
+            inputchar = inputchar .. c
+            poke(int(0x08000+cur0*128+cur1),tonumber(inputchar,16))
         else
         end
         if #inputchar == 2 then
@@ -319,9 +349,32 @@ function ONKEYDOWN(k)
             PlayInst(0,cur0,note2freq(60),1)
         end
     end
+    if mode == 3 then
+        if to_key_name(k) == "Up" then
+            poke(int(0x08000+cur0*128+cur1),(peek(int(0x08000+cur0*128+cur1))+1)%256)
+        end
+        if to_key_name(k) == "Down" then
+            poke(int(0x08000+cur0*128+cur1),(peek(int(0x08000+cur0*128+cur1))-1)%256)
+        end
+        if to_key_name(k) == "Left" then
+            cur1=(cur1-1)%1
+        end
+        if to_key_name(k) == "Right" then
+            cur1=(cur1+1)%1
+        end
+        if to_key_name(k) == "S" then
+            cur0=(cur0-1)%64
+        end
+        if to_key_name(k) == "X" then
+            cur0=(cur0+1)%64
+        end
+        if to_key_name(k) == "Space" then
+            PlayInst(0,cur0,note2freq(60),1)
+        end
+    end
     if to_key_name(k) == "Z" then
 
-        mode=(mode+1)%3
+        mode=(mode+1)%4
 
     end
 end
