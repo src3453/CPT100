@@ -290,7 +290,7 @@ function LOOP()
             end
         end
     end
-    if palaying==0 and g_playing==0 then
+    if playing==0 and g_playing==0 then
         for i=0,9 do
         poke(0x10080+i,0)
         end
