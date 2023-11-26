@@ -109,7 +109,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             }
             val -= 128;
             double omega = 2.0 * 3.14159265 * ((double)regwt.at(ch+8).toInt()+1)*32 / SAMPLE_FREQ;
-            double alpha = sin(omega) / (2.0 * 2.0);
+            double alpha = sin(omega) / (2.0 * 1.5);
             double a0 =  1.0 + alpha;
             double a1 = -2.0 * cos(omega);
             double a2 =  1.0 - alpha;
@@ -121,7 +121,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
 		    in1[ch]  = val; 
 		    out2[ch] = out1[ch];     
 		    out1[ch] = output; 
-            if (regwt.at(ch+8).toInt() == 255) {
+            if (regwt.at(ch+8).toInt() == 0) {
                 result += (double)(val)*255*vt;
             } else {
                 result += (double)(output)*255*vt;

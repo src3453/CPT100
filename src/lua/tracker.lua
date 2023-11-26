@@ -1,7 +1,10 @@
 mode=0
 cur0=0
 cur1=0
-
+preview_tick = 0
+pattern_tick = 0
+track_tick = {0,0}
+play_target=0
 
 showcur(0)
 startinput()
@@ -69,6 +72,7 @@ function PatternEditor()
         note=peek(cur0*256+cur1//64*64+y*4+3)
         print(string.format("%02X",note),168,20+y*16,rgb(255,255,255))
     end
+    
 end
 
 -- インストゥルメントエディターの描画関数
@@ -92,17 +96,37 @@ function WTInstEditor()
     val=peek(int(0x08000+cur0*128+cur1))
     print(string.sub("8Bit  4Bit  Noise ",val*6+1,val*6+6),48,4,rgb(255,255,255))
     mx,my,mb=mouse()
-    rect(8,34,256,64,248)
-    if mx>=8 and mx<=8+256 and my>=34 and my<=34+64 and mb==1 then
-    
+    rect(8,34,256,68,248)
+    for i=0,30 do
+        val=peek(0x08020+cur0*128+i)//4
+        val2=peek(0x08020+cur0*128+i+1)//4
+        line(12+i*8,36+64-val,20+i*8,36+64-val2,255)
+    end
+    for i=0,31 do
+        val=peek(0x08020+cur0*128+i)//4
+        rect(10+i*8,34+64-val,4,4,rgb(255,64,64))
+        rectb(10+i*8,34+64-val,4,4,rgb(255,128,128))
+    end
+    if mx>8 and mx<8+256 and my>34 and my<34+64 and mb==1 then
+        poke(0x08020+cur0*128+math.min(mx-8,256)//8,((34+63)-my)*4)
     end
     rect(8,114,256,64,248)
-    if mx>=8 and mx<=8+256 and my>=114 and my<=114+64 and mb==1 then
-    
+    for i=0,31 do
+        val=peek(0x08040+cur0*128+i)//4
+        rect(8+i*8,114+64-val,8,val,rgb(64,255,64))
+        rectb(8+i*8,114+64-val,8,val,rgb(128,255,128))
+    end
+    if mx>8 and mx<8+256 and my>114 and my<114+64 and mb==1 then
+        poke(0x08040+cur0*128+math.min(mx-8,256)//8,((114+63)-my)*4)
     end
     rect(8,194,256,64,248)
-    if mx>=8 and mx<=8+256 and my>=194 and my<=194+64 and mb==1 then
-    
+    for i=0,31 do
+        val=peek(0x08060+cur0*128+i)//4
+        rect(8+i*8,194+64-val,8,val,rgb(64,64,255))
+        rectb(8+i*8,194+64-val,8,val,rgb(128,128,255))
+    end
+    if mx>8 and mx<8+256 and my>194 and my<194+64 and mb==1 then
+        poke(0x08060+cur0*128+math.min(mx-8,256)//8,((194+63)-my)*4)
     end
 end
 
@@ -123,6 +147,16 @@ function PlayInst(ch,num,freq,gate)
         resetgate(ch)
     end
     poke(0x10080+ch,gate)
+end
+function PlayWTInst(ch,num,freq,tick)
+    for i=0,31 do
+        poke(0x10090+i+ch*32,peek(0x08020+num*128+i))
+    end
+    poke(0x10084+ch*2,freq//256)
+    poke(0x10085+ch*2,freq%256)
+    poke(0x1008a+ch,peek(0x08000+num*128))
+    poke(0x10088+ch,peek(0x08040+num*128+math.min(tick,31)))
+    poke(0x1008c+ch,peek(0x08060+num*128+math.min(tick,31)))
 end
 
 -- カーソルの描画関数
@@ -160,6 +194,7 @@ function LOOP()
     if mode == 1 then
         PatternEditor()
         print(modeLabel[mode+1].." "..string.format("%02X",cur0),1,276,0)
+        print("Target "..string.sub("FMWT",play_target*2+1,play_target*2+2),304,276,0)
     end
     if mode == 2 then
         FMInstEditor()
@@ -171,16 +206,38 @@ function LOOP()
     end  
     drawcur()
     if playing == 1 then 
-        if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 20 then
+        if play_target==0 then
+            if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 20 then
+                local gate,val
+                val = peek((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+                val2 = peek(((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
+                    if val == 255 then
+                        poke(0x10080,0)
+                    else
+                        gate = 1
+                        if val ~= 0 then
+                            PlayInst(0,val2,note2freq(val),gate)
+                        end
+                    end
+                if mode == 1 then
+                    cur1 = int((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+                end
+            end
+        else 
             local gate,val
-            val = peek((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+            val=peek((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+            if val ~= 0 then
+            pattern_note = peek((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+            end
             val2 = peek(((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
+            if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 20 and val ~= 0 and playing == 1 then
+                pattern_tick=0
+            end
             if val == 255 then
-                poke(0x10080,0)
+                pattern_tick=31
             else
-                gate = 1
-                if val ~= 0 then
-                    PlayInst(0,val2,note2freq(val),gate)
+                if pattern_tick<32 then
+                    PlayWTInst(0,val2,note2freq(pattern_note),pattern_tick)
                 end
             end
             if mode == 1 then
@@ -209,6 +266,12 @@ function LOOP()
             end
         end
     end
+    if preview_tick<32 then
+        PlayWTInst(0,cur0,note2freq(60),preview_tick)
+    end
+    preview_tick=preview_tick+1
+    pattern_tick=pattern_tick+1
+    track_tick=track_tick+1
 end
 
 inputchar = ""
@@ -332,6 +395,9 @@ function ONKEYDOWN(k)
                 poke(cur0*256+cur1,peek(cur0*256+cur1)-1)
             end
         end
+        if to_key_name(k) == "C" then
+            play_target=(play_target+1)%2
+        end
     end
     if mode == 2 then
         if to_key_name(k) == "Up" then
@@ -358,10 +424,10 @@ function ONKEYDOWN(k)
     end
     if mode == 3 then
         if to_key_name(k) == "Up" then
-            poke(int(0x08000+cur0*128+cur1),(peek(int(0x08000+cur0*128+cur1))+1)%256)
+            poke(int(0x08000+cur0*128+cur1),(peek(int(0x08000+cur0*128+cur1))+1)%3)
         end
         if to_key_name(k) == "Down" then
-            poke(int(0x08000+cur0*128+cur1),(peek(int(0x08000+cur0*128+cur1))-1)%256)
+            poke(int(0x08000+cur0*128+cur1),(peek(int(0x08000+cur0*128+cur1))-1)%3)
         end
         if to_key_name(k) == "Left" then
             cur1=(cur1-1)%1
@@ -376,7 +442,7 @@ function ONKEYDOWN(k)
             cur0=(cur0+1)%64
         end
         if to_key_name(k) == "Space" then
-            PlayInst(0,cur0,note2freq(60),1)
+            preview_tick=0
         end
     end
     if to_key_name(k) == "Z" then
