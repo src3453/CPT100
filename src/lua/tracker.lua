@@ -264,19 +264,19 @@ function LOOP()
             end
             for ch=0,1 do
                 local val
-                val=peek(peek(int(0x0F000+math.floor(cur0//6)*6+ch+5))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256))
+                val=peek(peek(int(0x0F000+math.floor(cur0//6)*6+ch+4))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256))
                 if val ~= 0 then
-                    track_note[ch+1] = val
+                    track_note[ch+1]=val
                 end
-                val2 = peek((peek(int(0x0F000+math.floor(cur0//6)*6+ch+5))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256)+1))
+                val2=peek((peek(int(0x0F000+math.floor(cur0//6)*6+ch+4))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256)+1))
                 if (time()-g_lastplaytime)%((60/tempo/speed)*1000) <= 20 and val ~= 0 and g_playing == 1 then
                     track_tick[ch+1]=0
                 end
                 if val == 255 then
                     track_tick[ch+1]=31
                 else
-                    if track_tick<32 then
-                        PlayWTInst(0,val2,note2freq(track_note[ch+1]),track_tick[ch+1])
+                    if track_tick[ch+1]<32 then
+                        PlayWTInst(ch,val2,note2freq(track_note[ch+1]),track_tick[ch+1])
                     end
                 end
             end
@@ -290,7 +290,9 @@ function LOOP()
     end
     preview_tick=preview_tick+1
     pattern_tick=pattern_tick+1
-    track_tick=track_tick+1
+    for i=1,2 do
+        track_tick[i]=track_tick[i]+1
+    end
 end
 
 inputchar = ""
