@@ -165,6 +165,7 @@ void initSound() {
     
     envl.resize(16,_envl);
     noise.resize(1024,0);
+    pcm_ram.resize(2);
     
     for (int addr=0x10090;addr<0x100d0;addr++) {
         ram_poke(ram,addr,0x00);
