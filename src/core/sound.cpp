@@ -73,6 +73,14 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
     reg = ram_peek2array(ram,0x10000,64);
     regenvl = ram_peek2array(ram,0x10040,68);
     regwt = ram_peek2array(ram,0x10084,76);
+    int[2] pcm_addr,pcm_len={0,0};
+    std::vector<std::vector<Byte> > pcm_ram; 
+    for (int ch=0;ch<2;ch++) {
+        pcm_addr[ch] = regwt.at(44+32*ch+0).toInt()*65536+regwt.at(44+32*ch+1).toInt()*256+regwt.at(44+32*ch+2).toInt();
+        pcm_len[ch] = regwt.at(44+32*ch+4).toInt()*65536+regwt.at(44+32*ch+5).toInt()*256+regwt.at(44+32*ch+6).toInt();
+        pcm_ram[ch] = ram_peek2array(ram,pcm_addr[ch],pcm_len[ch]);
+    }
+    
     for (i=0;i<1024;i++) {
         noise[i] = mt()%2;
     }
@@ -116,6 +124,10 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
                 val = regwt.at(12+32*ch+((int)twt[ch]%32)).toInt();
             } else if(regwt.at(ch+6).toInt() == 2) {
                 val = noise.at(((int)twt[ch]%1024))*255;
+            } else if(regwt.at(ch+6).toInt() == 3) {
+                val = noise.at(((int)twt[ch]%64))*255;
+            } else if(regwt.at(ch+6).toInt() == 4) {
+                val = pcm_ram.at(min((int)twt[ch],pcm_len));
             }
             val -= 128;
             double omega = 2.0 * 3.14159265 * ((double)regwt.at(ch+8).toInt()+1)*32 / SAMPLE_FREQ;
@@ -173,4 +185,8 @@ void resetGate(int ch) {
     for (int i=0;i<4;i++) {
         envl.at((size_t)(ch*4+i)).reset(EnvGenerator::State::Attack); 
     }
+}
+
+void wtSync(int ch) {
+    twt[ch]=0;
 }

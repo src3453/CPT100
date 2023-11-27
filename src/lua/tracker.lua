@@ -101,7 +101,7 @@ end
 function WTInstEditor()
     print("Mode",8,4,rgb(192,255,192))
     val=peek(int(0x08000+cur0*128+cur1))
-    print(string.sub("8Bit  4Bit  Noise ",val*6+1,val*6+6),48,4,rgb(255,255,255))
+    print(string.sub("8Bit  4Bit  Noise PNoisePCM   ",val*6+1,val*6+6),48,4,rgb(255,255,255))
     mx,my,mb=mouse()
     rect(8,34,256,68,248)
     for i=0,30 do
@@ -499,10 +499,10 @@ function ONKEYDOWN(k)
     end
     if mode == 3 then
         if to_key_name(k) == "Up" then
-            poke(int(0x08000+cur0*128+cur1),(peek(int(0x08000+cur0*128+cur1))+1)%3)
+            poke(int(0x08000+cur0*128+cur1),(peek(int(0x08000+cur0*128+cur1))+1)%5)
         end
         if to_key_name(k) == "Down" then
-            poke(int(0x08000+cur0*128+cur1),(peek(int(0x08000+cur0*128+cur1))-1)%3)
+            poke(int(0x08000+cur0*128+cur1),(peek(int(0x08000+cur0*128+cur1))-1)%5)
         end
         if to_key_name(k) == "Left" then
             cur1=(cur1-1)%1
