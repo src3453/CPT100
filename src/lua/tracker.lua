@@ -38,7 +38,12 @@ function TrackEditor()
     for y=0,15 do
         print(string.format("%02X",int(math.floor(cur0//96)*16+y)),16,20+y*16,rgb(192,192,255))
         for x=0,5 do
-            print(string.format("%02X",peek(int(0x0F000+math.floor(cur0//96)*96+y*6+x))),48+x*32,20+y*16,rgb(255,255,255))
+            if peek(int(0x0F000+math.floor(cur0//96)*96+y*6+x))==0 then
+                txt=".."
+            else 
+                txt=string.format("%02X",peek(int(0x0F000+math.floor(cur0//96)*96+y*6+x)))
+            end
+            print(txt,48+x*32,20+y*16,rgb(255,255,255))
         end
     end
     --print("mouse:("..mx..","..my..","..mb..")",mx,my,255)
@@ -410,10 +415,10 @@ function ONKEYDOWN(k)
             cur1=(cur1+1)%256
         end
         if to_key_name(k) == "S" then
-            cur0=(cur0-1)%128
+            cur0=(cur0-1)%127+1
         end
         if to_key_name(k) == "X" then
-            cur0=(cur0+1)%128
+            cur0=(cur0+1)%127+1
         end
         if to_key_name(k) == "Space" then
             playing=(playing+1)%2
