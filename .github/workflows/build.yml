@@ -38,7 +38,7 @@ jobs:
           ./lib/emsdk/emsdk.bat install latest
           ./lib/emsdk/emsdk.bat activate latest
           mkdir build
-          emcmake cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_WASM=ON -DCMAKE_C_COMPILER=${{ github.workspace }}/lib/emsdk/upstream/emscripten/emcc.bat -DCMAKE_CXX_COMPILER=${{ github.workspace }}/lib/emsdk/upstream/emscripten/em++.bat
+          ${{ github.workspace }}/lib/emsdk/upstream/emscripten/emcmake cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_WASM=ON -DCMAKE_C_COMPILER=${{ github.workspace }}/lib/emsdk/upstream/emscripten/emcc.bat -DCMAKE_CXX_COMPILER=${{ github.workspace }}/lib/emsdk/upstream/emscripten/em++.bat
           cmake --build build --parallel         
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
