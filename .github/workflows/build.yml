@@ -22,7 +22,7 @@ jobs:
           name: CPTTracker
           path: ${{ github.workspace }}/build/CPTTracker.exe
   debug-build-for-wasm:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -35,10 +35,11 @@ jobs:
       - name: Build
         run: |
           cd ${{ github.workspace }}
-          ./lib/emsdk/emsdk.bat install latest
-          ./lib/emsdk/emsdk.bat activate latest
+          ./lib/emsdk/emsdk install latest
+          ./lib/emsdk/emsdk activate latest
+          source ./lib/emsdk/emsdk_env.sh
           mkdir build
-          cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_WASM=ON -DCMAKE_C_COMPILER=${{ github.workspace }}/lib/emsdk/upstream/emscripten/emcc.bat -DCMAKE_CXX_COMPILER=${{ github.workspace }}/lib/emsdk/upstream/emscripten/em++.bat
+          emcmake cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_WASM=ON -DCMAKE_C_COMPILER=${{ github.workspace }}/lib/emsdk/upstream/emscripten/emcc -DCMAKE_CXX_COMPILER=${{ github.workspace }}/lib/emsdk/upstream/emscripten/em++
           cmake --build build --parallel         
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
