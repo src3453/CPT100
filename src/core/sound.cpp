@@ -77,8 +77,8 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
     regenvl = ram_peek2array(ram,0x10040,68);
     regwt = ram_peek2array(ram,0x10084,76);
     for (int ch=0;ch<2;ch++) {
-        pcm_addr[ch] = regwt.at(44+32*ch+0).toInt()*65536+regwt.at(44+32*ch+1).toInt()*256+regwt.at(44+32*ch+2).toInt();
-        pcm_len[ch] = regwt.at(44+32*ch+4).toInt()*65536+regwt.at(44+32*ch+5).toInt()*256+regwt.at(44+32*ch+6).toInt();
+        pcm_addr[ch] = regwt.at(12+32*ch+0).toInt()*65536+regwt.at(12+32*ch+1).toInt()*256+regwt.at(12+32*ch+2).toInt();
+        pcm_len[ch] = regwt.at(12+32*ch+4).toInt()*65536+regwt.at(12+32*ch+5).toInt()*256+regwt.at(12+32*ch+6).toInt();
         pcm_ram[ch] = ram_peek2array(ram,pcm_addr[ch],pcm_len[ch]);
     }
     
