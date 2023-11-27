@@ -1,9 +1,9 @@
 mode=0
 cur0=0
 cur1=0
-preview_tick = 0
-pattern_tick = 0
-track_tick = {0,0}
+preview_tick = 32
+pattern_tick = 32
+track_tick = {32,32}
 play_target=0
 
 showcur(0)
@@ -39,7 +39,12 @@ function TrackEditor()
     for y=0,15 do
         print(string.format("%02X",int(math.floor(cur0//96)*16+y)),16,20+y*16,rgb(192,192,255))
         for x=0,5 do
-            print(string.format("%02X",peek(int(0x0F000+math.floor(cur0//96)*96+y*6+x))),48+x*32,20+y*16,rgb(255,255,255))
+            if peek(int(0x0F000+math.floor(cur0//96)*96+y*6+x))==0 then
+                txt=".."
+            else 
+                txt=string.format("%02X",peek(int(0x0F000+math.floor(cur0//96)*96+y*6+x)))
+            end
+            print(txt,48+x*32,20+y*16,rgb(255,255,255))
         end
     end
     --print("mouse:("..mx..","..my..","..mb..")",mx,my,255)
@@ -47,13 +52,14 @@ end
 currentinst=0
 -- パターンエディターの描画関数
 function PatternEditor()
+    _cur0=cur0+1
     notes="C-C#D-D#E-F-F#G-G#A-A#B-"
     print("ROW NOTE INST -EFFECT-",16,4,rgb(192,255,192))
     rectb(15,19+(cur1//4%16)*16,185,12,250)
     rect(47+(cur1%4)*40,19+(cur1//4%16)*16,33,12,250)
     for y=0,15 do
         print(string.format("%02X",int(math.floor(cur1//64)*16+y)),16,20+y*16,rgb(192,192,255))
-        note=peek(cur0*256+cur1//64*64+y*4)
+        note=peek(_cur0*256+cur1//64*64+y*4)
         if note==0 then
             print("...",48,20+y*16,rgb(255,255,255))
         elseif note==255 then
@@ -61,16 +67,16 @@ function PatternEditor()
         else
             print(string.sub(notes,note*2%24+1,note*2%24+2)..note//12,48,20+y*16,rgb(255,255,255))
         end
-        note=peek(cur0*256+cur1//64*64+y*4+1)
-        if peek(cur0*256+cur1//64*64+y*4)==0 then
+        note=peek(_cur0*256+cur1//64*64+y*4+1)
+        if peek(_cur0*256+cur1//64*64+y*4)==0 then
             print("..",88,20+y*16,rgb(255,255,255))
         else
             print(string.format("%02X",note),88,20+y*16,rgb(255,255,255))
         end
         effects="....VOLUARPELEGASLIDDELYJUMPTEMP"
-        note=peek(cur0*256+cur1//64*64+y*4+2)
+        note=peek(_cur0*256+cur1//64*64+y*4+2)
         print(string.sub(effects,note*4+1,note*4+4),128,20+y*16,rgb(255,255,255))
-        note=peek(cur0*256+cur1//64*64+y*4+3)
+        note=peek(_cur0*256+cur1//64*64+y*4+3)
         print(string.format("%02X",note),168,20+y*16,rgb(255,255,255))
     end
     
@@ -206,7 +212,7 @@ function LOOP()
     end
     if mode == 1 then
         PatternEditor()
-        print(modeLabel[mode+1].." "..string.format("%02X",cur0),1,276,0)
+        print(modeLabel[mode+1].." "..string.format("%02X",cur0+1),1,276,0)
         print("Target "..string.sub("FMWT",play_target*2+1,play_target*2+2),304,276,0)
     end
     if mode == 2 then
@@ -220,7 +226,7 @@ function LOOP()
     drawcur()
     if playing == 1 then 
         if play_target==0 then
-            if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 20 then
+            if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 30 then
                 local gate,val
                 val = peek(cur0*256+(time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
                 val2 = peek(cur0*256+((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
@@ -240,10 +246,10 @@ function LOOP()
             local val
             val=peek(cur0*256+(time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
             if val ~= 0 then
-            pattern_note = val
+                pattern_note = val
             end
             val2 = peek(cur0*256+((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
-            if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 20 and val ~= 0 and playing == 1 then
+            if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 30 and val ~= 0 and playing == 1 then
                 pattern_tick=0
             end
             if val == 255 then
@@ -260,12 +266,13 @@ function LOOP()
     end
 
     if g_playing == 1 then 
-        if (time()-g_lastplaytime)%((60/tempo/speed)*1000) <= 20 then
+        playcur = int((time()-g_lastplaytime)//((60/tempo/speed)*1000)//64*6%1536)
+        if (time()-g_lastplaytime)%((60/tempo/speed)*1000) <= 30 then
             for ch=0,3 do
                 local gate,val
                 
-                val = peek(peek(int(0x0F000+math.floor(cur0//6)*6+ch))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256))
-                val2 = peek((peek(int(0x0F000+math.floor(cur0//6)*6+ch))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256)+1))
+                val = peek(peek(int(0x0F000+math.floor(playcur//6)*6+ch))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256))
+                val2 = peek((peek(int(0x0F000+math.floor(playcur//6)*6+ch))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256)+1))
                 if val == 255 then
                     poke(0x10080+ch,0)
                 else
@@ -275,27 +282,28 @@ function LOOP()
                     end
                 end
             end
-            for ch=0,1 do
-                local val
-                val=peek(peek(int(0x0F000+math.floor(cur0//6)*6+ch+4))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256))
-                if val ~= 0 then
-                    track_note[ch+1]=val
-                end
-                val2=peek((peek(int(0x0F000+math.floor(cur0//6)*6+ch+4))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256)+1))
-                if (time()-g_lastplaytime)%((60/tempo/speed)*1000) <= 20 and val ~= 0 and g_playing == 1 then
-                    track_tick[ch+1]=0
-                end
-                if val == 255 then
-                    track_tick[ch+1]=31
-                end
-                if track_tick[ch+1]<32 then
-                    PlayWTInst(ch,val2,note2freq(track_note[ch+1]),track_tick[ch+1])
-                end
-                
+        end
+        for ch=0,1 do
+            local val
+            val=peek(peek(int(0x0F000+math.floor(playcur//6)*6+ch+4))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256))
+            if val ~= 0 then
+                track_note[ch+1]=val
             end
-            if mode == 0 then
-                cur0 = int((time()-g_lastplaytime)//((60/tempo/speed)*1000)//64*6%1536)
+            val2=peek((peek(int(0x0F000+math.floor(playcur//6)*6+ch+4))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256)+1))
+            if (time()-g_lastplaytime)%((60/tempo/speed)*1000) <= 30 and val ~= 0 and g_playing == 1 then
+                track_tick[ch+1]=0
             end
+            if val == 255 then
+                track_tick[ch+1]=31
+            end
+            ind = int(track_tick[ch+1])
+            if ind<32 then
+                PlayWTInst(ch,val2,note2freq(track_note[ch+1]),ind)
+            end
+            
+        end
+        if mode == 0 then
+            cur0 = playcur
         end
     end
     if playing==0 and g_playing==0 then
@@ -308,9 +316,10 @@ function LOOP()
     end
     preview_tick=preview_tick+1
     pattern_tick=pattern_tick+1
-    for i=1,2 do
-        track_tick[i]=track_tick[i]+1
-    end
+    track_tick[1]=track_tick[1]+1
+    track_tick[2]=track_tick[2]+1
+    --trace(""..pattern_tick)
+    --trace(track_tick[1].." "..track_tick[2])
 end
 
 inputchar = ""
@@ -415,10 +424,10 @@ function ONKEYDOWN(k)
             cur1=(cur1+1)%256
         end
         if to_key_name(k) == "S" then
-            cur0=(cur0-1)%128
+            cur0=(cur0-1)%127
         end
         if to_key_name(k) == "X" then
-            cur0=(cur0+1)%128
+            cur0=(cur0+1)%127
         end
         if to_key_name(k) == "Space" then
             playing=(playing+1)%2
