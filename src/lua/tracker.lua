@@ -170,9 +170,9 @@ function PlayWTInst(ch,num,freq,tick)
 end
 function RegisterView()
     for j=0,15 do
-        print(string.format("%05X",(ptr//256)*256+j*16),0,12+j*12,rgb(192,192,255))
+        print(string.format("%05X",(0x10000//256)*256+j*16),0,12+j*12,rgb(192,192,255))
         for i=0,15 do
-            print(string.format("%02X",peek((ptr//256)*256+j*16+i)),64+i*20,12+j*12,rgb(192,255,192))
+            print(string.format("%02X",peek((0x10000//256)*256+j*16+i)),64+i*20,12+j*12,rgb(192,255,192))
         end
     end
 end
