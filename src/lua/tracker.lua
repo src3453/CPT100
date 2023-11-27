@@ -164,6 +164,9 @@ function PlayWTInst(ch,num,freq,tick)
     poke(0x1008a+ch,peek(0x08000+num*128))
     poke(0x10088+ch,peek(0x08040+num*128+math.min(tick,31)))
     poke(0x1008c+ch,peek(0x08060+num*128+math.min(tick,31)))
+    if tick==0 then
+        wtsync(ch)
+    end
 end
 function RegisterView()
     for j=0,15 do
