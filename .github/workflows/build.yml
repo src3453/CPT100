@@ -21,3 +21,29 @@ jobs:
         with:
           name: CPTTracker
           path: ${{ github.workspace }}/build/CPTTracker.exe
+  debug-build-for-wasm:
+    runs-on: windows-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Build
+        run: |
+          cd ${{ github.workspace }}
+          ./lib/emsdk/emsdk.bat install latest
+          ./lib/emsdk/emsdk.bat activate latest
+          mkdir build
+          cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_WASM=ON
+          cmake --build build --parallel         
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: './build/'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
