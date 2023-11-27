@@ -13,6 +13,7 @@ modeLabel = {
     "Pattern",
     "FM Insturument",
     "WT Insturument",
+    "Sound Registers"
 }
 function table_contains(tbl, x)
     local found = false
@@ -164,7 +165,14 @@ function PlayWTInst(ch,num,freq,tick)
     poke(0x10088+ch,peek(0x08040+num*128+math.min(tick,31)))
     poke(0x1008c+ch,peek(0x08060+num*128+math.min(tick,31)))
 end
-
+function RegisterView()
+    for j=0,15 do
+        print(string.format("%05X",(ptr//256)*256+j*16),0,12+j*12,rgb(192,192,255))
+        for i=0,15 do
+            print(string.format("%02X",peek((ptr//256)*256+j*16+i)),64+i*20,12+j*12,rgb(192,255,192))
+        end
+    end
+end
 -- カーソルの描画関数
 function drawcur()
     mx,my,mb=mouse()
@@ -514,7 +522,7 @@ function ONKEYDOWN(k)
     end
     if to_key_name(k) == "Z" then
 
-        mode=(mode+1)%4
+        mode=(mode+1)%5
         cur0=0
         cur1=0
 
