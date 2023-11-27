@@ -23,8 +23,8 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: CPTTracker
-          path: ${{ github.workspace }}/build/CPTTracker.exe
+          name: cpttracker
+          path: ${{ github.workspace }}/build/cpttracker.exe
   debug-build-for-wasm:
     runs-on: ubuntu-latest
     environment:
@@ -52,3 +52,22 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
+  debug-build-for-linux-x64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Build
+        run: |
+          cd ${{ github.workspace }}
+          mkdir build
+          cmake -S . -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RelWithDebInfo
+          cmake --build build --parallel         
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cpttracker
+          path: ${{ github.workspace }}/build/cpttracker
