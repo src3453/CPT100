@@ -51,13 +51,14 @@ end
 currentinst=0
 -- パターンエディターの描画関数
 function PatternEditor()
+    _cur0=cur0+1
     notes="C-C#D-D#E-F-F#G-G#A-A#B-"
     print("ROW NOTE INST -EFFECT-",16,4,rgb(192,255,192))
     rectb(15,19+(cur1//4%16)*16,185,12,250)
     rect(47+(cur1%4)*40,19+(cur1//4%16)*16,33,12,250)
     for y=0,15 do
         print(string.format("%02X",int(math.floor(cur1//64)*16+y)),16,20+y*16,rgb(192,192,255))
-        note=peek(cur0*256+cur1//64*64+y*4)
+        note=peek(_cur0*256+cur1//64*64+y*4)
         if note==0 then
             print("...",48,20+y*16,rgb(255,255,255))
         elseif note==255 then
@@ -65,16 +66,16 @@ function PatternEditor()
         else
             print(string.sub(notes,note*2%24+1,note*2%24+2)..note//12,48,20+y*16,rgb(255,255,255))
         end
-        note=peek(cur0*256+cur1//64*64+y*4+1)
-        if peek(cur0*256+cur1//64*64+y*4)==0 then
+        note=peek(_cur0*256+cur1//64*64+y*4+1)
+        if peek(_cur0*256+cur1//64*64+y*4)==0 then
             print("..",88,20+y*16,rgb(255,255,255))
         else
             print(string.format("%02X",note),88,20+y*16,rgb(255,255,255))
         end
         effects="....VOLUARPELEGASLIDDELYJUMPTEMP"
-        note=peek(cur0*256+cur1//64*64+y*4+2)
+        note=peek(_cur0*256+cur1//64*64+y*4+2)
         print(string.sub(effects,note*4+1,note*4+4),128,20+y*16,rgb(255,255,255))
-        note=peek(cur0*256+cur1//64*64+y*4+3)
+        note=peek(_cur0*256+cur1//64*64+y*4+3)
         print(string.format("%02X",note),168,20+y*16,rgb(255,255,255))
     end
     
@@ -203,7 +204,7 @@ function LOOP()
     end
     if mode == 1 then
         PatternEditor()
-        print(modeLabel[mode+1].." "..string.format("%02X",cur0),1,276,0)
+        print(modeLabel[mode+1].." "..string.format("%02X",cur0+1),1,276,0)
         print("Target "..string.sub("FMWT",play_target*2+1,play_target*2+2),304,276,0)
     end
     if mode == 2 then
@@ -415,10 +416,10 @@ function ONKEYDOWN(k)
             cur1=(cur1+1)%256
         end
         if to_key_name(k) == "S" then
-            cur0=(cur0-1)%127+1
+            cur0=(cur0-1)%127
         end
         if to_key_name(k) == "X" then
-            cur0=(cur0+1)%127+1
+            cur0=(cur0+1)%127
         end
         if to_key_name(k) == "Space" then
             playing=(playing+1)%2
