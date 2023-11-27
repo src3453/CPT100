@@ -26,10 +26,7 @@ jobs:
           name: cpttracker
           path: ${{ github.workspace }}/build/cpttracker.exe
   debug-build-for-wasm:
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latestfiz
     steps:
       - name: Checkout
         uses: actions/checkout@v4
