@@ -229,6 +229,10 @@ function LOOP()
         WTInstEditor()
         print(modeLabel[mode+1].." "..string.format("%02X",cur0),1,276,0)
     end  
+    if mode == 4 then
+        RegisterView()
+        print(modeLabel[mode+1],1,276,0)
+    end  
     drawcur()
     if playing == 1 then 
         local _cur0=cur0+1
