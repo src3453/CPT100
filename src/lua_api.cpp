@@ -124,6 +124,10 @@ std::string api_getinput() {
 void api_resetgate(float ch) {
     resetGate((int)ch);
 }
+void api_wtsync(float ch) {
+    wtSync((int)ch);
+}
+
 
 void register_functions() {
     lua.set_function("_maincall",api__maincall);
@@ -156,6 +160,7 @@ void register_functions() {
     lua.set_function("resetinput",api_resetinput);
     lua.set_function("getinput",api_getinput);
     lua.set_function("resetgate",api_resetgate);
+    lua.set_function("wtsync",api_wtsync);
 }
 
 std::string opening_source = "_tick=0\n"
