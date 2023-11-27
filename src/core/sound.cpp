@@ -64,8 +64,8 @@ void applyEnveloveToRegisters(std::vector<Byte> &reg, std::vector<Byte> &regenvl
     envl.at((size_t)(ch*4+opNum)).update(adsr,dt);
 }
 
-int[2] pcm_addr,pcm_len={0,0};
-std::vector<std::vector<Byte> > pcm_ram; 
+int pcm_addr[2],pcm_len[2]={0,0};
+std::vector<std::vector<Byte>> pcm_ram; 
 
 void AudioCallBack(void *unused, Uint8 *stream, int len)
 {
@@ -128,7 +128,7 @@ void AudioCallBack(void *unused, Uint8 *stream, int len)
             } else if(regwt.at(ch+6).toInt() == 3) {
                 val = noise.at(((int)twt[ch]%64))*255;
             } else if(regwt.at(ch+6).toInt() == 4) {
-                val = pcm_ram[ch].at(min((int)twt[ch],pcm_len[ch]));
+                val = pcm_ram[ch].at(std::min((int)twt[ch],pcm_len[ch])).toInt();
             }
             val -= 128;
             double omega = 2.0 * 3.14159265 * ((double)regwt.at(ch+8).toInt()+1)*32 / SAMPLE_FREQ;
