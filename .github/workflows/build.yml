@@ -1,6 +1,10 @@
 name: build
 run-name: Debug build by ${{ github.actor }}
 on: [push]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 jobs:
   debug-build-for-windows:
     runs-on: windows-latest
