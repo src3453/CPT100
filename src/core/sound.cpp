@@ -3,8 +3,8 @@
 #include "envelove.cpp"
 
 #define SAMPLE_FREQ 48000
-#define SOUND_CLOCK 1000
-#define SOUND_CHUNK SAMPLE_FREQ/SOUND_CLOCK
+//#define SOUND_CLOCK 1000
+#define SOUND_CHUNK 256
 
 SDL_AudioSpec want, have;
 SDL_AudioStream *stream = SDL_NewAudioStream(AUDIO_S16, 1, SAMPLE_FREQ, AUDIO_F32, 2, SAMPLE_FREQ);

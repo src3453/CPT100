@@ -193,6 +193,11 @@ void init_lua() {
     sol::lib::io);
     register_functions();
     lua["_CPT_VERSION"] = (std::string)VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
+    #ifdef WASM_BUILD
+    lua["_CPT_IS_WASM"] = 1;
+    #else 
+    lua["_CPT_IS_WASM"] = 0;
+    #endif
     lua.script(opening_source);
 }
 
