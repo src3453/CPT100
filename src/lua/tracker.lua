@@ -189,6 +189,9 @@ currentoctave=4
 g_playing=0
 g_lastplaytime=0
 track_note={0,0}
+pattern_inst=0
+track_inst={0,0}
+preview2_tick=32
 -- メインループ関数
 function LOOP()
     cls(0)
@@ -217,11 +220,12 @@ function LOOP()
     end  
     drawcur()
     if playing == 1 then 
+        local _cur0=cur0+1
         if play_target==0 then
             if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 30 then
                 local gate,val
-                val = peek(cur0*256+(time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
-                val2 = peek(cur0*256+((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
+                val = peek(_cur0*256+(time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+                val2 = peek(_cur0*256+((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
                     if val == 255 then
                         poke(0x10080,0)
                     else
@@ -236,11 +240,13 @@ function LOOP()
             end
         else 
             local val
-            val=peek(cur0*256+(time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+            val=peek(_cur0*256+(time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)
+            val2 = peek(_cur0*256+((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
             if val ~= 0 then
                 pattern_note = val
+                pattern_inst = val2
             end
-            val2 = peek(cur0*256+((time()-lastplaytime)//((60/tempo/speed)*1000)*4%256)+1)
+            
             if (time()-lastplaytime)%((60/tempo/speed)*1000) <= 30 and val ~= 0 and playing == 1 then
                 pattern_tick=0
             end
@@ -248,7 +254,7 @@ function LOOP()
                 pattern_tick=31
             end
             if pattern_tick<32 then
-                PlayWTInst(0,val2,note2freq(pattern_note),pattern_tick)
+                PlayWTInst(0,pattern_inst,note2freq(pattern_note),pattern_tick)
             end
 
             if mode == 1 then
@@ -278,10 +284,12 @@ function LOOP()
         for ch=0,1 do
             local val
             val=peek(peek(int(0x0F000+math.floor(playcur//6)*6+ch+4))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256))
+            val2=peek((peek(int(0x0F000+math.floor(playcur//6)*6+ch+4))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256)+1))
             if val ~= 0 then
                 track_note[ch+1]=val
+                track_inst[ch+1]=val2
             end
-            val2=peek((peek(int(0x0F000+math.floor(playcur//6)*6+ch+4))*256+((time()-g_lastplaytime)//((60/tempo/speed)*1000)*4%256)+1))
+            
             if (time()-g_lastplaytime)%((60/tempo/speed)*1000) <= 30 and val ~= 0 and g_playing == 1 then
                 track_tick[ch+1]=0
             end
@@ -290,7 +298,7 @@ function LOOP()
             end
             ind = int(track_tick[ch+1])
             if ind<32 then
-                PlayWTInst(ch,val2,note2freq(track_note[ch+1]),ind)
+                PlayWTInst(ch,track_inst[ch+1],note2freq(track_note[ch+1]),ind)
             end
             
         end
@@ -298,7 +306,7 @@ function LOOP()
             cur0 = playcur
         end
     end
-    if playing==0 and g_playing==0 then
+    if playing==0 and g_playing==0 and preview_tick>32 and preview2_tick>32 then
         for i=0,9 do
         poke(0x10080+i,0)
         end
@@ -306,7 +314,11 @@ function LOOP()
     if preview_tick<32 then
         PlayWTInst(0,cur0,note2freq(60),preview_tick)
     end
+    if preview2_tick<32 then
+        PlayWTInst(0,peek((cur0+1)*256+cur1+1),note2freq(peek((cur0+1)*256+cur1)),preview2_tick)
+    end
     preview_tick=preview_tick+1
+    preview2_tick=preview2_tick+1
     pattern_tick=pattern_tick+1
     track_tick[1]=track_tick[1]+1
     track_tick[2]=track_tick[2]+1
@@ -330,21 +342,29 @@ function ONINPUT(c)
         end
     end
     if mode == 1 then
+        local _cur0=cur0+1
         if cur1%4 == 0 then
             if string.find("qwertyu",c) then
                 ind = string.find("qwertyu",c)
                 local notes = {0,2,4,5,7,9,11}
-                poke(cur0*256+cur1,currentoctave*12+notes[ind])
+                poke(_cur0*256+cur1,currentoctave*12+notes[ind])
             elseif string.find("0123456789",c) then  
                 currentoctave = string.find("0123456789",c)-1
-                poke(cur0*256+cur1,peek(cur0*256+cur1)%12+currentoctave*12)
+                poke(_cur0*256+cur1,peek(_cur0*256+cur1)%12+currentoctave*12)
             end
-            poke(int(cur0*256+cur1+1),currentinst)
+            if string.find("0123456789qwertyuh",c) then
+                if play_target==0 then
+                    PlayInst(0,peek(_cur0*256+cur1+1),note2freq(peek(_cur0*256+cur1)),1)
+                else
+                    preview2_tick=0
+                end 
+            end
+            poke(int(_cur0*256+cur1+1),currentinst)
         end
         if cur1%4 == 1 then
             if tonumber(c,16) ~= nil then
                 inputchar = inputchar .. c
-                poke(int(cur0*256+cur1),tonumber(inputchar,16))
+                poke(int(_cur0*256+cur1),tonumber(inputchar,16))
             else
             end
             currentinst = tonumber(inputchar,16)
@@ -403,6 +423,7 @@ function ONKEYDOWN(k)
         end
     end
     if mode == 1 then
+        local _cur0=cur0+1
         if to_key_name(k) == "Up" then
             cur1=(cur1-4)%256
         end
@@ -426,19 +447,19 @@ function ONKEYDOWN(k)
             lastplaytime=time()
         end
         if to_key_name(k) == "Backspace" then
-            if peek(cur0*256+cur1) == 0 then
-                poke(cur0*256+cur1,255)
+            if peek(_cur0*256+cur1) == 0 then
+                poke(_cur0*256+cur1,255)
             else
-                poke(cur0*256+cur1,0)
+                poke(_cur0*256+cur1,0)
             end
         end
         if to_key_name(k) == "H" then
             local notes = {0,2,5,7,9}
             local sharp_notes = {1,3,6,8,10}
-            if table_contains(notes,peek(cur0*256+cur1)%12) then
-                poke(cur0*256+cur1,peek(cur0*256+cur1)+1)
-            elseif table_contains(sharp_notes,peek(cur0*256+cur1)%12) then
-                poke(cur0*256+cur1,peek(cur0*256+cur1)-1)
+            if table_contains(notes,peek(_cur0*256+cur1)%12) then
+                poke(_cur0*256+cur1,peek(_cur0*256+cur1)+1)
+            elseif table_contains(sharp_notes,peek(_cur0*256+cur1)%12) then
+                poke(_cur0*256+cur1,peek(_cur0*256+cur1)-1)
             end
         end
         if to_key_name(k) == "C" then
