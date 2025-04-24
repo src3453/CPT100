@@ -1,27 +1,41 @@
 #include <vector>
+#include "header/spec.hpp"
+<<<<<<< HEAD
+#include "header/types.hpp"
 
 std::vector<Byte> ram;
 std::vector<Byte> vram;
+
 // RAMおよびVRAMを管理する関数
 void ram_boot(std::vector<Byte>& ram, std::vector<Byte>& vram) {
-    ram.resize(RAM_SIZE, Byte(0));
-    vram.resize(VRAM_SIZE, Byte(0));
+    ram.resize(S3HS_RAM_SIZE, Byte(0));
+    vram.resize(S3HS_VRAM_SIZE, Byte(0));
 }
+=======
+
+#define Byte unsigned char
+
+std::vector<Byte> ram;
+
+// RAMおよびVRAMを管理する関数
+/*
+>>>>>>> 99782b263c54af98739368d26e9507091b7a4a62
 
 Byte vram_peek(std::vector<Byte>& vram, int addr) {
     if (addr < 0) {
         return Byte(0);
     }
-    if (addr < VRAM_SIZE) {
+    if (addr < S3HS_VRAM_SIZE) {
         return vram.at(addr);
     }
+    return Byte(0);
 }
 
 void vram_poke(std::vector<Byte>& vram, int addr, Byte val) {
     if (addr < 0) {
         return;
     }   
-    if (addr < VRAM_SIZE) {
+    if (addr < S3HS_VRAM_SIZE) {
         vram.at(addr) = val;
     }
 }
@@ -41,22 +55,30 @@ void vram_pokefill(std::vector<Byte>& vram, int addr, int block, Byte val) {
 
 void vram_poke2array(std::vector<Byte>& vram, int addr, std::vector<Byte>& vals) {
     std::copy(vals.begin(), vals.end(), vram.begin() + addr);
+<<<<<<< HEAD
+=======
+} */
+
+void ram_boot(std::vector<Byte>& ram) {
+    ram.resize(S3HS_RAM_SIZE, Byte(0));
+>>>>>>> 99782b263c54af98739368d26e9507091b7a4a62
 }
 
 Byte ram_peek(std::vector<Byte>& ram, int addr) {
     if (addr < 0) {
         return Byte(0);
     }
-    if (addr < RAM_SIZE) {
+    if (addr < S3HS_RAM_SIZE) {
         return ram.at(addr);
     }
+    return Byte(0);
 }
 
 void ram_poke(std::vector<Byte>& ram, int addr, Byte val) {
     if (addr < 0) {
         return;
     }   
-    if (addr < RAM_SIZE) {
+    if (addr < S3HS_RAM_SIZE) {
         ram.at(addr) = val;
     }
 }
