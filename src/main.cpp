@@ -7,17 +7,21 @@
 #include <stdio.h>
 #include <SDL.h>
 
+
 int mouseState = 0;
 std::string inputText = "";
 
-#include "core/header/types.hpp"
+#define Byte unsigned char
+
 #include "core/header/spec.hpp"
 #include "core/ram.cpp"
 #include "core/disp.cpp"
 #include "core/text.cpp"
-#include "core/sound.cpp"
+#include "core/vpu/vpu.cpp"
+#include "core/sound_drv_SDL.cpp"
 
 CPT_Screen scr(vram);
+VPU vpu(scr);
 Font font(scr);
 
 #include "lua_api.cpp"
@@ -36,12 +40,11 @@ void cpt_init(int argv, char** args) {
     std::string opening_msg = 
     (std::string)
     "+------------------------------------------------+\n"
-    "|  CPTTracker Fantasy Chiptune Tracker           |\n"
+    "|  CPT200 High-spec Fantasy Console              |\n"
     "|  " + padTo(version,44) +       (std::string)"  |\n"
     "|  (c) src3453 2023 Released under MIT Licence.  |\n"
     "+------------------------------------------------+\n";
     std::cout << opening_msg << std::endl;
-    ram_boot(ram, vram);
     scr.init();
     initSound();
     init_lua();   
@@ -186,6 +189,7 @@ int main(int argv, char** args) {
         MainLoop();
     }
     #endif
+    closeSound();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_CloseAudioDevice(dev);

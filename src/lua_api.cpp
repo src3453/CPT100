@@ -1,11 +1,13 @@
-#include <sol/sol.hpp>
+#include "sol/sol.hpp"
 #include <time.h>
 
 sol::state lua;
 int timerStart = 0;
 std::string LuaSrcPath = "";
 
-#include "lua/tracker.lua.hpp"
+#include "lua/main.lua.hpp"
+
+#define Byte unsigned char
 
 void api__maincall() {
     timerStart = clock();
@@ -14,13 +16,13 @@ void api__maincall() {
     if (func != sol::nil) func();
 }
 int api_peek(float addr) {
-    return ram_peek(ram, (int)addr).toInt();
+    return ram_peek(ram, (int)addr);
 }
 void api_poke(float addr, float value) {
     ram_poke(ram, (int)addr, (Byte)((int)value%256));
 }
 int api_vpeek(float addr) {
-    return vram_peek(vram, (int)addr).toInt();
+    return vram_peek(vram, (int)addr);
 }
 void api_vpoke(float addr, float value) {
     vram_poke(vram, (int)addr, (Byte)((int)value%256));
@@ -38,7 +40,7 @@ void api_cls(float color) {
     scr.cls((Byte)(int)color);
 }
 int api_rgb(float r, float g, float b) {
-    return scr.fromRGB((int)r,(int)g,(int)b).toInt();
+    return scr.fromRGB((int)r,(int)g,(int)b);
 }
 int api_time() {
     return clock()-timerStart;
@@ -69,7 +71,7 @@ std::vector<int> api_peekarr(float addr, float block) {
     std::vector<int> out;
     for (int i = (int)addr; i < (int)addr + (int)block; i++)
     {
-        out.push_back(ram_peek(ram, i).toInt());
+        out.push_back(ram_peek(ram, i));
     }
     return out;
 }
@@ -77,7 +79,7 @@ std::vector<int> api_vpeekarr(float addr, float block) {
     std::vector<int> out;
     for (int i = (int)addr; i < (int)addr + (int)block; i++)
     {
-        out.push_back(vram_peek(vram, i).toInt());
+        out.push_back(vram_peek(vram, i));
     }
     return out;
 }
@@ -122,10 +124,13 @@ std::string api_getinput() {
     return (std::string)inputText;
 }
 void api_resetgate(float ch) {
-    resetGate((int)ch);
+    chip.resetGate((int)ch);
 }
 void api_wtsync(float ch) {
-    wtSync((int)ch);
+    chip.wtSync((int)ch);
+}
+void api_vpu_init() {
+    
 }
 
 
@@ -164,24 +169,27 @@ void register_functions() {
 }
 
 std::string opening_source = "_tick=0\n"
-"poke(0x10000,1000//256)\n"
-"poke(0x10001,1000%256)\n"
-"poke(0x10009,255)\n"
-"poke(0x10041,32)\n"
-"poke(0x10043,32)\n"
-"poke(0x10080,1)\n"
+"poke(0x400000,1000//256)\n"
+"poke(0x400001,1000%256)\n"
+"poke(0x400010,255)\n"
+"poke(0x400018,0x30)\n"
+"poke(0x400021,32)\n"
+"poke(0x400023,32)\n"
+"poke(0x40001e,1)\n"
+"poke(0x40001f,0x80)\n"
+"resetgate(0)\n"
 "function LOOP()\n"
 "    cls(0)\n"
-"    print(\"CPT100 High-spec Fantasy Console\",0,0,rgb(0,255,0))\n"
+"    print(\"CPT200 High-spec Fantasy Console\",0,0,rgb(0,255,0))\n"
 "    print(\"Version \".._CPT_VERSION,0,12,rgb(0,255,0))\n"
-"    print(\"(c)2023 src3453 MIT licence\",0,24,rgb(0,255,0))\n"
-"    print(\"Main  RAM \".. string.format(\"%6d\",math.min(_tick*4096,0x80000)) ..\" Bytes OK\",0,36,255)\n"
-"    print(\"Video RAM \".. string.format(\"%6d\",math.min(_tick*3072,0x20000)) ..\" Bytes OK\",0,48,255)\n"
+"    print(\"(c)2025 src3453 MIT licence\",0,24,rgb(0,255,0))\n"
+"    print(\"Main  RAM \".. string.format(\"%6d\",math.min(_tick*131072,0x1000000)) ..\" Bytes OK\",0,36,255)\n"
+"    print(\"Video RAM \".. string.format(\"%6d\",math.min(_tick*131072,0x100000)) ..\" Bytes OK\",0,48,255)\n"
 "    print(\"Sound chip was successfully initialized\",0,60,255)\n"
 "    _tick=_tick+1\n"
-"    if _tick == 4 then\n"
-"        poke(0x10000,500//256)\n"
-"        poke(0x10001,500%256)\n"
+"    if _tick == 5 then\n"
+"        poke(0x400000,500//256)\n"
+"        poke(0x400001,500%256)\n"
 "        resetgate(0)\n"
 "    end\n"
 "    if _tick>=200 then _maincall() end\n"

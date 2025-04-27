@@ -20,9 +20,9 @@ public:
         int i = 0;
         for (int y = 0; y < CPT_SCREEN_HEIGHT; y++){
             for (int x = 0; x < CPT_SCREEN_WIDTH; x++){
-                tmp_pixels[i*3+0] = CLUT.at(tmp.at(i).toInt()*3+0).toInt();
-                tmp_pixels[i*3+1] = CLUT.at(tmp.at(i).toInt()*3+1).toInt();
-                tmp_pixels[i*3+2] = CLUT.at(tmp.at(i).toInt()*3+2).toInt();
+                tmp_pixels[i*3+0] = CLUT.at(tmp.at(i)*3+0);
+                tmp_pixels[i*3+1] = CLUT.at(tmp.at(i)*3+1);
+                tmp_pixels[i*3+2] = CLUT.at(tmp.at(i)*3+2);
                 i+=1;
             }
         }

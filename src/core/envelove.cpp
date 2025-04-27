@@ -89,11 +89,7 @@ public:
 		return m_state;
 	}
 	double lerp(double start, double end, double t) {
-<<<<<<< HEAD
-		return (1 - t) * start  + t * end;
-=======
 		return start+(end-start)*(t>=1?1:1-std::powf(2,-10*t));
->>>>>>> 99782b263c54af98739368d26e9507091b7a4a62
 	}
 	State m_state = State::Attack;
 	double m_elapsed = 0; // ステート変更からの経過秒数

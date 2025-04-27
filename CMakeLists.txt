@@ -64,7 +64,7 @@ find_package(PythonInterp REQUIRED)
 if(PythonInterp_FOUND)
     message("Python3 found: ${PYTHON_EXECUTABLE}")
     execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${CMAKE_SOURCE_DIR}/src/lua/tracker.lua
+    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${CMAKE_SOURCE_DIR}/src/lua/main.lua
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 else()
@@ -72,8 +72,8 @@ else()
 endif()
 
 
-project(cpttracker LANGUAGES C CXX)
-set(EXECUTABLE_NAME cpttracker)
+project(cpt200 LANGUAGES C CXX)
+set(EXECUTABLE_NAME cpt200)
 # ソースファイルを検索し，変数「MY_SOURCE」に設定
 
 set(CMAKE_CXX_STANDARD 17)
@@ -147,17 +147,19 @@ file(GLOB_RECURSE SDL2_SRC ${SDL2_DIR}/include/*.h)
 
 add_library(lua STATIC ${LUA_SRC})
 
-add_library(sol STATIC ${SOL_SRC})
+add_library(sol INTERFACE)
+target_include_directories(sol INTERFACE ${SOL_DIR}/include)
 
 add_library(SDL2 STATIC ${SDL2_SRC})
-
-set_target_properties(sol PROPERTIES LINKER_LANGUAGE CXX)
 
 set_target_properties(SDL2 PROPERTIES LINKER_LANGUAGE CXX)
 
 
 #実行ファイルを作成
-add_executable(${EXECUTABLE_NAME} ${CMAKE_PROJECT_DIR}src/main.cpp)
+add_executable(${EXECUTABLE_NAME} 
+
+${CMAKE_PROJECT_DIR}src/main.cpp
+)
 
 if (EMSCRIPTEN)
     set(CMAKE_EXECUTABLE_SUFFIX ".html") # デフォルトでは.js
@@ -177,5 +179,5 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_DIR}/include)
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SOL_DIR}/include)
 
-target_link_libraries(${EXECUTABLE_NAME} lua sol SDL2main SDL2-static)
+target_link_libraries(${EXECUTABLE_NAME} lua SDL2main SDL2-static)
 

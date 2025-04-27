@@ -1,47 +1,33 @@
 #include <vector>
-#include "header/spec.hpp"
-<<<<<<< HEAD
-#include "header/types.hpp"
 
-std::vector<Byte> ram;
-std::vector<Byte> vram;
-
+std::vector<unsigned char> ram(RAM_SIZE, 0);
+std::vector<unsigned char> vram(VRAM_SIZE, 0);
 // RAMおよびVRAMを管理する関数
-void ram_boot(std::vector<Byte>& ram, std::vector<Byte>& vram) {
-    ram.resize(S3HS_RAM_SIZE, Byte(0));
-    vram.resize(S3HS_VRAM_SIZE, Byte(0));
+void ram_boot(std::vector<unsigned char>& ram, std::vector<unsigned char>& vram) {
+    ram.resize(RAM_SIZE, 0);
+    vram.resize(VRAM_SIZE, 0);
 }
-=======
 
-#define Byte unsigned char
-
-std::vector<Byte> ram;
-
-// RAMおよびVRAMを管理する関数
-/*
->>>>>>> 99782b263c54af98739368d26e9507091b7a4a62
-
-Byte vram_peek(std::vector<Byte>& vram, int addr) {
+unsigned char vram_peek(std::vector<unsigned char>& vram, int addr) {
     if (addr < 0) {
-        return Byte(0);
+        return unsigned char(0);
     }
-    if (addr < S3HS_VRAM_SIZE) {
+    if (addr < VRAM_SIZE) {
         return vram.at(addr);
     }
-    return Byte(0);
 }
 
-void vram_poke(std::vector<Byte>& vram, int addr, Byte val) {
+void vram_poke(std::vector<unsigned char>& vram, int addr, unsigned char val) {
     if (addr < 0) {
         return;
     }   
-    if (addr < S3HS_VRAM_SIZE) {
+    if (addr < VRAM_SIZE) {
         vram.at(addr) = val;
     }
 }
 
-std::vector<Byte> vram_peek2array(std::vector<Byte>& vram, int addr, int block) {
-    std::vector<Byte> out;
+std::vector<unsigned char> vram_peek2array(std::vector<unsigned char>& vram, int addr, int block) {
+    std::vector<unsigned char> out;
     for (int i = addr; i < addr + block; i++)
     {
         out.push_back(vram_peek(vram, i));
@@ -49,42 +35,34 @@ std::vector<Byte> vram_peek2array(std::vector<Byte>& vram, int addr, int block) 
     return out;
 }
 
-void vram_pokefill(std::vector<Byte>& vram, int addr, int block, Byte val) {
+void vram_pokefill(std::vector<unsigned char>& vram, int addr, int block, unsigned char val) {
     std::fill(vram.begin() + addr, vram.begin() + addr + block, val);
 }
 
-void vram_poke2array(std::vector<Byte>& vram, int addr, std::vector<Byte>& vals) {
+void vram_poke2array(std::vector<unsigned char>& vram, int addr, std::vector<unsigned char>& vals) {
     std::copy(vals.begin(), vals.end(), vram.begin() + addr);
-<<<<<<< HEAD
-=======
-} */
-
-void ram_boot(std::vector<Byte>& ram) {
-    ram.resize(S3HS_RAM_SIZE, Byte(0));
->>>>>>> 99782b263c54af98739368d26e9507091b7a4a62
 }
 
-Byte ram_peek(std::vector<Byte>& ram, int addr) {
+unsigned char ram_peek(std::vector<unsigned char>& ram, int addr) {
     if (addr < 0) {
-        return Byte(0);
+        return unsigned char(0);
     }
-    if (addr < S3HS_RAM_SIZE) {
+    if (addr < RAM_SIZE) {
         return ram.at(addr);
     }
-    return Byte(0);
 }
 
-void ram_poke(std::vector<Byte>& ram, int addr, Byte val) {
+void ram_poke(std::vector<unsigned char>& ram, int addr, unsigned char val) {
     if (addr < 0) {
         return;
     }   
-    if (addr < S3HS_RAM_SIZE) {
+    if (addr < RAM_SIZE) {
         ram.at(addr) = val;
     }
 }
 
-std::vector<Byte> ram_peek2array(std::vector<Byte>& ram, int addr, int block) {
-    std::vector<Byte> out;
+std::vector<unsigned char> ram_peek2array(std::vector<unsigned char>& ram, int addr, int block) {
+    std::vector<unsigned char> out;
     for (int i = addr; i < addr + block; i++)
     {
         out.push_back(ram_peek(ram, i));
@@ -92,11 +70,11 @@ std::vector<Byte> ram_peek2array(std::vector<Byte>& ram, int addr, int block) {
     return out;
 }
 
-void ram_pokefill(std::vector<Byte>& ram, int addr, int block, Byte val) {
+void ram_pokefill(std::vector<unsigned char>& ram, int addr, int block, unsigned char val) {
     std::fill(ram.begin() + addr, ram.begin() + addr + block, val);
 }
 
-void ram_poke2array(std::vector<Byte>& ram, int addr, std::vector<Byte>& vals) {
+void ram_poke2array(std::vector<unsigned char>& ram, int addr, std::vector<unsigned char>& vals) {
     std::copy(vals.begin(), vals.end(), ram.begin() + addr);
 }
 

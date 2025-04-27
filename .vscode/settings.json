@@ -96,6 +96,7 @@
         "__std_stream": "cpp",
         "barrier": "cpp",
         "*.ipp": "cpp",
-        "__memory": "cpp"
+        "__memory": "cpp",
+        "coroutine": "cpp"
     }
 }
