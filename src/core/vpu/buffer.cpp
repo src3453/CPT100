@@ -39,8 +39,9 @@ public:
     }
   }
 
-  void fetchTexBuffer() {
+  unsigned char* fetchTexBuffer() {
     texBuffer = ram_peek2array(ram, addr, width * height * (format == TEX_PALETTE ? 1 : 3)).data();
+    return texBuffer;
   }
 
   void writeTexBuffer(unsigned char *texture) {

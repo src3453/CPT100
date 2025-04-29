@@ -156,15 +156,17 @@ int main(int argv, char** args) {
     SDL_Init(SDL_INIT_EVERYTHING);
     
     
-    window = SDL_CreateWindow("CPTTracker v" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("CPT200 v" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
     if (!window)
     {
         printf("SDL Window could not be initialized. SDL_Error: %s\n", SDL_GetError());
+        return 1;
     }
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer)
     {
         printf("SDL Renderer could not be initialized. SDL_Error: %s\n", SDL_GetError());
+        return 1;
     }
     texture = SDL_CreateTexture(
         renderer,
