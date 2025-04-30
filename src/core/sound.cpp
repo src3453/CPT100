@@ -361,7 +361,7 @@ public:
                 } else if(regwt[ch*48+3] == 5) {
                     if (DMABufferPointer[ch] > 0) {
                         DMA_DAC_Current[ch] = (int)(DMABuffer[ch][0]);
-                        
+                        val = DMA_DAC_Current[ch];
                         memmove(DMABuffer[ch], &DMABuffer[ch][1], DMA_BUFFER_SIZE-1);  //pop first value
                         DMABufferPointer[ch]--;
                     } else {
