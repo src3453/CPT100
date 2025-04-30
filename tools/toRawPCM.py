@@ -4,7 +4,7 @@ from pydub import AudioSegment
 
 
 path = input("path?> ")
-FRAME_RATE = 6000
+FRAME_RATE = 12000
 
 def rle(seq:str) -> str:
     x=0

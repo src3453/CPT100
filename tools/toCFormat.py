@@ -4,7 +4,7 @@ import sys
 path = sys.argv[1]
 txt = open(path,"r",encoding="utf-8").read()
 txt = txt.split("\n")
-res = "std::string source = "
+res = f"std::string {re.sub('.lua','',path.split('/')[-1])}_source = "
 for i in txt:
     res += "\""+re.sub('\"','\\\"',i)+"\\n\"\n"
 res = res[:-1] + ";"

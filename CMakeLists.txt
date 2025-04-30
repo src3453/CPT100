@@ -63,10 +63,19 @@ message("- VERSION_HASH: ${VERSION_HASH}")
 find_package(PythonInterp REQUIRED)
 if(PythonInterp_FOUND)
     message("Python3 found: ${PYTHON_EXECUTABLE}")
-    execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${CMAKE_SOURCE_DIR}/src/lua/main.lua
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    
+    # Get all *.lua files in src/lua directory recursively
+    file(GLOB_RECURSE LUA_FILES "${CMAKE_SOURCE_DIR}/src/lua/*.lua")
+    
+    # Process each file
+    foreach(LUA_FILE ${LUA_FILES})
+        message(STATUS "Processing: ${LUA_FILE}")
+        execute_process(
+            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${LUA_FILE}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    endforeach()
 else()
     message("Python3 not found.")
 endif()

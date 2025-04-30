@@ -37,6 +37,10 @@ public:
     float feedback = 0;
     int vols[64] = {};
     double previous[12] = {0.0};
+    #define DMA_BUFFER_SIZE 4096
+    unsigned char DMABuffer[4][DMA_BUFFER_SIZE] = {{0}};
+    int DMABufferPointer[4] = {0};
+    int DMA_DAC_Current[4] = {0};
     std::vector<int> gateTick = {0,0,0,0,0,0,0,0};
     std::vector<Byte> reg;
     std::vector<Byte> regenvl;
@@ -354,6 +358,16 @@ public:
                     val = noise[((int)phase%65536)]*255;
                 } else if(regwt[ch*48+3] == 3) {
                     val = noise[((int)phase%64)]*255;
+                } else if(regwt[ch*48+3] == 5) {
+                    if (DMABufferPointer[ch] > 0) {
+                        DMA_DAC_Current[ch] = (int)(DMABuffer[ch][0]);
+                        
+                        memmove(DMABuffer[ch], &DMABuffer[ch][1], DMA_BUFFER_SIZE-1);  //pop first value
+                        DMABufferPointer[ch]--;
+                    } else {
+                        val = DMA_DAC_Current[ch]; // Return previous value if buffer is empty
+                    }
+
                 } else if(regwt[ch*48+3] == 1) {
                     float pre = (float)regwt[16+48*ch+((int)phase%32)];
                     float nxt = (float)regwt[16+48*ch+((int)(phase+1)%32)];
@@ -569,6 +583,45 @@ public:
 
     void wtSync(int ch) {
         twt[ch]=0;
+    }
+
+    int putDMABuffer(int ch, unsigned char* data, size_t dataSize) 
+    {
+        // Error check for valid channel
+        if (ch < 0 || ch > 3) {
+            return -1; // Invalid channel number
+        }
+        
+        if (data == nullptr) {
+            return -3; // Invalid data pointer
+        }
+        
+        // Calculate data size by finding the length until null terminator or max buffer
+        //printf("Data size: %d\n", dataSize);
+        
+        if (dataSize == 0) {
+            return DMABufferPointer[ch]; // No data to copy
+        }
+        
+        // Check for buffer overflow
+        if (DMABufferPointer[ch] + dataSize > DMA_BUFFER_SIZE) {
+            // Provide detailed error message
+            printf("Channel %d: DMA Buffer overflow! Current: %d, Adding: %d, Max: %d\n", 
+                   ch, DMABufferPointer[ch], dataSize, DMA_BUFFER_SIZE);
+            
+            // Copy as much data as possible
+            int copyAmount = DMA_BUFFER_SIZE - DMABufferPointer[ch];
+            if (copyAmount > 0) {
+                memcpy(&DMABuffer[ch][DMABufferPointer[ch]], data, copyAmount);
+                DMABufferPointer[ch] = DMA_BUFFER_SIZE;
+            }
+            return -2; // Buffer overflow
+        }
+        
+        // Safely copy the data
+        memcpy(&DMABuffer[ch][DMABufferPointer[ch]], data, dataSize);
+        DMABufferPointer[ch] += dataSize;
+        return DMABufferPointer[ch]; // Return buffer length
     }
     
 };

@@ -187,8 +187,18 @@ int main(int argv, char** args) {
     emscripten_set_main_loop(MainLoop, 0, 1);
     #endif
     #ifndef WASM_BUILD
+    const int desired_fps = 60;
+    int desired_frame_duration = 1000/desired_fps;
     while(1) {
+        int ticks_before = SDL_GetTicks();
         MainLoop();
+        int ticks_after = SDL_GetTicks();
+        int ticks_passed = ticks_after - ticks_before;
+        int amount_to_wait = desired_frame_duration - ticks_passed;
+    
+        if(amount_to_wait > 0) {
+            SDL_Delay(amount_to_wait);
+        }
     }
     #endif
     closeSound();

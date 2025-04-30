@@ -6,12 +6,13 @@ int timerStart = 0;
 std::string LuaSrcPath = "";
 
 #include "lua/main.lua.hpp"
+#include "lua/opening.lua.hpp"
 
 #define Byte unsigned char
 
 void api__maincall() {
     timerStart = clock();
-    lua.script(source);
+    lua.script(main_source);
     sol::function func = lua["BOOT"];
     if (func != sol::nil) func();
 }
@@ -129,6 +130,14 @@ void api_resetgate(float ch) {
 void api_wtsync(float ch) {
     chip.wtSync((int)ch);
 }
+int api_put_dma_buffer(float ch, std::vector<float> data) {
+    std::vector<unsigned char> byteData;
+    //printf("data size: %d\n", (int)data.size());
+    for (size_t i = 0; i < data.size(); i++){
+        byteData.push_back((unsigned char)(int)data[i]);
+    }
+    return chip.putDMABuffer((int)ch, byteData.data(), data.size());
+}
 void api_vpu_init() {
     
 }
@@ -166,35 +175,8 @@ void register_functions() {
     lua.set_function("getinput",api_getinput);
     lua.set_function("resetgate",api_resetgate);
     lua.set_function("wtsync",api_wtsync);
+    lua.set_function("put_dma_buffer", api_put_dma_buffer);
 }
-
-std::string opening_source = "_tick=0\n"
-"poke(0x400000,1000//256)\n"
-"poke(0x400001,1000%256)\n"
-"poke(0x400010,255)\n"
-"poke(0x400018,0x30)\n"
-"poke(0x400021,32)\n"
-"poke(0x400023,32)\n"
-"poke(0x40001e,1)\n"
-"poke(0x40001f,0x80)\n"
-"resetgate(0)\n"
-"function LOOP()\n"
-"    cls(0)\n"
-"    print(\"CPT200 High-spec Fantasy Console\",0,0,rgb(0,255,0))\n"
-"    print(\"Version \".._CPT_VERSION,0,12,rgb(0,255,0))\n"
-"    print(\"(c)2025 src3453 MIT licence\",0,24,rgb(0,255,0))\n"
-"    print(\"Main  RAM \".. string.format(\"%6d\",math.min(_tick*131072,0x1000000)) ..\" Bytes OK\",0,36,255)\n"
-"    print(\"Video RAM \".. string.format(\"%6d\",math.min(_tick*131072,0x100000)) ..\" Bytes OK\",0,48,255)\n"
-"    print(\"Sound chip was successfully initialized\",0,60,255)\n"
-"    _tick=_tick+1\n"
-"    if _tick == 5 then\n"
-"        poke(0x400000,500//256)\n"
-"        poke(0x400001,500%256)\n"
-"        resetgate(0)\n"
-"    end\n"
-"    if _tick>=200 then _maincall() end\n"
-"    poke(0x10080,0)\n"
-"end\n";
 
 void init_lua() {
     lua.open_libraries(
