@@ -23,8 +23,8 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: cpttracker
-          path: ${{ github.workspace }}/build/cpttracker.exe
+          name: cpt200.exe
+          path: ${{ github.workspace }}/build/cpt200.exe
   debug-build-for-wasm:
     runs-on: ubuntu-latest
     environment:
@@ -69,5 +69,5 @@ jobs:
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: cpttracker
-          path: ${{ github.workspace }}/build/cpttracker
+          name: cpt200
+          path: ${{ github.workspace }}/build/cpt200
