@@ -138,6 +138,11 @@ int api_put_dma_buffer(float ch, std::vector<float> data) {
     }
     return chip.putDMABuffer((int)ch, byteData.data(), data.size());
 }
+
+int api_get_dma_buffer_length(float ch) {
+    return chip.getDMABufferLength((int)ch);
+}
+
 void api_vpu_init() {
     
 }
@@ -176,6 +181,7 @@ void register_functions() {
     lua.set_function("resetgate",api_resetgate);
     lua.set_function("wtsync",api_wtsync);
     lua.set_function("put_dma_buffer", api_put_dma_buffer);
+    lua.set_function("get_dma_buffer_length", api_get_dma_buffer_length);
 }
 
 void init_lua() {

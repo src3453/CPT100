@@ -623,5 +623,12 @@ public:
         DMABufferPointer[ch] += dataSize;
         return DMABufferPointer[ch]; // Return buffer length
     }
+
+    int getDMABufferLength(int ch) {
+        if (ch < 0 || ch > 3) {
+            return -1; // Invalid channel number
+        }
+        return DMABufferPointer[ch]; // Return current buffer length
+    }
     
 };
