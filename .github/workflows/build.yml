@@ -24,7 +24,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cpt200.exe
-          path: ${{ github.workspace }}/build/cpt200.exe
+          path: ${{ github.workspace }}/build/Debug/cpt200.exe
   debug-build-for-wasm:
     runs-on: ubuntu-latest
     environment:
