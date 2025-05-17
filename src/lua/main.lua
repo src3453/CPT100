@@ -57,6 +57,8 @@ function BOOT()
         vpoke(0x1b000+i*3+2, clamp(0,0,255))
     end]]
 end
+u=0
+screen(1)
 function LOOP()
     cls(0)
     xm,ym,_ = mouse()
@@ -76,6 +78,10 @@ function LOOP()
             end
             fval = math.max(math.min(fval,255),0)
             rect(x,y,resolution,resolution,fval)
+            
+            
+            u=u+1            
+
         end
     end
     
@@ -95,21 +101,23 @@ function LOOP()
             t2 = int(t%(#wave//2-1))
             pre = tonumber(string.sub(wave, t2*2+1, t2*2+2),16)
             nxt = tonumber(string.sub(wave, t2*2+3, t2*2+4),16)
-            --buf[a+1] = pre+((nxt-pre)*(t%1))--+math.random(-16,16)
-            buf[a+1] = pre
+            buf[a+1] = pre+((nxt-pre)*(t%1))--+math.random(-16,16)
+            --buf[a+1] = pre
             if a<384 then line(a,255-buf[math.max(a,1)],a+1,255-buf[a+1],255) end
             --vpoke((t)%0x1b000,pre+((nxt-pre)*(t%1)))
             --vpoke(0x1b000+t*8%768+0, pre)
-            
+            --vpoke(0x1c000+t%(1152*3), pre)
             t=t+0.125
             
         end
     end
+    scrollp(0,1)
+    printp(string.format("%d, %d",bufremaining, t2),0,23,255,0)
     put_dma_buffer(0, buf)
     --rect(0,0,192,48,0)
-    _print(string.format("DMA buffer length: %d",bufremaining),0,12,255) --flush data
-    _print(string.format("PCM data size: 0x%06x",#wave//2),0,24,255) --flush data
-    _print(string.format("PCM read head: 0x%06x",t2),0,36,255) --flush data
+    --_print(string.format("DMA buffer length: %d",bufremaining),0,12,255) --flush data
+    --_print(string.format("PCM data size: 0x%06x",#wave//2),0,24,255) --flush data
+    --_print(string.format("PCM read head: 0x%06x",t2),0,36,255) --flush data
     
     
     

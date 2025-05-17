@@ -40,7 +40,7 @@ public:
 		case State::Attack: // 0.0 から 1.0 まで attackTime かけて増幅する
 			if (m_elapsed < adsr.attackTime)
 			{
-				m_currentLevel = lerp(0.0, 1.0, m_elapsed / adsr.attackTime);
+				m_currentLevel = lerp(0.0, 1.0, m_elapsed / adsr.attackTime, 1);
 				break;
 			}
 			m_elapsed -= adsr.attackTime;
@@ -88,8 +88,13 @@ public:
 	{
 		return m_state;
 	}
-	double lerp(double start, double end, double t) {
-		return start+(end-start)*(t>=1?1:1-std::powf(2,-10*t));
+	double lerp(double start, double end, double t, int interp = 0) {
+		if (interp == 0) {
+			return start + (end - start) * (t >= 1 ? 1 : 1 - std::powf(2, -10 * t));
+		}
+		else {
+			return start + (end - start) * t;
+		}
 	}
 	State m_state = State::Attack;
 	double m_elapsed = 0; // ステート変更からの経過秒数

@@ -14,8 +14,7 @@ void wrapper(void *unused, Uint8 *stream, int len) {
   // ストリームバッファをクリア（音声のノイズ防止に重要）
   SDL_memset(stream, 0, len);
   
-  std::vector<std::vector<std::vector<int16_t>>> result = chip.AudioCallBack(len / 4);
-  
+  std::vector<std::vector<std::vector<float>>> result = chip.AudioCallBack(len / 4);
   // 出力バッファのサンプル数を計算（ステレオint16_t形式）
   size_t samples = len / (2 * sizeof(int16_t));
   
@@ -25,9 +24,9 @@ void wrapper(void *unused, Uint8 *stream, int len) {
   // L/Rチャンネルのデータでバッファを埋める
   for (size_t i = 0; i < samples; i++) {
     // 左チャンネル
-    stereo_buffer[i * 2] = (i < result[0][12].size()) ? result[0][12][i] : 0;
+    stereo_buffer[i * 2] = (i < result[0][12].size()) ? (int16_t)(result[0][12][i]) : 0;
     // 右チャンネル
-    stereo_buffer[i * 2 + 1] = (i < result[1][12].size()) ? result[1][12][i] : 0;
+    stereo_buffer[i * 2 + 1] = (i < result[1][12].size()) ? (int16_t)(result[1][12][i]) : 0;
   }
   
   // コピーではなく、適切にミキシングする

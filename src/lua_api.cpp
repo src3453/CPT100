@@ -147,6 +147,17 @@ void api_vpu_init() {
     
 }
 
+void api_screen(int mode) {
+    screenMode = (int)mode;
+} 
+
+void api_printp(std::string text, float x, float y, float color=255, float bgColor=0) {
+    font.printPCG((std::string)text, (int)x, (int)y, (Byte)(int)color, (Byte)(int)bgColor);
+}
+
+void api_scrollp(float x, float y) {
+    font.scrollPCG((int)y);
+}
 
 void register_functions() {
     lua.set_function("_maincall",api__maincall);
@@ -182,6 +193,11 @@ void register_functions() {
     lua.set_function("wtsync",api_wtsync);
     lua.set_function("put_dma_buffer", api_put_dma_buffer);
     lua.set_function("get_dma_buffer_length", api_get_dma_buffer_length);
+    lua.set_function("vpu_init", api_vpu_init);
+    lua.set_function("screen", api_screen);
+    lua.set_function("printp", api_printp);
+    lua.set_function("scrollp", api_scrollp);
+
 }
 
 void init_lua() {

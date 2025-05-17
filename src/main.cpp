@@ -9,6 +9,7 @@
 
 
 int mouseState = 0;
+int screenMode = 0;
 std::string inputText = "";
 
 #define Byte unsigned char
@@ -92,6 +93,9 @@ SDL_Renderer* renderer;
 SDL_Texture *texture;
 void MainTick() {
     Lua_MainLoop(); //60Hz
+    if (screenMode <= 1) {
+        font.drawCharPCG(screenMode);
+    }
     scr.update(finalPixels);
     std::tuple<int,int,int,int> winRect = blitToMainWindow(window, texture, renderer, finalPixels);
     wx = std::get<0>(winRect);
