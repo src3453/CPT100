@@ -1,135 +1,154 @@
+import pygame
+import sys
+import os
 import tkinter as tk
 from tkinter import filedialog
-from tkinter import messagebox
-import re
 
-class FontMaker:
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("8x12 Font Maker")
-        # 256文字×12行のビットマップ保存用
-        self.char_data = [[0]*12 for _ in range(256)]
-        self.char_index = 32  # 最初はスペース
-        # セルボタン群
-        self.cells = [[None]*8 for _ in range(12)]
-        # ドラッグ塗りつぶし用フラグ
-        self.paint_value = None
-        self._build_ui()
-        self._load_char()
+CELL_SIZE = 32
+MARGIN = 8
+FONT_W, FONT_H = 8, 12
+SCREEN_W, SCREEN_H = CELL_SIZE * FONT_W + MARGIN * 2, CELL_SIZE * FONT_H + MARGIN * 2 + 80
 
-    def _build_ui(self):
-        frame = tk.Frame(self.root)
-        frame.pack(padx=10, pady=10)
-        for y in range(12):
-            for x in range(8):
-                b = tk.Button(frame, width=2, height=1)
-                b.grid(row=y, column=x)
-                self.cells[y][x] = b
-                # クリック押下でペイント開始（塗り or 消去）
-                b.bind("<ButtonPress-1>", lambda e, xx=x, yy=y: self._start_paint(xx, yy))
-                # ドラッグ中のペイント継続
-                b.bind("<B1-Motion>",     lambda e, xx=x, yy=y: self._paint(xx, yy))
-                # ボタンリリースでペイント終了
-                b.bind("<ButtonRelease-1>", lambda e: setattr(self, 'paint_value', None))
-        ctrl = tk.Frame(self.root)
-        ctrl.pack(pady=5)
-        tk.Button(ctrl, text="Prev", command=self._prev_char).pack(side="left")
-        tk.Button(ctrl, text="Next", command=self._next_char).pack(side="left")
-        tk.Button(ctrl, text="Export", command=self._export).pack(side="left")
-        tk.Button(ctrl, text="Import", command=self._import).pack(side="left")
-        self.lbl = tk.Label(self.root, text="")
-        self.lbl.pack()
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
+pygame.display.set_caption("8x12フォントエディタ")
+clock = pygame.time.Clock()
 
-    def _toggle(self, x, y):
-        row = self.char_data[self.char_index][y]
-        mask = 1 << (7-x)
-        if row & mask:
-            row &= ~mask
-            self.cells[y][x].configure(bg="white")
-        else:
-            row |= mask
-            self.cells[y][x].configure(bg="black")
-        self.char_data[self.char_index][y] = row
+font_data = [[0 for _ in range(FONT_H)] for _ in range(256)]
+current_char = 65  # 'A'
 
-    def _start_paint(self, x, y):
-        # 初回クリック時のセル状態を反転させるモードで開始
-        row = self.char_data[self.char_index][y]
-        mask = 1 << (7-x)
-        self.paint_value = not bool(row & mask)
-        self._apply_paint(x, y)
+def draw_grid(char_code):
+    screen.fill((40, 40, 40))
+    # Draw grid
+    for y in range(FONT_H):
+        for x in range(FONT_W):
+            bit = (font_data[char_code][y] >> (7 - x)) & 1
+            color = (255, 255, 255) if bit else (60, 60, 60)
+            pygame.draw.rect(screen, color,
+                (MARGIN + x * CELL_SIZE, MARGIN + y * CELL_SIZE, CELL_SIZE - 2, CELL_SIZE - 2))
+    # Draw char code
+    # 日本語対応フォント指定
+    jp_font_name = None
+    for name in ["Meiryo", "Yu Gothic", "MS Gothic", "Noto Sans CJK JP"]:
+        try:
+            font = pygame.font.SysFont(name, 14)
+            test = font.render("日本語", True, (0,0,0))
+            jp_font_name = name
+            break
+        except:
+            continue
+    if jp_font_name:
+        font = pygame.font.SysFont(jp_font_name, 14)
+        help_font = pygame.font.SysFont(jp_font_name, 14)
+    else:
+        font = pygame.font.SysFont(None, 14)
+        help_font = pygame.font.SysFont(None, 14)
+    # 文字表示
+    try:
+        char_disp = chr(char_code)
+    except:
+        char_disp = "?"
+    # chr(0)（NULL文字）は描画不可なので置換
+    if char_code == 0:
+        char_disp = " "
+    txt = font.render(f"Char: 0x{char_code:02X} ({char_disp})", True, (200, 200, 0))
+    screen.blit(txt, (MARGIN, SCREEN_H - 70))
+    # ヘルプ
+    help_lines = [
+        "クリック: ドットON/OFF",
+        "←/→: 文字切替  S:保存  L:読込  C:クリア"
+    ]
+    for i, line in enumerate(help_lines):
+        t = help_font.render(line, True, (180, 180, 180))
+        screen.blit(t, (MARGIN, SCREEN_H - 40 + i * 20))
 
-    def _paint(self, x, y):
-        if self.paint_value is None:
-            return
-        self._apply_paint(x, y)
+def save_font():
+    root = tk.Tk()
+    root.withdraw()
+    path = filedialog.asksaveasfilename(defaultextension=".h", filetypes=[("C Header", "*.h")])
+    if not path:
+        return
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("unsigned char font[256][12] = {\n")
+        for i, char in enumerate(font_data):
+            f.write("  { " + ", ".join(f"0x{b:02X}" for b in char) + " }")
+            f.write(",\n" if i < 255 else "\n")
+        f.write("};\n")
 
-    def _apply_paint(self, x, y):
-        mask = 1 << (7-x)
-        if self.paint_value:
-            self.char_data[self.char_index][y] |= mask
-            self.cells[y][x].configure(bg="black")
-        else:
-            self.char_data[self.char_index][y] &= ~mask
-            self.cells[y][x].configure(bg="white")
+def load_font():
+    root = tk.Tk()
+    root.withdraw()
+    path = filedialog.askopenfilename(filetypes=[("C Header", "*.h")])
+    if not path:
+        return
+    with open(path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    idx = 0
+    for line in lines:
+        if '{' in line:
+            bytestr = line.split('{')[1].split('}')[0]
+            bytes_ = [int(b, 16) for b in bytestr.replace('0x', '').split(',') if b.strip()]
+            if len(bytes_) == FONT_H:
+                font_data[idx] = bytes_
+                idx += 1
+            if idx >= 256:
+                break
 
-    def _load_char(self):
-        # 文字コードと文字自体を表示
-        self.lbl.config(text=f"Code: 0x{self.char_index:02x} ('{chr(self.char_index)}')")
-        for y in range(12):
-            row = self.char_data[self.char_index][y]
-            for x in range(8):
-                color = "black" if (row & (1<<(7-x))) else "white"
-                self.cells[y][x].configure(bg=color)
+def clear_char(char_code):
+    font_data[char_code] = [0 for _ in range(FONT_H)]
 
-    def _save_current(self):
-        # 変更はリアルタイムに保存しているので特になし
-        pass
-
-    def _prev_char(self):
-        self._save_current()
-        if self.char_index>0:
-            self.char_index -=1
-            self._load_char()
-
-    def _next_char(self):
-        self._save_current()
-        if self.char_index<255:
-            self.char_index +=1
-            self._load_char()
-
-    def _export(self):
-        path = filedialog.asksaveasfilename(defaultextension=".h",
-             filetypes=[("C Header","*.h")])
-        if not path: return
-        with open(path, "w") as f:
-            f.write("unsigned char font[256][12] = {\n")
-            for ci in range(256):
-                f.write("  { ")
-                for y in range(12):
-                    b = self.char_data[ci][y]
-                    f.write(f"0x{b:02X}")
-                    if y<11: f.write(", ")
-                f.write(" },\n")
-            f.write("};\n")
-        tk.messagebox.showinfo("Export", f"Saved to {path}")
-
-    def _import(self):
-        path = filedialog.askopenfilename(
-            filetypes=[("C Source/Header","*.c;*.h"),("All files","*.*")])
-        if not path: return
-        text = open(path, "r", encoding="utf-8", errors="ignore").read()
-        vals = re.findall(r'0x([0-9A-Fa-f]{2})', text)
-        if len(vals) < 256*12:
-            messagebox.showerror("Import", "フォントデータが不足しています")
-            return
-        for idx, hx in enumerate(vals[:256*12]):
-            ci, y = divmod(idx, 12)
-            self.char_data[ci][y] = int(hx, 16)
-        messagebox.showinfo("Import", f"{path} から読み込みました")
-        self._load_char()
-
-    def run(self):
-        self.root.mainloop()
+def main():
+    global current_char
+    pygame.key.set_repeat(300, 40)  # キーリピート有効化（初回300ms、以降40ms間隔）
+    running = True
+    drawing = False
+    draw_value = None
+    while running:
+        draw_grid(current_char)
+        pygame.display.flip()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RIGHT:
+                    current_char = (current_char + 1) % 256
+                elif event.key == pygame.K_LEFT:
+                    current_char = (current_char - 1) % 256
+                elif event.key == pygame.K_s:
+                    save_font()
+                elif event.key == pygame.K_l:
+                    load_font()
+                elif event.key == pygame.K_c:
+                    clear_char(current_char)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = event.pos
+                gx = (mx - MARGIN) // CELL_SIZE
+                gy = (my - MARGIN) // CELL_SIZE
+                if 0 <= gx < FONT_W and 0 <= gy < FONT_H:
+                    mask = 1 << (7 - gx)
+                    if (font_data[current_char][gy] & mask):
+                        font_data[current_char][gy] &= ~mask
+                        draw_value = 0
+                    else:
+                        font_data[current_char][gy] |= mask
+                        draw_value = 1
+                    drawing = True
+            elif event.type == pygame.MOUSEBUTTONUP:
+                drawing = False
+                draw_value = None
+            elif event.type == pygame.MOUSEMOTION and drawing:
+                mx, my = event.pos
+                gx = (mx - MARGIN) // CELL_SIZE
+                gy = (my - MARGIN) // CELL_SIZE
+                if 0 <= gx < FONT_W and 0 <= gy < FONT_H:
+                    mask = 1 << (7 - gx)
+                    if draw_value == 1:
+                        font_data[current_char][gy] |= mask
+                    elif draw_value == 0:
+                        font_data[current_char][gy] &= ~mask
+        clock.tick(30)
+    pygame.quit()
+    sys.exit()
 
 if __name__ == "__main__":
-    FontMaker().run()
+    main()

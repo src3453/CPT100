@@ -106,13 +106,13 @@ function LOOP()
             if a<384 then line(a,255-buf[math.max(a,1)],a+1,255-buf[a+1],255) end
             --vpoke((t)%0x1b000,pre+((nxt-pre)*(t%1)))
             --vpoke(0x1b000+t*8%768+0, pre)
-            --vpoke(0x1c000+t%(1152*3), pre)
+            vpoke(0x1c000+t%(1152*3), math.random(0,255))
             t=t+0.125
             
         end
     end
-    scrollp(0,1)
-    printp(string.format("%d, %d",bufremaining, t2),0,23,255,0)
+    --scrollp(0,1)
+    --printp(string.format("%d, %d",bufremaining, t2),0,23,255,0)
     put_dma_buffer(0, buf)
     --rect(0,0,192,48,0)
     --_print(string.format("DMA buffer length: %d",bufremaining),0,12,255) --flush data
