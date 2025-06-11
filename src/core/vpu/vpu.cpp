@@ -20,6 +20,8 @@ public:
   {
   }
 
+  // Hardware T&L: Transform and Lighting
+
   int dither(int x, int y, float value)
   {
     // dithering helper function

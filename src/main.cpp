@@ -18,6 +18,7 @@ std::string inputText = "";
 #include "core/ram.cpp"
 #include "core/disp.cpp"
 #include "core/text.cpp"
+#include "core/music.cpp"
 #include "core/vpu/vpu.cpp"
 #include "core/sound_drv_SDL.cpp"
 

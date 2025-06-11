@@ -147,6 +147,19 @@ void api_vpu_init() {
     
 }
 
+void api_file_open(float slot, std::string filename) {
+    std::cout << "Opening file: " << filename << std::endl;
+    if (slot < 0 || slot >= 4) {
+        std::cerr << "Invalid slot number. Must be between 0 and 3." << std::endl;
+        return;
+    }
+    if (filename.empty()) {
+        std::cerr << "Filename cannot be empty." << std::endl;
+        return;
+    }
+    
+}
+
 void api_screen(int mode) {
     screenMode = (int)mode;
 } 

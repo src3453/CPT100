@@ -99,7 +99,7 @@ def clear_char(char_code):
 
 def main():
     global current_char
-    pygame.key.set_repeat(300, 40)  # キーリピート有効化（初回300ms、以降40ms間隔）
+    pygame.key.set_repeat(700, 40)  # キーリピート有効化（初回700ms、以降40ms間隔）
     running = True
     drawing = False
     draw_value = None
