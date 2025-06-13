@@ -38,7 +38,11 @@ void api_trace(std::string text) {
     printf(((std::string)text+"\n").c_str());
 }
 void api_cls(float color) {
-    scr.cls((Byte)(int)color);
+    if (screenMode == 0) {
+        scr.cls((Byte)(int)color);
+    } else if (screenMode == 1) {
+        font.clearPCG((Byte)(int)color);
+    }
 }
 int api_rgb(float r, float g, float b) {
     return scr.fromRGB((int)r,(int)g,(int)b);

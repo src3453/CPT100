@@ -67,6 +67,14 @@ public:
         }
     }
 
+    void clearPCG(uint8_t color) {
+        for (int i = 0; i < CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT / 96; ++i) {
+            vram_poke(vram, PCG_OFFSET + i * 3 + 0, (char)0);
+            vram_poke(vram, PCG_OFFSET + i * 3 + 1, 255);
+            vram_poke(vram, PCG_OFFSET + i * 3 + 2, (uint8_t)color);
+        }
+    }
+
 
     void print(const std::string text, int x = 0, int y = 0, Byte color = 255) {
         for (size_t i = 0; i < text.length(); ++i) {
