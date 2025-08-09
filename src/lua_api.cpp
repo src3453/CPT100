@@ -10,10 +10,14 @@ std::string LuaSrcPath = "";
 
 #define Byte unsigned char
 
+// API functions, these are called from Lua frontend
+
 void api__maincall() {
+    // it is a special API function that is called once at the beginning, works as main entry point
+    // will be override LOOP() function used in opening.lua
     timerStart = clock();
     lua.script(main_source);
-    sol::function func = lua["BOOT"];
+    sol::function func = lua["BOOT"]; // it will be called once at the beginning, useful for initialization
     if (func != sol::nil) func();
 }
 int api_peek(float addr) {
@@ -57,7 +61,7 @@ int api_key(float keycode) {
     int length = 0;
     const Uint8* buf = SDL_GetKeyboardState(&length);
     const std::vector<Uint8> keystates(buf,buf+length);
-    std::cout << buf;
+    //std::cout << buf;
     return keystates.at((int)keycode);
 }
 std::string api_to_key_name(float keycode) {
@@ -176,7 +180,14 @@ void api_scrollp(float x, float y) {
     font.scrollPCG((int)y);
 }
 
+void api_include(std::string content) {
+    // This function is used to include a Lua script from a string
+    // It can be used to dynamically load Lua code at runtime
+    lua.script(content);
+}
+
 void register_functions() {
+    // Register all API functions
     lua.set_function("_maincall",api__maincall);
     lua.set_function("peek",api_peek);
     lua.set_function("poke",api_poke);
@@ -214,10 +225,12 @@ void register_functions() {
     lua.set_function("screen", api_screen);
     lua.set_function("printp", api_printp);
     lua.set_function("scrollp", api_scrollp);
+    lua.set_function("include", api_include);
 
 }
 
 void init_lua() {
+    // it will call opening screen, then it will be overridden by main entry point
     lua.open_libraries(
     sol::lib::base,
     sol::lib::package,
@@ -227,6 +240,7 @@ void init_lua() {
     sol::lib::io);
     register_functions();
     lua["_CPT_VERSION"] = (std::string)VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
+    // in WASM build, some features will be limited
     #ifdef WASM_BUILD
     lua["_CPT_IS_WASM"] = 1;
     #else 
@@ -234,6 +248,8 @@ void init_lua() {
     #endif
     lua.script(opening_source);
 }
+
+// These functions are called when specific events occur by C++ backend
 
 void Lua_OnKeyDown(int key) {
     sol::function func = lua["ONKEYDOWN"];

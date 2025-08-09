@@ -65,11 +65,11 @@ def draw_grid(char_code):
 def save_font():
     root = tk.Tk()
     root.withdraw()
-    path = filedialog.asksaveasfilename(defaultextension=".h", filetypes=[("C Header", "*.h")])
+    path = filedialog.asksaveasfilename(defaultextension=".h", filetypes=[("C/C++ Header", ("*.h", "*.hpp"))])
     if not path:
         return
     with open(path, "w", encoding="utf-8") as f:
-        f.write("unsigned char font[256][12] = {\n")
+        f.write("unsigned char font8x12[256][12] = {\n")
         for i, char in enumerate(font_data):
             f.write("  { " + ", ".join(f"0x{b:02X}" for b in char) + " }")
             f.write(",\n" if i < 255 else "\n")
@@ -78,7 +78,7 @@ def save_font():
 def load_font():
     root = tk.Tk()
     root.withdraw()
-    path = filedialog.askopenfilename(filetypes=[("C Header", "*.h")])
+    path = filedialog.askopenfilename(filetypes=[("C/C++ Header", ("*.h", "*.hpp"))])
     if not path:
         return
     with open(path, "r", encoding="utf-8") as f:

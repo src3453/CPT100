@@ -41,11 +41,11 @@ void cpt_init(int argv, char** args) {
     version = padTo(version,44);
     std::string opening_msg = 
     (std::string)
-    "+------------------------------------------------+\n"
-    "|  CPT200 High-spec Fantasy Console              |\n"
-    "|  " + padTo(version,44) +       (std::string)"  |\n"
-    "|  (c) src3453 2023 Released under MIT Licence.  |\n"
-    "+------------------------------------------------+\n";
+    "+-----------------------------------------------------+\n"
+    "|  CPT200 High-spec Fantasy Console                   |\n"
+    "|  " + padTo(version,44) +       (std::string)"       |\n"
+    "|  (c) src3453 2023-2025 Released under MIT Licence.  |\n"
+    "+-----------------------------------------------------+\n";
     std::cout << opening_msg << std::endl;
     scr.init();
     initSound();
