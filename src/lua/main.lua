@@ -1,5 +1,7 @@
 -- CPT200 Demo: Flappy Bird
 
+debug = 0
+
 AABB = {
     -- Axis-Aligned Bounding Box struct
     x = 0,
@@ -49,6 +51,9 @@ end
 function draw_obstacles()
     for i, obs in ipairs(obstacles) do
         rect(obs.x, obs.y, obs.w, obs.h, rgb(0,255,0))
+        if debug%2==1 then
+            print(""..i, obs.x + 2, obs.y + 2, rgb(0,0,0)) -- Draw obstacle index for debugging
+        end
     end
 end
 
@@ -127,20 +132,28 @@ function LOOP()
             player_vy = 0
             previous_score = score
             score = 0 -- Reset score
-            timer_gameover = 60 -- Set game over timer for 1 second
+            timer_gameover = 120 -- Set game over timer for 2 seconds
         end
     end
     print("Flappy Bird: CPT200 Tech Demo", 0, 0, rgb(255,255,255))
     print("Score: " .. int(score), 0, 12, rgb(255,255,255))
-    
+    if debug%2==1 then
+        print("y: " .. (player_y), 0, 24, rgb(0,0,0))
+        print("vy: " .. (player_vy), 0, 36, rgb(0,0,0))
+        print("Obstacles: " .. #obstacles, 0, 48, rgb(0,0,0))
+        print("Gameover timer: " .. (timer_gameover), 0, 60, rgb(0,0,0))
+    end
     t = t + 1
 end
 
 function ONKEYDOWN(k)
-    if to_key_name(k) == "X" then
+    if to_key_name(k) == "Space" then
         if timer_gameover == 0 then
             beep(200)
             player_vy = 2
         end
+    end
+    if to_key_name(k) == "D" then
+        debug = debug + 1
     end
 end
