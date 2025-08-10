@@ -27,9 +27,8 @@ function LOOP()
         
     end
     if _tick >= 5 then
-        printp("VPU: Vertex  Processor... OK!",0,5,255,0)
-        printp("VPU: Shading Processor... OK!",0,6,255,0)
-        printp("Sound Module: 3HS88PWN4... OK! (1x Found; Rev.3)",0,7,255,0)
+        printp("VPU: 3D System... ALL OK!",0,5,255,0)
+        printp("Sound Module: 3HS88PWN4... OK! (Rev.C)",0,6,255,0)
     end
     if _tick >= 10 then
         printp("System check complete!",0,8,255,0)
