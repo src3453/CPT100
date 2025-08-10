@@ -19,13 +19,13 @@ end
 function spawn_obstacle()
     -- Create a new obstacle at a random height
     -- in Flappy Bird, the obstacles are gaps between pipes
-    local gap_y = math.random(64, 224)
+    local gap_y = math.random(48, 288-48)
     -- Create the top and bottom parts of the obstacle
     local top = {
         x = 384,
         y = 0,
         w = 16,
-        h = gap_y - 32
+        h = gap_y - 48
     }
     local bottom = {
         x = 384,
@@ -39,7 +39,7 @@ end
 
 function update_obstacles()
     for i, obs in ipairs(obstacles) do
-        obs.x = obs.x - 2 -- Move obstacles left
+        obs.x = obs.x - 1 -- Move obstacles left
     end
     if obstacles[1] and obstacles[1].x < -16 then
         table.remove(obstacles, 1) -- Remove off-screen obstacles
@@ -73,6 +73,18 @@ function update_and_draw_player()
 
 end
 
+function beep(freq)
+    poke(0x400000,freq//256)
+    poke(0x400001,freq%256)
+    poke(0x400010,255)
+    poke(0x400018,0x30)
+    poke(0x400021,32)
+    poke(0x400023,32)
+    poke(0x40001e,1)
+    poke(0x40001f,0x80)
+    resetgate(0)
+end
+
 obstacles = {}
 
 player_x = 0
@@ -85,20 +97,20 @@ t = 0
 
 function BOOT()
     screen(0)
-    cls(rgb(0,128,255))
+    cls(rgb(0,96,192))
     player_x = 16
 
 end
 
 function LOOP()
-    cls(rgb(0,128,255)) -- Clear screen
+    cls(rgb(0,96,192)) -- Clear screen
 
     
     if timer_gameover > 0 then
         timer_gameover = timer_gameover - 1
         print("Game Over! Score: " .. int(previous_score), 100, 138, rgb(255,0,0))
     else
-        if t % 60 == 0 then
+        if t % 120 == 0 then
             spawn_obstacle() -- Spawn a new obstacle every second
         end
         update_and_draw_player()
@@ -109,6 +121,7 @@ function LOOP()
     if obstacle_collides_with_player() then
         -- Handle player collision with obstacle
         if timer_gameover == 0 then
+            beep(100)
             obstacles = {} -- Reset obstacles
             player_y = 144
             player_vy = 0
@@ -125,6 +138,9 @@ end
 
 function ONKEYDOWN(k)
     if to_key_name(k) == "X" then
-        player_vy = 2
+        if timer_gameover == 0 then
+            beep(200)
+            player_vy = 2
+        end
     end
 end
