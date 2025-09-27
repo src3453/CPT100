@@ -120,11 +120,18 @@ void api_spr(float num, float x, float y, float w=1, float h=1) {
 int api_showcur(float toggle=-1) {
     return SDL_ShowCursor((int)toggle);
 }
+int api_showcurp(float toggle=-1) {
+    if (toggle != -1) {
+        mode1_cursorShow = (int)toggle;
+    }
+    font.setCursorVisibilityPCG(mode1_cursorShow!=0);
+    return mode1_cursorShow;
+}
 void api_startinput() {
     SDL_StartTextInput();
 }
 void api_stopinput() {
-    SDL_StartTextInput();
+    SDL_StopTextInput();
 }
 void api_resetinput() {
     inputText = "";
@@ -172,12 +179,36 @@ void api_screen(int mode) {
     screenMode = (int)mode;
 } 
 
-void api_printp(std::string text, float x, float y, float color=255, float bgColor=0) {
-    font.printPCG((std::string)text, (int)x, (int)y, (Byte)(int)color, (Byte)(int)bgColor);
+void api_printp(std::string text) {
+    font.printPCG((std::string)text);
+}
+
+void api_printlnp(std::string text) {
+    font.printPCG((std::string)text+"\n");
+}
+
+void api_lc(float x, float y) {
+    font.locatePCG((int)x, (int)y);
+}
+
+void api_cursorp(bool visible) {
+    font.setCursorVisibilityPCG(visible);
+}
+
+void api_colorfg(float color) {
+    font.setFGColor((Byte)(int)color);
+}
+
+void api_colorbg(float color) {
+    font.setBGColor((Byte)(int)color);
 }
 
 void api_scrollp(float x, float y) {
     font.scrollPCG((int)y);
+}
+
+void api_movecursor(float dx, float dy) {
+    font.moveCursorPCG((int)dx, (int)dy);
 }
 
 void api_include(std::string content) {
@@ -213,6 +244,7 @@ void register_functions() {
     lua.set_function("line",api_line);
     lua.set_function("spr",api_spr);
     lua.set_function("showcur",api_showcur);
+    lua.set_function("showcurp",api_showcurp);
     lua.set_function("startinput",api_startinput);
     lua.set_function("stopinput",api_stopinput);
     lua.set_function("resetinput",api_resetinput);
@@ -224,7 +256,13 @@ void register_functions() {
     lua.set_function("vpu_init", api_vpu_init);
     lua.set_function("screen", api_screen);
     lua.set_function("printp", api_printp);
+    lua.set_function("printlnp", api_printlnp);
     lua.set_function("scrollp", api_scrollp);
+    lua.set_function("lc", api_lc);
+    lua.set_function("cursorp", api_cursorp);
+    lua.set_function("colorfg", api_colorfg);
+    lua.set_function("colorbg", api_colorbg);
+    lua.set_function("movecursor", api_movecursor);
     lua.set_function("include", api_include);
 
 }

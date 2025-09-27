@@ -31,37 +31,90 @@ public:
     }
 
     #define PCG_OFFSET 0x1c000
+    #define PCG_SCREEN_WIDTH CPT_SCREEN_WIDTH/8
+    #define PCG_SCREEN_HEIGHT CPT_SCREEN_HEIGHT/12
+
+    void locatePCG(int x, int y) {
+        // Set the cursor position for PCG
+        cursor_x = x;
+        cursor_y = y;
+    }
+
+    void moveCursorPCG(int dx, int dy) {
+        cursor_x += dx;
+        cursor_y += dy;
+
+        if (cursor_x < 0) {cursor_x = 0; cursor_y--;}
+        if (cursor_x >= PCG_SCREEN_WIDTH) {cursor_x = 0; cursor_y++;}
+        if (cursor_y < 0) {cursor_y = 0;}
+        if (cursor_y >= PCG_SCREEN_HEIGHT) {cursor_y = PCG_SCREEN_HEIGHT - 1;}
+    }
+
+    void setCursorVisibilityPCG(bool visible) {
+        cursor_visible = visible;
+    }
 
     void drawCharPCG(int mode) {
         if (mode == 1) {
             // Draw a character in mode 1
             //screen.cls(0);
             int i = 0;
-            for (int y = 0; y < CPT_SCREEN_HEIGHT/12; ++y) {
-                for (int x = 0; x < CPT_SCREEN_WIDTH/8; ++x) {
-                    screen.rect(x * 8, y * 12, 8, 12, vram_peek(vram, PCG_OFFSET+i*3+2));
-                    drawChar(vram_peek(vram, PCG_OFFSET+i*3), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*3+1));
+            for (int y = 0; y < PCG_SCREEN_HEIGHT; ++y) {
+                for (int x = 0; x < PCG_SCREEN_WIDTH; ++x) {
+                    if (cursor_visible && x == cursor_x && y == cursor_y && blinktimer % 10 < 5) {
+                        screen.rect(x * 8, y * 12, 8, 12, vram_peek(vram, PCG_OFFSET+i*3+1));
+                        drawChar(vram_peek(vram, PCG_OFFSET+i*3), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*3+2));
+                    } else {
+                        screen.rect(x * 8, y * 12, 8, 12, vram_peek(vram, PCG_OFFSET+i*3+2));
+                        drawChar(vram_peek(vram, PCG_OFFSET+i*3), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*3+1));
+                    }
+                   
                     i++;
+                    
                 }
             }
+            blinktimer++;
         }
     }
 
-    void printPCG(std::string text, int x = 0, int y = 0, Byte color = 255, Byte BGcolor = 0) {
+    void setFGColor(Byte color) {
+        colorFG = color;
+    }
+
+    void setBGColor(Byte color) {
+        colorBG = color;
+    }
+
+    void printPCG(std::string text) {
         for (size_t i = 0; i < text.length(); ++i) {
-            vram_poke(vram, PCG_OFFSET+(y*(CPT_SCREEN_WIDTH/8)+x+i)*3+0, text[i]);
-            vram_poke(vram, PCG_OFFSET+(y*(CPT_SCREEN_WIDTH/8)+x+i)*3+1, color);
-            vram_poke(vram, PCG_OFFSET+(y*(CPT_SCREEN_WIDTH/8)+x+i)*3+2, BGcolor);
+            if (text[i] == '\n') {
+                cursor_x = 0; // reset to start of line
+                cursor_y += 1; // move to next line
+            } else if (text[i] == '\r') {
+                cursor_x = 0; // carriage return
+            }
+            else if (text[i] == '\t') {
+                cursor_x += 4; // tab, move 4 spaces
+            } else {
+                vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+0, text[i]);
+                vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+1, colorFG);
+                vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+2, colorBG);
+                cursor_x += 1;
+            }
+            if (cursor_x >= (PCG_SCREEN_WIDTH)) {
+                cursor_x =  0; // carriage return
+                cursor_y += 1; // line feed
+            }
         }
     }
 
     void scrollPCG(int lines) {
         for (int i = 0; i < lines; ++i) {
-            for (int y = 0; y < CPT_SCREEN_HEIGHT/12; ++y) {
-                for (int x = 0; x < CPT_SCREEN_WIDTH/8; ++x) {
-                    vram_poke(vram, PCG_OFFSET+(y*(CPT_SCREEN_WIDTH/8)+x)*3+0, vram_peek(vram, PCG_OFFSET+((y+1)*(CPT_SCREEN_WIDTH/8)+x)*3+0));
-                    vram_poke(vram, PCG_OFFSET+(y*(CPT_SCREEN_WIDTH/8)+x)*3+1, vram_peek(vram, PCG_OFFSET+((y+1)*(CPT_SCREEN_WIDTH/8)+x)*3+1));
-                    vram_poke(vram, PCG_OFFSET+(y*(CPT_SCREEN_WIDTH/8)+x)*3+2, vram_peek(vram, PCG_OFFSET+((y+1)*(CPT_SCREEN_WIDTH/8)+x)*3+2));
+            for (int y = 0; y < PCG_SCREEN_HEIGHT; ++y) {
+                for (int x = 0; x < PCG_SCREEN_WIDTH; ++x) {
+                    vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+0, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+0));
+                    vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+1, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+1));
+                    vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+2, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+2));
                 }
             }
         }
@@ -84,6 +137,12 @@ public:
 
 private:
     CPT_Screen &screen;
+    int cursor_x = 0;
+    int cursor_y = 0;
+    int colorFG = 255;
+    int colorBG = 0;
+    int blinktimer = 0;
+    bool cursor_visible = true;
 
     void loadFontData() {
         // Load font data from a file or any data source and store it in fontData

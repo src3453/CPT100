@@ -3,3 +3,4 @@ src/config.h
 src/lua/*.lua.hpp
 converted.lua
 **.bk
+**.f12

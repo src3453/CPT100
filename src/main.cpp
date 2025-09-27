@@ -10,6 +10,7 @@
 
 int mouseState = 0;
 int screenMode = 0;
+int mode1_cursorShow = 1;
 std::string inputText = "";
 
 #define Byte unsigned char
