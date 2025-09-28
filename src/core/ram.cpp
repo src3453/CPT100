@@ -1,4 +1,5 @@
 #include <vector>
+#include <tuple>
 
 std::vector<unsigned char> ram(RAM_SIZE, 0);
 std::vector<unsigned char> vram(VRAM_SIZE, 0);
@@ -10,7 +11,7 @@ void ram_boot(std::vector<unsigned char>& ram, std::vector<unsigned char>& vram)
 
 unsigned char vram_peek(std::vector<unsigned char>& vram, int addr) {
     if (addr < 0) {
-        return unsigned char(0);
+        return 0;
     }
     if (addr < VRAM_SIZE) {
         return vram.at(addr);
@@ -45,7 +46,7 @@ void vram_poke2array(std::vector<unsigned char>& vram, int addr, std::vector<uns
 
 unsigned char ram_peek(std::vector<unsigned char>& ram, int addr) {
     if (addr < 0) {
-        return unsigned char(0);
+        return 0;
     }
     if (addr < RAM_SIZE) {
         return ram.at(addr);

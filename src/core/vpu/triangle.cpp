@@ -11,7 +11,7 @@ public:
   int u2, v2; // Texture coordinates for vertex 2
   int u3, v3; // Texture coordinates for vertex 3
   int z1, z2, z3; // Depth values for the vertices
-vpuTriangle::vpuTriangle(int x1,int y1,int x2,int y2,int x3,int y3,int u1,int v1,int u2,int v2,int u3,int v3,int z1,int z2,int z3)
+vpuTriangle(int x1,int y1,int x2,int y2,int x3,int y3,int u1,int v1,int u2,int v2,int u3,int v3,int z1,int z2,int z3)
 {
   this->x1 = x1;
   this->y1 = y1;
@@ -30,7 +30,7 @@ vpuTriangle::vpuTriangle(int x1,int y1,int x2,int y2,int x3,int y3,int u1,int v1
   this->z3 = z3;
 }
 
-vpuTriangle::~vpuTriangle()
+~vpuTriangle()
 {
 }
 };

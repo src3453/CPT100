@@ -6,7 +6,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <SDL.h>
-
+//#include "boost/tuple/tuple.hpp"
 
 int mouseState = 0;
 int screenMode = 0;

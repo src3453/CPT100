@@ -15,7 +15,7 @@ public:
   unsigned int height; // Height of the texture
   TexFormat format; // Format of the texture (palette or RGB)
   unsigned char *texBuffer; // Pointer to the texture buffer
-  vpuTexBuffer::vpuTexBuffer(unsigned int width, unsigned int height, TexFormat format)
+  vpuTexBuffer(unsigned int width, unsigned int height, TexFormat format)
   {
     // Allocate memory for the texture buffer based on the format
     if (format == TEX_PALETTE) {
