@@ -11,6 +11,7 @@
 class Font {
 public:
     Font(CPT_Screen &screen) : screen(screen) {
+        clearPCG(0);
     }
 
 
@@ -61,7 +62,7 @@ public:
             int i = 0;
             for (int y = 0; y < PCG_SCREEN_HEIGHT; ++y) {
                 for (int x = 0; x < PCG_SCREEN_WIDTH; ++x) {
-                    if (cursor_visible && x == cursor_x && y == cursor_y && blinktimer % 10 < 5) {
+                    if (cursor_visible && x == cursor_x && y == cursor_y && blinktimer % 20 < 10) {
                         screen.rect(x * 8, y * 12, 8, 12, vram_peek(vram, PCG_OFFSET+i*3+1));
                         drawChar(vram_peek(vram, PCG_OFFSET+i*3), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*3+2));
                     } else {
