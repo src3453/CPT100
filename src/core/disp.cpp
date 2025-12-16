@@ -4,6 +4,17 @@
 //#include "ram.cpp"
 #include <math.h>
 
+/*
+VRAM Layout:
+0x00000 - 0x1AFFF: Screen Data (384x288 pixels, 1 byte per pixel)
+0x1B000 - 0x1B2FF: Color Lookup Table (CLUT) (256 colors, 3 bytes each: R, G, B)
+0x1B300 - 0x1BEFF: Font Data (8x12 font, 256 characters, 12 bytes each)
+0x1BF00 - 0x1BFFF: Reserved
+0x1C000 - 0x1CD7F: PCG Data (8x12 font, 256 characters, 3 bytes each: char code (as in CP437), fg color, bg color)
+0x1CD80 - 0x1CFFF: Reserved 
+0x1D000 - 0x1FFFF: Sprite Data 
+*/
+
 int wx,wy,ww,wh = 0;
 
 class CPT_Screen {

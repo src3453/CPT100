@@ -1,6 +1,6 @@
 build/*
 src/config.h
-src/lua/*.lua.hpp
+**.lua.hpp
 converted.lua
 **.bk
 **.f12

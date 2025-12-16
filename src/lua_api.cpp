@@ -1,3 +1,9 @@
+// Define SOL2 flags
+#define SOL_ALL_SAFETIES_ON 1
+#define SOL_EXCEPTIONS_ALWAYS_UNSAFE 1
+#define SOL_EXCEPTIONS_SAFE_PROPAGATION 1
+
+
 #include "sol/sol.hpp"
 #include <time.h>
 
@@ -217,6 +223,18 @@ void api_include(std::string content) {
     lua.script(content);
 }
 
+void api_init_sound_input(int samples=1024) {
+    initSoundInput(samples);
+}
+
+std::vector<float> api_acquire_sound_input() {
+    return acquireSoundInput();
+}
+
+std::vector<float> api_acquire_sound_input_fft(int fft_size) {
+    return acquireSoundInputFFT(fft_size);
+}
+
 void register_functions() {
     // Register all API functions
     lua.set_function("_maincall",api__maincall);
@@ -264,6 +282,9 @@ void register_functions() {
     lua.set_function("colorbg", api_colorbg);
     lua.set_function("movecursor", api_movecursor);
     lua.set_function("include", api_include);
+    lua.set_function("init_sound_input", api_init_sound_input);
+    lua.set_function("acquire_sound_input", api_acquire_sound_input);
+    lua.set_function("acquire_sound_input_fft", api_acquire_sound_input_fft);
 
 }
 
@@ -284,28 +305,105 @@ void init_lua() {
     #else 
     lua["_CPT_IS_WASM"] = 0;
     #endif
+
+    std::string subroutines_source = "";
+    #include "lua/subroutine/s_io.lua.hpp"
+    #include "lua/subroutine/s_game.lua.hpp"
+    subroutines_source += s_io_source+"\n";
+    subroutines_source += s_game_source+"\n";
+    lua.script(subroutines_source);
+    
     lua.script(opening_source);
 }
 
 // These functions are called when specific events occur by C++ backend
 
 void Lua_OnKeyDown(int key) {
-    sol::function func = lua["ONKEYDOWN"];
-    if (func != sol::nil) func(key);
-    
+    try {
+        sol::function func = lua["ONKEYDOWN"];
+        if (func != sol::nil) func(key);
+    } catch (const sol::error& e) {
+        std::cerr << "Lua error in ONKEYDOWN(): " << e.what() << std::endl;
+        font.locatePCG(0,0);
+        font.setFGColor(scr.fromRGB(255,0,0)); // Red
+        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.printPCG("Lua error in ONKEYDOWN():");
+        font.printPCG(e.what());
+    } catch (const std::exception& e) {
+        std::cerr << "Lua error in ONKEYDOWN(): " << e.what() << std::endl;
+        font.locatePCG(0,0);
+        font.setFGColor(scr.fromRGB(255,0,0)); // Red
+        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.printPCG("Lua error in ONKEYDOWN():");
+        font.printPCG(e.what());
+    }
 }
 
 void Lua_OnKeyUp(int key) {
-    sol::function func = lua["ONKEYUP"];
-    if (func != sol::nil) func(key);
+    try {
+        sol::function func = lua["ONKEYUP"];
+        if (func != sol::nil) func(key);
+    } catch (const sol::error& e) {
+        std::cerr << "Lua error in ONKEYUP(): " << e.what() << std::endl;
+        font.locatePCG(0,0);
+        font.setFGColor(scr.fromRGB(255,0,0)); // Red
+        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.printPCG("Lua error in ONKEYUP():");
+        font.printPCG(e.what());
+    } catch (const std::exception& e) {
+        std::cerr << "Lua error in ONKEYUP(): " << e.what() << std::endl;
+        font.locatePCG(0,0);
+        font.setFGColor(scr.fromRGB(255,0,0)); // Red
+        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.printPCG("Lua error in ONKEYUP():");
+        font.printPCG(e.what());
+    }
 }
 
 void Lua_MainLoop() {
-    sol::function func = lua["LOOP"];
-    if (func != sol::nil) func();
+    try {
+        sol::function func = lua["LOOP"];
+        if (func != sol::nil) {
+            auto result = func();
+            if (!result.valid()) {
+                sol::error err = result;
+                throw sol::error(err.what());
+            }
+        }
+    } catch (const sol::error& e) {
+        std::cerr << "Lua error in LOOP(): " << e.what() << std::endl;
+        font.locatePCG(0,0);
+        font.setFGColor(scr.fromRGB(255,0,0)); // Red
+        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.printPCG("Lua error in LOOP():");
+        font.printPCG(e.what());
+    } catch (const std::exception& e) {
+        std::cerr << "Lua error in LOOP(): " << e.what() << std::endl;
+        font.locatePCG(0,0);
+        font.setFGColor(scr.fromRGB(255,0,0)); // Red
+        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.printPCG("Lua error in LOOP():");
+        font.printPCG(e.what());
+    }
 }
 
 void Lua_OnTextInput(std::string inputChar) {
-    sol::function func = lua["ONINPUT"];
-    if (func != sol::nil) func((std::string)inputChar);
+    try {
+        sol::function func = lua["ONTEXTINPUT"];
+        if (func != sol::nil) func((std::string)inputChar);
+    } catch (const sol::error& e) {
+        std::cerr << "Lua error in ONTEXTINPUT(): " << e.what() << std::endl;
+        font.locatePCG(0,0);
+        font.setFGColor(scr.fromRGB(255,0,0)); // Red
+        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.printPCG("Lua error in ONTEXTINPUT():");
+        font.printPCG(e.what());
+    } catch (const std::exception& e) {
+        std::cerr << "Lua error in ONTEXTINPUT(): " << e.what() << std::endl;
+        font.locatePCG(0,0);
+        font.setFGColor(scr.fromRGB(255,0,0)); // Red
+        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.printPCG("Lua error in ONTEXTINPUT():");
+        font.printPCG(e.what());
+    }
 }

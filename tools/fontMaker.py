@@ -7,7 +7,7 @@ from tkinter import filedialog
 CELL_SIZE = 32
 MARGIN = 8
 FONT_W, FONT_H = 8, 12
-SCREEN_W, SCREEN_H = CELL_SIZE * FONT_W + MARGIN * 2, CELL_SIZE * FONT_H + MARGIN * 2 + 80
+SCREEN_W, SCREEN_H = CELL_SIZE * FONT_W + MARGIN * 2, CELL_SIZE * FONT_H + MARGIN * 2 + 120
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
@@ -52,15 +52,16 @@ def draw_grid(char_code):
     if char_code == 0:
         char_disp = " "
     txt = font.render(f"Char: 0x{char_code:02X} ({char_disp})", True, (200, 200, 0))
-    screen.blit(txt, (MARGIN, SCREEN_H - 70))
+    screen.blit(txt, (MARGIN, SCREEN_H - 90))
     # ヘルプ
     help_lines = [
         "クリック: ドットON/OFF",
-        "←/→: 文字切替  S:保存  L:読込  C:クリア"
+        "←/→: 文字切替  S:保存  L:読込",
+        "C:クリア  M:コピー"
     ]
     for i, line in enumerate(help_lines):
         t = help_font.render(line, True, (180, 180, 180))
-        screen.blit(t, (MARGIN, SCREEN_H - 40 + i * 20))
+        screen.blit(t, (MARGIN, SCREEN_H - 60 + i * 20))
 
 def save_font():
     root = tk.Tk()
@@ -120,6 +121,19 @@ def main():
                     load_font()
                 elif event.key == pygame.K_c:
                     clear_char(current_char)
+                elif event.key == pygame.K_m:
+                    # コピー機能の追加
+                    # ダイアログを表示してコピー元の文字コードを入力
+                    root = tk.Tk()
+                    root.withdraw()
+                    code_str = tk.simpledialog.askstring("コピー元文字コード", "コピー元の文字コードを16進数で入力 (例: 41):")
+                    if code_str:
+                        try:
+                            src_code = int(code_str, 16)
+                            if 0 <= src_code < 256:
+                                font_data[current_char] = font_data[src_code][:]
+                        except ValueError:
+                            pass
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mx, my = event.pos
                 gx = (mx - MARGIN) // CELL_SIZE

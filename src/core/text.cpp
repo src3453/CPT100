@@ -8,12 +8,25 @@
 
 #include "res/font8x12.hpp"
 
+
+
+#define PCG_OFFSET 0x1c000
+#define FONT_OFFSET 0x1b300
+
 class Font {
 public:
     Font(CPT_Screen &screen) : screen(screen) {
-        clearPCG(0);
+        
     }
 
+    void loadFontData() {
+        // Load font data into VRAM at FONT_OFFSET
+        for (int i = 0; i < 256; ++i) {
+            for (int j = 0; j < 12; ++j) {
+                vram_poke(vram, FONT_OFFSET + i * 12 + j, font8x12[i][j]);
+            }
+        }
+    }
 
     void drawChar(char ch, int x, int y, Byte color) {
         // Get the character index (0-255)
@@ -21,7 +34,7 @@ public:
         
         // Draw the character
         for (int i = 0; i < 12; ++i) {
-            unsigned char row = font8x12[charIndex][i];
+            unsigned char row = vram_peek(vram, FONT_OFFSET + charIndex * 12 + i);
             for (int j = 0; j < 8; ++j) {
                 // Check if the bit is set (1 = pixel on, 0 = pixel off)
                 if ((row >> (7 - j)) & 0x01) {
@@ -31,7 +44,7 @@ public:
         }
     }
 
-    #define PCG_OFFSET 0x1c000
+    #define BLINK_INTERVAL 10 // Number of frames for blink toggle
     #define PCG_SCREEN_WIDTH CPT_SCREEN_WIDTH/8
     #define PCG_SCREEN_HEIGHT CPT_SCREEN_HEIGHT/12
 
@@ -62,7 +75,7 @@ public:
             int i = 0;
             for (int y = 0; y < PCG_SCREEN_HEIGHT; ++y) {
                 for (int x = 0; x < PCG_SCREEN_WIDTH; ++x) {
-                    if (cursor_visible && x == cursor_x && y == cursor_y && blinktimer % 20 < 10) {
+                    if (cursor_visible && x == cursor_x && y == cursor_y && blinktimer % (BLINK_INTERVAL*2) < BLINK_INTERVAL) {
                         screen.rect(x * 8, y * 12, 8, 12, vram_peek(vram, PCG_OFFSET+i*3+1));
                         drawChar(vram_peek(vram, PCG_OFFSET+i*3), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*3+2));
                     } else {
@@ -106,6 +119,10 @@ public:
                 cursor_x =  0; // carriage return
                 cursor_y += 1; // line feed
             }
+            if (cursor_y >= PCG_SCREEN_HEIGHT) {
+                cursor_y = PCG_SCREEN_HEIGHT - 1;
+                scrollPCG(1);
+            }
         }
     }
 
@@ -136,6 +153,7 @@ public:
         }
     }
 
+
 private:
     CPT_Screen &screen;
     int cursor_x = 0;
@@ -145,9 +163,4 @@ private:
     int blinktimer = 0;
     bool cursor_visible = true;
 
-    void loadFontData() {
-        // Load font data from a file or any data source and store it in fontData
-        // Example: fontData[characterCode] = vector of pixel data
-        // Note: This is a placeholder, you need to implement this part based on your data source
-    }
 };

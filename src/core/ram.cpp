@@ -1,5 +1,6 @@
 #include <vector>
 #include <tuple>
+#include <random>
 
 std::vector<unsigned char> ram(RAM_SIZE, 0);
 std::vector<unsigned char> vram(VRAM_SIZE, 0);
@@ -7,6 +8,10 @@ std::vector<unsigned char> vram(VRAM_SIZE, 0);
 void ram_boot(std::vector<unsigned char>& ram, std::vector<unsigned char>& vram) {
     ram.resize(RAM_SIZE, 0);
     vram.resize(VRAM_SIZE, 0);
+    std::mt19937 mt(0);
+    for (int i = 0; i < VRAM_SIZE; i++) {
+        vram[i] = mt();
+    }
 }
 
 unsigned char vram_peek(std::vector<unsigned char>& vram, int addr) {

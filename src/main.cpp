@@ -21,11 +21,13 @@ std::string inputText = "";
 #include "core/text.cpp"
 #include "core/music.cpp"
 #include "core/vpu/vpu.cpp"
+#include "core/sc/sc.cpp"
 #include "core/sound_drv_SDL.cpp"
 
 CPT_Screen scr(vram);
 VPU vpu(scr);
 Font font(scr);
+SpriteController sc(vram, scr);
 
 #include "lua_api.cpp"
 
@@ -48,7 +50,9 @@ void cpt_init(int argv, char** args) {
     "|  (c) src3453 2023-2025 Released under MIT Licence.  |\n"
     "+-----------------------------------------------------+\n";
     std::cout << opening_msg << std::endl;
+    ram_boot(ram, vram);
     scr.init();
+    font.loadFontData();
     initSound();
     init_lua();   
     //Set callback
@@ -98,6 +102,8 @@ void MainTick() {
     if (screenMode <= 1) {
         font.drawCharPCG(screenMode);
     }
+    sc.updateSprites();
+    sc.renderSprites();
     scr.update(finalPixels);
     std::tuple<int,int,int,int> winRect = blitToMainWindow(window, texture, renderer, finalPixels);
     wx = std::get<0>(winRect);
