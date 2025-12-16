@@ -11,3 +11,6 @@
 [submodule "lib/emsdk"]
 	path = lib/emsdk
 	url = https://github.com/emscripten-core/emsdk.git
+[submodule "lib/pocketfft"]
+	path = lib/pocketfft
+	url = https://github.com/hayguen/pocketfft
