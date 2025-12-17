@@ -14,3 +14,6 @@
 [submodule "lib/pocketfft"]
 	path = lib/pocketfft
 	url = https://github.com/hayguen/pocketfft
+[submodule "lib/stb"]
+	path = lib/stb
+	url = https://github.com/nothings/stb
