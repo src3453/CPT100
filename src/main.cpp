@@ -17,6 +17,7 @@ std::string inputText = "";
 
 #include "core/header/spec.hpp"
 #include "core/ram.cpp"
+#include "core/vpu/hppa.cpp"
 #include "core/disp.cpp"
 #include "core/text.cpp"
 #include "core/music.cpp"

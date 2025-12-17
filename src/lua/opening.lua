@@ -3,6 +3,9 @@ _tick=0
 screen(1)
 function LOOP()
     if _tick == 30 then
+        for addr=0x1c000, 0x100000-1 do
+            vpoke(addr,0)
+        end
         cls(0)
         poke(0x400000,1000//256)
         poke(0x400001,1000%256)
@@ -36,8 +39,9 @@ function LOOP()
     end
     if _tick >= 35 then
         printlnp("")
-        printlnp("VPU: 3D System... ALL OK!")
-        printlnp("Sound Module: 3HS88PWN4... OK! (Rev.C)")
+        printlnp("VDC/SC: 2D System... ALL OK!")
+        printlnp("VPU/HPPA: 3D System... ALL OK!")
+        printlnp("Sound Module/ADC: 3HS88PWN4... OK! (Rev.C)")
     end
     if _tick >= 40 then
         printlnp("")

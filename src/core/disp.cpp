@@ -4,6 +4,8 @@
 //#include "ram.cpp"
 #include <math.h>
 
+// VDC: Video Display Controller for 2D graphics rendering and character display
+
 /*
 VRAM Layout:
 0x00000 - 0x1AFFF: Screen Data (384x288 pixels, 1 byte per pixel)
@@ -110,16 +112,6 @@ public:
         }
     }
 
-    uint8_t fromRGB(int r, int g, int b) {
-        r = (int)(r%256/42.666666666666666);
-        g = (int)(g%256/42.666666666666666);
-        b = (int)(b%256/42.666666666666666);
-        if (r+g+b == 15) {
-            return uint8_t(255);
-        } else {
-            return (uint8_t)((r*36+g*6+b)%215);
-        }
-    }
 
     void line(
     int xs, /* 線の始点のx座標 */

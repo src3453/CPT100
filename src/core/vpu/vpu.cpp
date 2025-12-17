@@ -1,5 +1,5 @@
  // VPU: Vector Processing Unit
- // for 3D graphics rendering
+ // for 3D graphics rendering and Textured Triangle Rasterization
  
  #include <cstdint>
  #include <vector>
@@ -164,25 +164,6 @@
    }
  
    // Hardware T&L: Transform and Lighting
-
-  int dither(int x, int y, float value)
-  {
-    // dithering helper function
-    int ditherMatrix[4][4] = {
-        {0, 8, 2, 10},
-        {12, 4, 14, 6},
-        {3, 11, 1, 9},
-        {15, 7, 13, 5}};
-
-    if (fmod(value, 1) < ditherMatrix[y % 4][x % 4] / 16.0)
-    {
-      return ceil(value); // 白
-    }
-    else
-    {
-      return floor(value); // 黒
-    }
-  }
 
   void TexturedTriangle(vpuTexBuffer tex, vpuTriangle triangle)
   {

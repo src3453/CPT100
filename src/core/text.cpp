@@ -128,12 +128,19 @@ public:
 
     void scrollPCG(int lines) {
         for (int i = 0; i < lines; ++i) {
-            for (int y = 0; y < PCG_SCREEN_HEIGHT; ++y) {
+            for (int y = 0; y < PCG_SCREEN_HEIGHT-1; ++y) {
                 for (int x = 0; x < PCG_SCREEN_WIDTH; ++x) {
                     vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+0, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+0));
                     vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+1, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+1));
                     vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+2, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+2));
                 }
+            }
+            // Clear the last line
+            for (int x = 0; x < PCG_SCREEN_WIDTH; ++x)
+            {
+                vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*3+0, (char)0);
+                vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*3+1, 255);
+                vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*3+2, (uint8_t)0);
             }
         }
     }

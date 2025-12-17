@@ -2,6 +2,11 @@
 #include <map>
 #include <math.h>
 #include <algorithm>
+#include "../lib/stb/stb_image.h"
+#include "../lib/stb/stb_image_write.h"
+#include "../lib/stb/stb_image_resize2.h"
+
+// SC: Sprite Controller for 2D sprite management and rendering
 
 /*
 Sprite Controller Specification
@@ -93,6 +98,49 @@ public:
             // You would read the texture data from VRAM using sprite.texture.offset
             // and draw it on the screen at (sprite.x, sprite.y) with the specified attributes
         }
+    }
+
+    void loadSpriteFromLocalImage(int spriteIndex, const std::string& filepath) {
+        // Load image from local file and upload to VRAM at sprite texture offset
+        // This is a placeholder implementation
+        if (sprites.find(spriteIndex) == sprites.end()) {
+            return; // Sprite index not found
+        }
+        Sprite& sprite = sprites[spriteIndex];
+        // Load image file using stb_image
+        int width, height, channels;
+        unsigned char* data = stbi_load(filepath.c_str(), &width, &height, &channels, 3);
+        if (data) {
+            // Update sprite texture info
+            sprite.texture.width = width-1; // 0 means 1
+            sprite.texture.height = height-1; // 0 means 1
+            // Upload to VRAM at sprite.texture.offset
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int vramAddr = sprite.texture.offset + (y * width + x);
+                    int r = data[(y * width + x) * 3 + 0];
+                    int g = data[(y * width + x) * 3 + 1];
+                    int b = data[(y * width + x) * 3 + 2];
+                    uint8_t colorIndex = fromRGB(r, g, b);
+                    vWrite8(vramAddr, colorIndex);     // R
+                }
+            }
+            stbi_image_free(data);
+        }
+    }
+
+    int getSpriteCount() const {
+        return sprites.size();
+    }
+
+    int getVisibleSpriteCount() const {
+        int count = 0;
+        for (const auto& pair : sprites) {
+            if (pair.second.attributes.visible) {
+                count++;
+            }
+        }
+        return count;
     }
 
 private:

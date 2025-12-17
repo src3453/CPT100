@@ -47,6 +47,11 @@ void api_pix(float x, float y, float color) {
 void api_trace(std::string text) {
     printf(((std::string)text+"\n").c_str());
 }
+
+void api_trace(float num) {
+    printf("%d\n", (int)num);
+}
+
 void api_cls(float color) {
     if (screenMode == 0) {
         scr.cls((Byte)(int)color);
@@ -55,7 +60,7 @@ void api_cls(float color) {
     }
 }
 int api_rgb(float r, float g, float b) {
-    return scr.fromRGB((int)r,(int)g,(int)b);
+    return fromRGB((int)r,(int)g,(int)b);
 }
 int api_time() {
     return clock()-timerStart;
@@ -189,6 +194,13 @@ void api_printp(std::string text) {
     font.printPCG((std::string)text);
 }
 
+void api_printp(float c) {
+    char *text = new char[2];
+    text[0] = (char)(int)c;
+    text[1] = '\0';
+    font.printPCG((std::string)text);
+}
+
 void api_printlnp(std::string text) {
     font.printPCG((std::string)text+"\n");
 }
@@ -244,7 +256,10 @@ void register_functions() {
     lua.set_function("vpoke",api_vpoke);
     lua.set_function("print",api_print);
     lua.set_function("pix",api_pix);
-    lua.set_function("trace",api_trace);
+    lua.set_function("trace",sol::overload(
+        static_cast<void(*)(std::string)>(&api_trace),
+        static_cast<void(*)(float)>(&api_trace)
+    ));
     lua.set_function("cls",api_cls);
     lua.set_function("rgb",api_rgb);
     lua.set_function("time",api_time);
@@ -273,7 +288,10 @@ void register_functions() {
     lua.set_function("get_dma_buffer_length", api_get_dma_buffer_length);
     lua.set_function("vpu_init", api_vpu_init);
     lua.set_function("screen", api_screen);
-    lua.set_function("printp", api_printp);
+    lua.set_function("printp", sol::overload(
+        static_cast<void(*)(std::string)>(&api_printp),
+        static_cast<void(*)(float)>(&api_printp)
+    ));
     lua.set_function("printlnp", api_printlnp);
     lua.set_function("scrollp", api_scrollp);
     lua.set_function("lc", api_lc);
@@ -309,8 +327,12 @@ void init_lua() {
     std::string subroutines_source = "";
     #include "lua/subroutine/s_io.lua.hpp"
     #include "lua/subroutine/s_game.lua.hpp"
+    #include "lua/subroutine/s_image.lua.hpp"
+    #include "lua/subroutine/s_common.lua.hpp"
     subroutines_source += s_io_source+"\n";
     subroutines_source += s_game_source+"\n";
+    subroutines_source += s_image_source+"\n";
+    subroutines_source += s_common_source+"\n";
     lua.script(subroutines_source);
     
     lua.script(opening_source);
@@ -325,15 +347,15 @@ void Lua_OnKeyDown(int key) {
     } catch (const sol::error& e) {
         std::cerr << "Lua error in ONKEYDOWN(): " << e.what() << std::endl;
         font.locatePCG(0,0);
-        font.setFGColor(scr.fromRGB(255,0,0)); // Red
-        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.setFGColor(fromRGB(255,0,0)); // Red
+        font.setBGColor(fromRGB(0,0,0));  // Black
         font.printPCG("Lua error in ONKEYDOWN():");
         font.printPCG(e.what());
     } catch (const std::exception& e) {
         std::cerr << "Lua error in ONKEYDOWN(): " << e.what() << std::endl;
         font.locatePCG(0,0);
-        font.setFGColor(scr.fromRGB(255,0,0)); // Red
-        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.setFGColor(fromRGB(255,0,0)); // Red
+        font.setBGColor(fromRGB(0,0,0));  // Black
         font.printPCG("Lua error in ONKEYDOWN():");
         font.printPCG(e.what());
     }
@@ -346,15 +368,15 @@ void Lua_OnKeyUp(int key) {
     } catch (const sol::error& e) {
         std::cerr << "Lua error in ONKEYUP(): " << e.what() << std::endl;
         font.locatePCG(0,0);
-        font.setFGColor(scr.fromRGB(255,0,0)); // Red
-        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.setFGColor(fromRGB(255,0,0)); // Red
+        font.setBGColor(fromRGB(0,0,0));  // Black
         font.printPCG("Lua error in ONKEYUP():");
         font.printPCG(e.what());
     } catch (const std::exception& e) {
         std::cerr << "Lua error in ONKEYUP(): " << e.what() << std::endl;
         font.locatePCG(0,0);
-        font.setFGColor(scr.fromRGB(255,0,0)); // Red
-        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.setFGColor(fromRGB(255,0,0)); // Red
+        font.setBGColor(fromRGB(0,0,0));  // Black
         font.printPCG("Lua error in ONKEYUP():");
         font.printPCG(e.what());
     }
@@ -373,15 +395,15 @@ void Lua_MainLoop() {
     } catch (const sol::error& e) {
         std::cerr << "Lua error in LOOP(): " << e.what() << std::endl;
         font.locatePCG(0,0);
-        font.setFGColor(scr.fromRGB(255,0,0)); // Red
-        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.setFGColor(fromRGB(255,0,0)); // Red
+        font.setBGColor(fromRGB(0,0,0));  // Black
         font.printPCG("Lua error in LOOP():");
         font.printPCG(e.what());
     } catch (const std::exception& e) {
         std::cerr << "Lua error in LOOP(): " << e.what() << std::endl;
         font.locatePCG(0,0);
-        font.setFGColor(scr.fromRGB(255,0,0)); // Red
-        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.setFGColor(fromRGB(255,0,0)); // Red
+        font.setBGColor(fromRGB(0,0,0));  // Black
         font.printPCG("Lua error in LOOP():");
         font.printPCG(e.what());
     }
@@ -394,15 +416,15 @@ void Lua_OnTextInput(std::string inputChar) {
     } catch (const sol::error& e) {
         std::cerr << "Lua error in ONTEXTINPUT(): " << e.what() << std::endl;
         font.locatePCG(0,0);
-        font.setFGColor(scr.fromRGB(255,0,0)); // Red
-        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.setFGColor(fromRGB(255,0,0)); // Red
+        font.setBGColor(fromRGB(0,0,0));  // Black
         font.printPCG("Lua error in ONTEXTINPUT():");
         font.printPCG(e.what());
     } catch (const std::exception& e) {
         std::cerr << "Lua error in ONTEXTINPUT(): " << e.what() << std::endl;
         font.locatePCG(0,0);
-        font.setFGColor(scr.fromRGB(255,0,0)); // Red
-        font.setBGColor(scr.fromRGB(0,0,0));  // Black
+        font.setFGColor(fromRGB(255,0,0)); // Red
+        font.setBGColor(fromRGB(0,0,0));  // Black
         font.printPCG("Lua error in ONTEXTINPUT():");
         font.printPCG(e.what());
     }
