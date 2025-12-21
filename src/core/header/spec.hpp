@@ -6,7 +6,7 @@
 
 // 定数の定義
 #define RAM_SIZE 0x1000000  // 16384KB
-#define VRAM_SIZE 0x100000 // 1024KB
+#define VRAM_SIZE 0x400000 // 4096KB
 
 #define CALLBACK_FPS 60
 #define CPT_SCREEN_WIDTH 384

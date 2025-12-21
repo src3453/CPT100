@@ -79,7 +79,7 @@ function update_and_draw_player()
 end
 
 function beep(freq)
-    poke(0x400000,freq//256)
+    poke(0x400000,int(freq/256))
     poke(0x400001,freq%256)
     poke(0x400010,255)
     poke(0x400018,0x30)

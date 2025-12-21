@@ -1,9 +1,9 @@
 function S_IMAGE_HSV2RGB(h, s, v)
     local r, g, b
 
-    h = clip(h,0,1)
-    s = clip(s,0,1)
-    v = clip(v,0,1)
+    h = S_COMMON_clip(h,0,1)
+    s = S_COMMON_clip(s,0,1)
+    v = S_COMMON_clip(v,0,1)
 
     local i = math.floor(h * 6)
     local f = h * 6 - i
@@ -25,9 +25,9 @@ function S_IMAGE_HSV2RGB(h, s, v)
 end
 
 function S_IMAGE_RGB2HSV(r, g, b)
-    r = clip(r/255,0,1)
-    g = clip(g/255,0,1)
-    b = clip(b/255,0,1)
+    r = S_COMMON_clip(r/255,0,1)
+    g = S_COMMON_clip(g/255,0,1)
+    b = S_COMMON_clip(b/255,0,1)
 
     local max = math.max(r, g, b)
     local min = math.min(r, g, b)

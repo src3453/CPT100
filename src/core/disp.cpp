@@ -12,9 +12,11 @@ VRAM Layout:
 0x1B000 - 0x1B2FF: Color Lookup Table (CLUT) (256 colors, 3 bytes each: R, G, B)
 0x1B300 - 0x1BEFF: Font Data (8x12 font, 256 characters, 12 bytes each)
 0x1BF00 - 0x1BFFF: Reserved
-0x1C000 - 0x1CD7F: PCG Data (8x12 font, 256 characters, 3 bytes each: char code (as in CP437), fg color, bg color)
+0x1C000 - 0x1CD7F: PCG Data (8x12 font, 48x24 screen size, 3 bytes each: char code (as in CP437), fg color, bg color)
 0x1CD80 - 0x1CFFF: Reserved 
 0x1D000 - 0x1FFFF: Sprite Data 
+0x20000 - 0x7FFFF: for VPU (3D engine registers, Mesh and Texture Buffers)
+0x80000 - 0xFFFFF: Reserved (for user data)
 */
 
 int wx,wy,ww,wh = 0;
@@ -35,9 +37,11 @@ public:
         int i = 0;
         for (int y = 0; y < CPT_SCREEN_HEIGHT; y++){
             for (int x = 0; x < CPT_SCREEN_WIDTH; x++){
-                tmp_pixels[i*3+0] = CLUT[tmp[i]*3+0];
-                tmp_pixels[i*3+1] = CLUT[tmp[i]*3+1];
-                tmp_pixels[i*3+2] = CLUT[tmp[i]*3+2];
+                uint8_t idx = tmp[i];
+                tmp_pixels[i*4+0] = CLUT[idx*3+0];
+                tmp_pixels[i*4+1] = CLUT[idx*3+1];
+                tmp_pixels[i*4+2] = CLUT[idx*3+2];
+                tmp_pixels[i*4+3] = (idx == 0) ? 0 : 255;
                 i+=1;
             }
         }

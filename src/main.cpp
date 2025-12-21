@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <SDL.h>
+#include <SDL_opengl.h>
 //#include "boost/tuple/tuple.hpp"
 
 int mouseState = 0;
@@ -59,45 +60,11 @@ void cpt_init(int argv, char** args) {
     //Set callback
 }
 
-std::tuple<int,int,int,int> blitToMainWindow(SDL_Window *window, SDL_Texture *texture, SDL_Renderer *renderer, uint8_t *pixels) {
-    
-    
-    // update texture with new data
-    int texture_pitch = 0;
-    void* texture_pixels = NULL;
-    if (SDL_LockTexture(texture, NULL, &texture_pixels, &texture_pitch) != 0) {
-        SDL_Log("Unable to lock texture: %s", SDL_GetError());
-    }
-    else {
-        memcpy(texture_pixels, pixels, texture_pitch * CPT_SCREEN_HEIGHT);
-    }
-    SDL_UnlockTexture(texture);
-    int w,h = 0;
-    SDL_GetWindowSize(window,&w,&h);
-    SDL_Rect _rect;
-    double aspect_ratio = (double)CPT_SCREEN_WIDTH / (double)CPT_SCREEN_HEIGHT;
-
-    // 新しいサイズを縦横比を維持して計算
-    if ((double)w / aspect_ratio <= (double)h) {
-        _rect.w = w;
-        _rect.h = (int)((double)w / aspect_ratio);
-    } else {
-        _rect.h = h;
-        _rect.w = (int)((double)h * aspect_ratio);
-    }
-    _rect.x = (w - _rect.w) / 2;
-    _rect.y = (h - _rect.h) / 2;
-
-    SDL_Rect *rect = &_rect;
-
-    SDL_RenderCopy(renderer, texture, NULL,(const SDL_Rect*)rect);
-    return std::make_tuple(_rect.x,_rect.y,_rect.w,_rect.h);
-}
-
-uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 3] = {0};
+uint8_t finalPixels[CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 4] = {0};
 SDL_Window* window;
-SDL_Renderer* renderer;
-SDL_Texture *texture;
+SDL_GLContext glContext;
+GLuint screenTexture;
+
 void MainTick() {
     Lua_MainLoop(); //60Hz
     if (screenMode <= 1) {
@@ -105,12 +72,51 @@ void MainTick() {
     }
     sc.updateSprites();
     sc.renderSprites();
+    Lua_PostDraw(); //after sprite render
     scr.update(finalPixels);
-    std::tuple<int,int,int,int> winRect = blitToMainWindow(window, texture, renderer, finalPixels);
-    wx = std::get<0>(winRect);
-    wy = std::get<1>(winRect);
-    ww = std::get<2>(winRect);
-    wh = std::get<3>(winRect);
+    
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+    glViewport(0, 0, w, h);
+    
+    // Upload 2D texture
+    glBindTexture(GL_TEXTURE_2D, screenTexture);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, finalPixels);
+    
+    // Draw 2D Quad over 3D
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, w, h, 0, -1, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+    
+    double aspect_ratio = (double)CPT_SCREEN_WIDTH / (double)CPT_SCREEN_HEIGHT;
+    int rw, rh, rx, ry;
+    if ((double)w / aspect_ratio <= (double)h) {
+        rw = w;
+        rh = (int)((double)w / aspect_ratio);
+    } else {
+        rh = h;
+        rw = (int)((double)h * aspect_ratio);
+    }
+    rx = (w - rw) / 2;
+    ry = (h - rh) / 2;
+    
+    wx = rx; wy = ry; ww = rw; wh = rh;
+
+    glColor4f(1, 1, 1, 1);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0); glVertex2i(rx, ry);
+    glTexCoord2f(1, 0); glVertex2i(rx + rw, ry);
+    glTexCoord2f(1, 1); glVertex2i(rx + rw, ry + rh);
+    glTexCoord2f(0, 1); glVertex2i(rx, ry + rh);
+    glEnd();
+    
+    glDisable(GL_BLEND);
 }
 
 
@@ -151,16 +157,18 @@ void MainLoop() {
                 }
             }
             if (event.type == SDL_TEXTINPUT) {
-                inputText += (std::string)(event.text.text);
-                Lua_OnTextInput((std::string)(event.text.text));
+                //printf("Text Input Event: %s\n", event.text.text);
+                //inputText += (std::string)(event.text.text);
+                Lua_OnInput((std::string)(event.text.text));
             }
         }
 
-        SDL_RenderClear(renderer);
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         MainTick();
 
-        SDL_RenderPresent(renderer);
+        SDL_GL_SwapWindow(window);
 }
 
 int main(int argv, char** args) {
@@ -168,34 +176,43 @@ int main(int argv, char** args) {
     
     SDL_Init(SDL_INIT_EVERYTHING);
     
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     
-    window = SDL_CreateWindow("CPT200 v" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("CPT200 v" VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")", 
+        SDL_WINDOWPOS_UNDEFINED, 
+        SDL_WINDOWPOS_UNDEFINED, 
+        CPT_SCREEN_WIDTH, 
+        CPT_SCREEN_HEIGHT, 
+            SDL_WINDOW_RESIZABLE|
+            SDL_WINDOW_OPENGL|
+            SDL_WINDOW_ALLOW_HIGHDPI|
+            SDL_WINDOW_MOUSE_FOCUS|
+            SDL_WINDOW_INPUT_FOCUS
+        );
     if (!window)
     {
         printf("SDL Window could not be initialized. SDL_Error: %s\n", SDL_GetError());
         return 1;
     }
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (!renderer)
-    {
-        printf("SDL Renderer could not be initialized. SDL_Error: %s\n", SDL_GetError());
+    
+    glContext = SDL_GL_CreateContext(window);
+    if (!glContext) {
+        printf("OpenGL Context could not be created. SDL_Error: %s\n", SDL_GetError());
         return 1;
     }
-    texture = SDL_CreateTexture(
-        renderer,
-        SDL_PIXELFORMAT_RGB24,
-        SDL_TEXTUREACCESS_STREAMING,
-        CPT_SCREEN_WIDTH,
-        CPT_SCREEN_HEIGHT);
+    SDL_GL_MakeCurrent(window, glContext);
+    
+    glGenTextures(1, &screenTexture);
+    glBindTexture(GL_TEXTURE_2D, screenTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
     bool isRunning = true;
 
     cpt_init(argv,args);
     
-    
-        if (texture == NULL) {
-            SDL_Log("Unable to create texture: %s", SDL_GetError());
-            return 1;
-        }
     #ifdef WASM_BUILD
     emscripten_set_main_loop(MainLoop, 0, 1);
     #endif
@@ -215,7 +232,7 @@ int main(int argv, char** args) {
     }
     #endif
     closeSound();
-    SDL_DestroyRenderer(renderer);
+    SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
     SDL_CloseAudioDevice(dev);
     SDL_Quit();

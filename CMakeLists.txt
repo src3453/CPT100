@@ -2,6 +2,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(WASM_BUILD "Build wasm" OFF) 
+option(USE_LUAJIT "Use LuaJIT. if not, use Lua 5.4" ON)
 
 if(EMSCRIPTEN)
 # 共有ライブラリのサポートを有効にする
@@ -14,8 +15,8 @@ endif()
 
 # プロジェクト名と使用する言語を設定
 set(VERSION_MAJOR 0)
-set(VERSION_MINOR 1)
-set(VERSION_STATUS "-alpha")
+set(VERSION_MINOR 2)
+set(VERSION_STATUS "-dev")
 
 find_package(Git)
 if(Git_FOUND)
@@ -93,8 +94,13 @@ message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER})
 message(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})
 message(STATUS "CMAKE_CXX_COMPILER_ID: " ${CMAKE_CXX_COMPILER_ID})
 
-
-set(LUA_DIR ${PROJECT_SOURCE_DIR}/lib/lua)
+if(USE_LUAJIT)
+    message(STATUS "Using LuaJIT")
+    set(LUA_DIR ${PROJECT_SOURCE_DIR}/lib/luajit/src)
+else()
+    message(STATUS "Using Lua 5.4")
+    set(LUA_DIR ${PROJECT_SOURCE_DIR}/lib/lua)
+endif()
 set(SOL_DIR ${PROJECT_SOURCE_DIR}/lib/sol2)
 set(SDL2_DIR ${PROJECT_SOURCE_DIR}/lib/SDL2)
 
@@ -114,47 +120,25 @@ set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(${SDL2_DIR})
 
-set(LUA_SRC
-    ${LUA_DIR}/lapi.c
-    ${LUA_DIR}/lcode.c
-    ${LUA_DIR}/lctype.c
-    ${LUA_DIR}/ldebug.c
-    ${LUA_DIR}/ldo.c
-    ${LUA_DIR}/ldump.c
-    ${LUA_DIR}/lfunc.c
-    ${LUA_DIR}/lgc.c
-    ${LUA_DIR}/llex.c
-    ${LUA_DIR}/lmem.c
-    ${LUA_DIR}/lobject.c
-    ${LUA_DIR}/lopcodes.c
-    ${LUA_DIR}/lparser.c
-    ${LUA_DIR}/lstate.c
-    ${LUA_DIR}/lstring.c
-    ${LUA_DIR}/ltable.c
-    ${LUA_DIR}/ltm.c
-    ${LUA_DIR}/lundump.c
-    ${LUA_DIR}/lvm.c
-    ${LUA_DIR}/lzio.c
-    ${LUA_DIR}/lauxlib.c
-    ${LUA_DIR}/lbaselib.c
-    ${LUA_DIR}/lcorolib.c
-    ${LUA_DIR}/ldblib.c
-    ${LUA_DIR}/liolib.c
-    ${LUA_DIR}/lmathlib.c
-    ${LUA_DIR}/loslib.c
-    ${LUA_DIR}/lstrlib.c
-    ${LUA_DIR}/ltablib.c
-    ${LUA_DIR}/lutf8lib.c
-    ${LUA_DIR}/loadlib.c
-    ${LUA_DIR}/linit.c
-)
+# LuaJIT sources are not compiled here, we use the prebuilt library.
 
 
 file(GLOB_RECURSE SOL_SRC ${SOL_DIR}/include/sol/*.hpp)
 
 file(GLOB_RECURSE SDL2_SRC ${SDL2_DIR}/include/*.h)
 
-add_library(lua STATIC ${LUA_SRC})
+add_library(lua SHARED IMPORTED)
+if(USE_LUAJIT)
+    set_target_properties(lua PROPERTIES
+        IMPORTED_LOCATION "${LUA_DIR}/lua51.dll"
+        IMPORTED_IMPLIB "${LUA_DIR}/lua51.lib"
+    )
+else()
+    set_target_properties(lua PROPERTIES
+        IMPORTED_LOCATION "${LUA_DIR}/lua54.dll"
+        IMPORTED_IMPLIB "${LUA_DIR}/lua54.lib"
+    )
+endif()
 
 add_library(sol INTERFACE)
 target_include_directories(sol INTERFACE ${SOL_DIR}/include)
@@ -182,11 +166,27 @@ endif()
 
 target_compile_features(${EXECUTABLE_NAME} PRIVATE cxx_std_17)
 
+if(USE_LUAJIT)
+    target_compile_definitions(${EXECUTABLE_NAME} PRIVATE SOL_LUAJIT)
+endif()
+
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LUA_DIR})
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_DIR}/include)
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SOL_DIR}/include)
 
-target_link_libraries(${EXECUTABLE_NAME} lua SDL2main SDL2-static)
+target_link_libraries(${EXECUTABLE_NAME} lua SDL2main SDL2-static opengl32)
+
+if(USE_LUAJIT)
+    set(LUA_DLL_NAME "lua51.dll")
+else()
+    set(LUA_DLL_NAME "lua54.dll")
+endif()
+
+add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${LUA_DIR}/${LUA_DLL_NAME}"
+    "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>"
+)
 

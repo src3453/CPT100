@@ -8,6 +8,13 @@
 
 #include "res/font8x12.hpp"
 
+/*
+SCREEN MODES (can be changed by screen(mode) API):
+0: Graphics Mode, 384x288 pixels, direct pixel access
+1: Character Mode (PCG), 48x24 characters, each character is 8x12 pixels
+2: Alternative Character Mode, 96x48 characters, each character is 4x6 pixels (not yet implemented)
+*/
+// TODO: Add 4x6 font and 96x48 screen mode (screen(2))
 
 
 #define PCG_OFFSET 0x1c000

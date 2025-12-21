@@ -18,13 +18,40 @@ std::string LuaSrcPath = "";
 
 // API functions, these are called from Lua frontend
 
+// Helper function to report Lua errors
+void report_lua_error(const sol::error& e) {
+    std::cerr << "Lua error: " << e.what() << std::endl;
+    font.locatePCG(0,0);
+    font.setFGColor(fromRGB(255,0,0)); // Red
+    font.setBGColor(fromRGB(0,0,0));  // Black
+    font.printPCG("Lua error:");
+    font.printPCG(e.what());
+}
+
+// Helper to call Lua functions safely
+template<typename... Args>
+void safe_lua_call(const std::string& name, Args&&... args) {
+    sol::protected_function func = lua[name];
+    if (func.valid()) {
+        auto result = func(std::forward<Args>(args)...);
+        if (!result.valid()) {
+            sol::error err = result;
+            report_lua_error(err);
+        }
+    }
+}
+
 void api__maincall() {
     // it is a special API function that is called once at the beginning, works as main entry point
     // will be override LOOP() function used in opening.lua
     timerStart = clock();
-    lua.script(main_source);
-    sol::function func = lua["BOOT"]; // it will be called once at the beginning, useful for initialization
-    if (func != sol::nil) func();
+    auto result = lua.safe_script(main_source);
+    if (!result.valid()) {
+        sol::error err = result;
+        report_lua_error(err);
+        return;
+    }
+    safe_lua_call("BOOT");
 }
 int api_peek(float addr) {
     return ram_peek(ram, (int)addr);
@@ -62,6 +89,11 @@ void api_cls(float color) {
 int api_rgb(float r, float g, float b) {
     return fromRGB((int)r,(int)g,(int)b);
 }
+
+int api_rgbd(float x, float y, float r, float g, float b) {
+    return fromRGBDithered((int)x,(int)y,(int)r,(int)g,(int)b);
+}
+
 int api_time() {
     return clock()-timerStart;
 }
@@ -125,7 +157,7 @@ void api_rectb(float x, float y, float w, float h, float color) {
 void api_line(float xs, float ys, float xe, float ye, float color) {
     scr.line((int)xs, (int)ys, (int)xe, (int)ye, (Byte)(int)color);
 }
-void api_spr(float num, float x, float y, float w=1, float h=1) {
+void api_sprraw(float num, float x, float y, float w=1, float h=1) {
     scr.spr((int)num,(int)x,(int)y,(int)w,(int)h);
 }
 int api_showcur(float toggle=-1) {
@@ -171,6 +203,18 @@ int api_get_dma_buffer_length(float ch) {
 
 void api_vpu_init() {
     
+}
+
+void api_vpu_draw_debug(float scale) {
+    vpu.renderDebug(scale);
+}
+
+void api_vpu_draw_debug2(float scale) {
+    vpu.renderDebug2(scale);
+}
+
+void api_vpu_update_state() {
+    vpu.updateState();
 }
 
 void api_file_open(float slot, std::string filename) {
@@ -229,10 +273,22 @@ void api_movecursor(float dx, float dy) {
     font.moveCursorPCG((int)dx, (int)dy);
 }
 
+void api_loadspr(float index, std::string filename, float offset = 0x20000, bool dither = true, float transparentColorIndex = 0) {
+    sc.loadSpriteFromLocalImage((int)index, (std::string)filename, (int)offset, dither, (int)transparentColorIndex);
+}
+
+void api_spr(float spriteIndex, bool enabled, float x, float y, float rotation = 0.0f) {
+    sc.spr((int)spriteIndex, (int)enabled, (int)x, (int)y, rotation);
+}
+
 void api_include(std::string content) {
     // This function is used to include a Lua script from a string
     // It can be used to dynamically load Lua code at runtime
-    lua.script(content);
+    auto result = lua.safe_script(content);
+    if (!result.valid()) {
+        sol::error err = result;
+        report_lua_error(err);
+    }
 }
 
 void api_init_sound_input(int samples=1024) {
@@ -262,6 +318,7 @@ void register_functions() {
     ));
     lua.set_function("cls",api_cls);
     lua.set_function("rgb",api_rgb);
+    lua.set_function("rgbd",api_rgbd);
     lua.set_function("time",api_time);
     lua.set_function("int",api_int);
     lua.set_function("key",api_key);
@@ -276,6 +333,8 @@ void register_functions() {
     lua.set_function("rectb",api_rectb);
     lua.set_function("line",api_line);
     lua.set_function("spr",api_spr);
+    lua.set_function("loadspr",api_loadspr);
+    lua.set_function("sprraw",api_sprraw);
     lua.set_function("showcur",api_showcur);
     lua.set_function("showcurp",api_showcurp);
     lua.set_function("startinput",api_startinput);
@@ -287,6 +346,10 @@ void register_functions() {
     lua.set_function("put_dma_buffer", api_put_dma_buffer);
     lua.set_function("get_dma_buffer_length", api_get_dma_buffer_length);
     lua.set_function("vpu_init", api_vpu_init);
+    lua.set_function("vpu_draw_debug", api_vpu_draw_debug);
+    lua.set_function("vpu_draw_debug2", api_vpu_draw_debug2);
+    lua.set_function("vpu_update_state", api_vpu_update_state);
+    lua.set_function("file_open", api_file_open);
     lua.set_function("screen", api_screen);
     lua.set_function("printp", sol::overload(
         static_cast<void(*)(std::string)>(&api_printp),
@@ -314,7 +377,16 @@ void init_lua() {
     sol::lib::math,
     sol::lib::string,
     sol::lib::table,
-    sol::lib::io);
+    sol::lib::package,
+    sol::lib::utf8,
+    sol::lib::io,
+    sol::lib::os,
+    sol::lib::coroutine,
+    sol::lib::debug,
+    sol::lib::bit32,
+    sol::lib::ffi, // if using LuaJIT
+    sol::lib::jit // if using LuaJIT
+    );
     register_functions();
     lua["_CPT_VERSION"] = (std::string)VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH ")";
     // in WASM build, some features will be limited
@@ -333,99 +405,38 @@ void init_lua() {
     subroutines_source += s_game_source+"\n";
     subroutines_source += s_image_source+"\n";
     subroutines_source += s_common_source+"\n";
-    lua.script(subroutines_source);
     
-    lua.script(opening_source);
+    auto result = lua.safe_script(subroutines_source);
+    if (!result.valid()) {
+        sol::error err = result;
+        report_lua_error(err);
+    }
+    
+    result = lua.safe_script(opening_source);
+    if (!result.valid()) {
+        sol::error err = result;
+        report_lua_error(err);
+    }
 }
 
 // These functions are called when specific events occur by C++ backend
 
 void Lua_OnKeyDown(int key) {
-    try {
-        sol::function func = lua["ONKEYDOWN"];
-        if (func != sol::nil) func(key);
-    } catch (const sol::error& e) {
-        std::cerr << "Lua error in ONKEYDOWN(): " << e.what() << std::endl;
-        font.locatePCG(0,0);
-        font.setFGColor(fromRGB(255,0,0)); // Red
-        font.setBGColor(fromRGB(0,0,0));  // Black
-        font.printPCG("Lua error in ONKEYDOWN():");
-        font.printPCG(e.what());
-    } catch (const std::exception& e) {
-        std::cerr << "Lua error in ONKEYDOWN(): " << e.what() << std::endl;
-        font.locatePCG(0,0);
-        font.setFGColor(fromRGB(255,0,0)); // Red
-        font.setBGColor(fromRGB(0,0,0));  // Black
-        font.printPCG("Lua error in ONKEYDOWN():");
-        font.printPCG(e.what());
-    }
+    safe_lua_call("ONKEYDOWN", key);
 }
 
 void Lua_OnKeyUp(int key) {
-    try {
-        sol::function func = lua["ONKEYUP"];
-        if (func != sol::nil) func(key);
-    } catch (const sol::error& e) {
-        std::cerr << "Lua error in ONKEYUP(): " << e.what() << std::endl;
-        font.locatePCG(0,0);
-        font.setFGColor(fromRGB(255,0,0)); // Red
-        font.setBGColor(fromRGB(0,0,0));  // Black
-        font.printPCG("Lua error in ONKEYUP():");
-        font.printPCG(e.what());
-    } catch (const std::exception& e) {
-        std::cerr << "Lua error in ONKEYUP(): " << e.what() << std::endl;
-        font.locatePCG(0,0);
-        font.setFGColor(fromRGB(255,0,0)); // Red
-        font.setBGColor(fromRGB(0,0,0));  // Black
-        font.printPCG("Lua error in ONKEYUP():");
-        font.printPCG(e.what());
-    }
+    safe_lua_call("ONKEYUP", key);
 }
 
 void Lua_MainLoop() {
-    try {
-        sol::function func = lua["LOOP"];
-        if (func != sol::nil) {
-            auto result = func();
-            if (!result.valid()) {
-                sol::error err = result;
-                throw sol::error(err.what());
-            }
-        }
-    } catch (const sol::error& e) {
-        std::cerr << "Lua error in LOOP(): " << e.what() << std::endl;
-        font.locatePCG(0,0);
-        font.setFGColor(fromRGB(255,0,0)); // Red
-        font.setBGColor(fromRGB(0,0,0));  // Black
-        font.printPCG("Lua error in LOOP():");
-        font.printPCG(e.what());
-    } catch (const std::exception& e) {
-        std::cerr << "Lua error in LOOP(): " << e.what() << std::endl;
-        font.locatePCG(0,0);
-        font.setFGColor(fromRGB(255,0,0)); // Red
-        font.setBGColor(fromRGB(0,0,0));  // Black
-        font.printPCG("Lua error in LOOP():");
-        font.printPCG(e.what());
-    }
+    safe_lua_call("LOOP");
 }
 
-void Lua_OnTextInput(std::string inputChar) {
-    try {
-        sol::function func = lua["ONTEXTINPUT"];
-        if (func != sol::nil) func((std::string)inputChar);
-    } catch (const sol::error& e) {
-        std::cerr << "Lua error in ONTEXTINPUT(): " << e.what() << std::endl;
-        font.locatePCG(0,0);
-        font.setFGColor(fromRGB(255,0,0)); // Red
-        font.setBGColor(fromRGB(0,0,0));  // Black
-        font.printPCG("Lua error in ONTEXTINPUT():");
-        font.printPCG(e.what());
-    } catch (const std::exception& e) {
-        std::cerr << "Lua error in ONTEXTINPUT(): " << e.what() << std::endl;
-        font.locatePCG(0,0);
-        font.setFGColor(fromRGB(255,0,0)); // Red
-        font.setBGColor(fromRGB(0,0,0));  // Black
-        font.printPCG("Lua error in ONTEXTINPUT():");
-        font.printPCG(e.what());
-    }
+void Lua_PostDraw() {
+    safe_lua_call("POSTDRAW");
+}
+
+void Lua_OnInput(std::string inputChar) {
+    safe_lua_call("ONINPUT", inputChar);
 }

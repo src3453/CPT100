@@ -7,7 +7,7 @@ function LOOP()
             vpoke(addr,0)
         end
         cls(0)
-        poke(0x400000,1000//256)
+        poke(0x400000,int(1000/256))
         poke(0x400001,1000%256)
         poke(0x400010,255)
         poke(0x400018,0x30)
@@ -33,7 +33,7 @@ function LOOP()
     if _tick == 35 then
         
         resetgate(0)
-        poke(0x400000,500//256)
+        poke(0x400000,int(500/256))
         poke(0x400001,500%256)
         
     end
