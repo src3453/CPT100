@@ -17,3 +17,6 @@
 [submodule "lib/stb"]
 	path = lib/stb
 	url = https://github.com/nothings/stb
+[submodule "lib/luajit"]
+	path = lib/luajit
+	url = https://github.com/LuaJIT/LuaJIT.git
