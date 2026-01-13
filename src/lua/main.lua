@@ -1,35 +1,75 @@
+-- CPT200 Disk Operating System
 
-t=0
-resolution = 1
-screen(0)
--- index, filepath, offset, Dithered, transparentColorIndex
-loadspr(0,"../sprite.png",0x20000,false,0)
-trace("Sprite loaded")
-
-timer_old = 0
-fps = 0
--- This is a simple Lua script that initializes a game loop and clears the screen.
-function LOOP()
-    local timer_new = time()/1000
-    local dt = timer_new - timer_old
-    fps = 1 / dt
-    cls(0)
-    xm,ym,_ = mouse()
-    for x=0,383,resolution do
-        for y=0,287,resolution do
-            val = math.max(math.min((math.sin(y/100*ym/50+t/50)+math.cos(x/100*xm/50+t/50))*64+128,255),0)
-            val = math.max(math.min(val,255),0)
-            rect(x,y,resolution,resolution,rgbd(x,y,0,val,0))
+Button = {}
+Button.new = function(self, x, y, width, height, text)
+    local obj = {}
+    setmetatable(obj, self)
+    self.__index = self
+    obj.x = x
+    obj.y = y
+    obj.width = width
+    obj.height = height
+    obj.text = text or "Button"
+    obj.color = rgb(200, 200, 200)
+    obj.textColor = rgb(0, 0, 0)
+    obj.hoverColor = rgb(220, 220, 220)
+    obj.hoverTextColor = rgb(0, 0, 0)
+    obj.isHovered = false
+    obj.onClick = function() end  -- Default click handler
+    obj.draw = function()
+        local color = obj.isHovered and obj.hoverColor or obj.color
+        local textColor = obj.isHovered and obj.hoverTextColor or obj.textColor
+        rect(obj.x, obj.y, obj.x + obj.width, obj.y + obj.height, color)
+        rectb(obj.x, obj.y, obj.x + obj.width, obj.y + obj.height, textColor)
+        print(obj.text, obj.x + (obj.width / 2) - int((#obj.text / 2)*8), obj.y + (obj.height / 2), textColor)
+    end
+    obj.update = function()
+        local mx, my, ms = mouse()
+        obj.isHovered = mx >= obj.x and mx <= (obj.x + obj.width) and my >= obj.y and my <= (obj.y + obj.height)
+        if obj.isHovered and ms==1 then
+            obj.onClick()  -- Call the click handler if the button is hovered and clicked
         end
     end
-    -- index, enabled, x, y, rotation
-    spr(0, true, xm, ym, 0)
-    t=t+1
-    timer_old = timer_new
+    return obj
 end
 
-function POSTDRAW()
-    -- called after sprite rendering
-    print("FPS:"..fps,1,1,rgb(0,0,0))
-    print("FPS:"..fps,0,0,rgb(255,255,255))
+_PODOS_VERSION="0.1"
+CurX = 0
+CurY = 2
+
+function BOOT()
+    screen(1)
+    cls(0)
+    printlnp("PoDOS: Primitive oldskool Disk Operating System")
+    printlnp("Version ".._PODOS_VERSION.." (c) 2025 src3453 MIT License")
+    printlnp("")
+    printp("0:/>")
+end
+
+inputchar = ""
+
+function ONINPUT(c)
+    inputchar = inputchar..c
+    printp(c)
+    if c == string.char(0x0a)then
+        -- Process the input command
+        local cmd = inputchar:match("^(%S+)")
+        if cmd == "load" then
+            local index = tonumber(inputchar:match("%s+(%d+)"))
+            if index then
+                loadentrypoint(index)
+            else
+                printp("Invalid index", CurX, CurY, 255, 0)
+            end
+        elseif cmd == "dir" then
+            DIR()
+        else
+            printp("Unknown command: " .. cmd, CurX, CurY, 255, 0)
+        end
+        inputchar = ""  -- Reset input after processing
+    end
+end
+
+function LOOP()
+    
 end

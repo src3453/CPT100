@@ -67,12 +67,12 @@ GLuint screenTexture;
 
 void MainTick() {
     Lua_MainLoop(); //60Hz
-    if (screenMode <= 1) {
-        font.drawCharPCG(screenMode);
-    }
+    font.drawCharPCG(screenMode);
     sc.updateSprites();
     sc.renderSprites();
     Lua_PostDraw(); //after sprite render
+    // test
+    //font.drawCharUnicode16(0x3042, 0, 0, 0xFFFF); // Draw 'あ' at (0,0)
     scr.update(finalPixels);
     
     int w, h;

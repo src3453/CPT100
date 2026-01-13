@@ -74,9 +74,13 @@ function update_and_draw_player()
     end
     player_y = player_y - player_vy
     player_y = player_y % 288
+    --spr(0, true, player_x, player_y, 0)
     rect(player_x, player_y, 8, 8, rgb(255,255,0)) -- Draw player
 
 end
+
+loadspr(0,"../sprite.png",0x20000,true,0)
+
 
 function beep(freq)
     poke(0x400000,int(freq/256))
@@ -104,7 +108,6 @@ function BOOT()
     screen(0)
     cls(rgb(0,96,192))
     player_x = 16
-
 end
 
 function LOOP()
@@ -156,4 +159,8 @@ function ONKEYDOWN(k)
     if to_key_name(k) == "D" then
         debug = debug + 1
     end
+end
+
+function POSTDRAW()
+    
 end

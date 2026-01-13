@@ -18,9 +18,25 @@ std::string LuaSrcPath = "";
 
 // API functions, these are called from Lua frontend
 
+// Function to halt the main loop by removing LOOP and POSTDRAW functions
+
+// placeholder, does nothing (because NULL or nullptr as Lua function will make exception)
+void api__NULL() {
+    // does nothing
+}
+
+// Function to halt the main loop by removing LOOP and POSTDRAW functions
+void haltLoop() {
+    lua.set_function("LOOP", api__NULL);    // Remove LOOP function to stop further calls
+    lua.set_function("POSTDRAW", api__NULL);// Remove POSTDRAW function to stop further calls
+}
+
 // Helper function to report Lua errors
 void report_lua_error(const sol::error& e) {
     std::cerr << "Lua error: " << e.what() << std::endl;
+    haltLoop(); // Stop the main loop
+    screenMode = 1; // Switch to text mode
+    font.clearPCG(0); // Clear screen
     font.locatePCG(0,0);
     font.setFGColor(fromRGB(255,0,0)); // Red
     font.setBGColor(fromRGB(0,0,0));  // Black
@@ -66,10 +82,10 @@ void api_vpoke(float addr, float value) {
     vram_poke(vram, (int)addr, (Byte)((int)value%256));
 }
 void api_print(std::string text, float x, float y, float color) {
-    font.print((std::string)text, (int)x, (int)y, (Byte)(int)color);
+    font.print((std::string)text, (int)x, (int)y, (int)color);
 }
 void api_pix(float x, float y, float color) {
-    scr.pix((int)x, (int)y, (Byte)(int)color);
+    scr.pix((int)x, (int)y, (int)color);
 }
 void api_trace(std::string text) {
     printf(((std::string)text+"\n").c_str());
@@ -80,10 +96,10 @@ void api_trace(float num) {
 }
 
 void api_cls(float color) {
-    if (screenMode == 0) {
-        scr.cls((Byte)(int)color);
-    } else if (screenMode == 1) {
-        font.clearPCG((Byte)(int)color);
+    if (screenMode == 1) {
+        font.clearPCG((int)color);
+    } else {
+        scr.cls((int)color);
     }
 }
 int api_rgb(float r, float g, float b) {
@@ -114,7 +130,7 @@ int api_from_key_name(std::string keyname) {
     return (int)SDL_GetScancodeFromName(keyname.c_str());
 }
 void api_rect(float x, float y, float w, float h, float color) {
-    scr.rect((int)x, (int)y, (int)w, (int)h, (Byte)color);
+    scr.rect((int)x, (int)y, (int)w, (int)h, (int)color);
 }
 std::tuple<int, int, int> api_mouse() {
     return scr.mouse();
@@ -152,10 +168,10 @@ void api_vpokearr(float addr, std::vector<float> vals) {
     vram_poke2array(vram,(int)addr,values);
 }
 void api_rectb(float x, float y, float w, float h, float color) {
-    scr.rectb((int)x, (int)y, (int)w, (int)h, (Byte)(int)color);
+    scr.rectb((int)x, (int)y, (int)w, (int)h, (int)color);
 }
 void api_line(float xs, float ys, float xe, float ye, float color) {
-    scr.line((int)xs, (int)ys, (int)xe, (int)ye, (Byte)(int)color);
+    scr.line((int)xs, (int)ys, (int)xe, (int)ye, (int)color);
 }
 void api_sprraw(float num, float x, float y, float w=1, float h=1) {
     scr.spr((int)num,(int)x,(int)y,(int)w,(int)h);

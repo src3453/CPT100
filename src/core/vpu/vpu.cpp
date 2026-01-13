@@ -235,7 +235,12 @@
     glGetIntegerv(GL_VIEWPORT, prevViewport);
     
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glViewport(0, 0, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT);
+    int WIDTH = CPT_SCREEN_WIDTH;
+    if (screenMode == 3) {
+        WIDTH = CPT_SCREEN_WIDTH / 2;
+    }
+    
+    glViewport(0, 0, WIDTH, CPT_SCREEN_HEIGHT);
     
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -358,16 +363,16 @@
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     
-    std::vector<uint8_t> pixels(CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT * 4);
-    glReadPixels(0, 0, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    std::vector<uint8_t> pixels(WIDTH * CPT_SCREEN_HEIGHT * 4);
+    glReadPixels(0, 0, WIDTH, CPT_SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
     
     glBindFramebuffer(GL_FRAMEBUFFER, prevFbo);
     glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
     
     for (int y = 0; y < CPT_SCREEN_HEIGHT; y++) {
-         for (int x = 0; x < CPT_SCREEN_WIDTH; x++) {
+         for (int x = 0; x < WIDTH; x++) {
              int glY = CPT_SCREEN_HEIGHT - 1 - y;
-             int idx = (glY * CPT_SCREEN_WIDTH + x) * 4;
+             int idx = (glY * WIDTH + x) * 4;
              if (pixels[idx+3] > 1) { 
                  screen.pix(x, y, fromRGBDithered(x,y,pixels[idx], pixels[idx+1], pixels[idx+2]));
              }

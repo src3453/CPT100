@@ -7,12 +7,15 @@
 #include <algorithm>
 
 #include "res/font8x12.hpp"
+#include "res/fontuni16_k8x12.hpp"
 
 /*
 SCREEN MODES (can be changed by screen(mode) API):
+variable: int screenMode;
 0: Graphics Mode, 384x288 pixels, direct pixel access
 1: Character Mode (PCG), 48x24 characters, each character is 8x12 pixels
 2: Alternative Character Mode, 96x48 characters, each character is 4x6 pixels (not yet implemented)
+3: High Color Graphics Mode, 192x288 pixels, 16bpp (RGB565), big endian
 */
 // TODO: Add 4x6 font and 96x48 screen mode (screen(2))
 
@@ -35,7 +38,7 @@ public:
         }
     }
 
-    void drawChar(char ch, int x, int y, Byte color) {
+    void drawChar(char ch, int x, int y, uint16_t color) {
         // Get the character index (0-255)
         unsigned char charIndex = static_cast<unsigned char>(ch);
         
@@ -50,6 +53,26 @@ public:
             }
         }
     }
+
+    void drawCharUnicode16(uint16_t unicode, int x, int y, uint16_t color) {
+        // Draw a Unicode character from the unicode16_font array
+        for (int i = 0; i < 12; ++i) {
+            unsigned char row;
+            try{
+                row = unicode16_font.at(unicode)[i];
+            } catch (const std::out_of_range& e) {
+                // Character not found, use blank character 
+                row = 0x00;
+            }
+            for (int j = 0; j < 8; ++j) {
+                // Check if the bit is set (1 = pixel on, 0 = pixel off)
+                if ((row >> (7 - j)) & 0x01) {
+                    screen.pix(x + j, y + i, color);
+                }
+            }
+        }
+    }
+
 
     #define BLINK_INTERVAL 10 // Number of frames for blink toggle
     #define PCG_SCREEN_WIDTH CPT_SCREEN_WIDTH/8
@@ -96,6 +119,35 @@ public:
             }
             blinktimer++;
         }
+        else if (mode == 2) {
+            // 16bit Unicode PCG mode
+            int i = 0;
+            for (int y = 0; y < PCG_SCREEN_HEIGHT; ++y) {
+                for (int x = 0; x < PCG_SCREEN_WIDTH; ++x) {
+                    if (cursor_visible && x == cursor_x && y == cursor_y && blinktimer % (BLINK_INTERVAL*2) < BLINK_INTERVAL) {
+                        screen.rect(x * 8, y * 12, 8, 12, vram_peek(vram, PCG_OFFSET+i*4+2));
+                        uint16_t unicode = (vram_peek(vram, PCG_OFFSET+i*4) << 8) | vram_peek(vram, PCG_OFFSET+i*4+1);
+                        if (unicode >= 256) {
+                            drawCharUnicode16(unicode, x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*4+3));
+                        }else{
+                            drawChar((char)(unicode & 0xFF), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*4+3));
+                        }
+                    } else {
+                        screen.rect(x * 8, y * 12, 8, 12, vram_peek(vram, PCG_OFFSET+i*4+3));
+                        uint16_t unicode = (vram_peek(vram, PCG_OFFSET+i*4) << 8) | vram_peek(vram, PCG_OFFSET+i*4+1);
+                        if (unicode >= 256) {
+                            drawCharUnicode16(unicode, x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*4+2));
+                        } else {
+                            drawChar((char)(unicode & 0xFF), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*4+2));
+                        }
+                    }
+                
+                    i++;
+                    
+                }
+            }
+            blinktimer++;
+        }
     }
 
     void setFGColor(Byte color) {
@@ -117,9 +169,18 @@ public:
             else if (text[i] == '\t') {
                 cursor_x += 4; // tab, move 4 spaces
             } else {
-                vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+0, text[i]);
-                vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+1, colorFG);
-                vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+2, colorBG);
+                if (screenMode == 2) {
+                    // Unicode mode
+                    uint16_t unicode = static_cast<uint16_t>(text[i]);
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+0, (unicode >> 8) & 0xFF);
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+1, unicode & 0xFF);
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+2, colorFG);
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+3, colorBG);
+                } else {
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+0, text[i]);
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+1, colorFG);
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+2, colorBG);
+                }
                 cursor_x += 1;
             }
             if (cursor_x >= (PCG_SCREEN_WIDTH)) {
@@ -134,36 +195,72 @@ public:
     }
 
     void scrollPCG(int lines) {
-        for (int i = 0; i < lines; ++i) {
-            for (int y = 0; y < PCG_SCREEN_HEIGHT-1; ++y) {
-                for (int x = 0; x < PCG_SCREEN_WIDTH; ++x) {
-                    vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+0, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+0));
-                    vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+1, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+1));
-                    vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+2, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+2));
+        if (screenMode == 2) {
+            for (int i = 0; i < lines; ++i) {
+                for (int y = 0; y < PCG_SCREEN_HEIGHT-1; ++y) {
+                    for (int x = 0; x < PCG_SCREEN_WIDTH; ++x) {
+                        vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*4+0, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*4+0));
+                        vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*4+1, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*4+1));
+                        vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*4+2, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*4+2));
+                        vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*4+3, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*4+3));
+                    }
+                }
+                // Clear the last line
+                for (int x = 0; x < PCG_SCREEN_WIDTH; ++x)
+                {
+                    vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*4+0, (char)0);
+                    vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*4+1, (char)0);
+                    vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*4+2, 255);
+                    vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*4+3, (uint8_t)0);
                 }
             }
-            // Clear the last line
-            for (int x = 0; x < PCG_SCREEN_WIDTH; ++x)
-            {
-                vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*3+0, (char)0);
-                vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*3+1, 255);
-                vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*3+2, (uint8_t)0);
+        } else {
+            for (int i = 0; i < lines; ++i) {
+                for (int y = 0; y < PCG_SCREEN_HEIGHT-1; ++y) {
+                    for (int x = 0; x < PCG_SCREEN_WIDTH; ++x) {
+                        vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+0, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+0));
+                        vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+1, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+1));
+                        vram_poke(vram, PCG_OFFSET+(y*(PCG_SCREEN_WIDTH)+x)*3+2, vram_peek(vram, PCG_OFFSET+((y+1)*(PCG_SCREEN_WIDTH)+x)*3+2));
+                    }
+                }
+                // Clear the last line
+                for (int x = 0; x < PCG_SCREEN_WIDTH; ++x)
+                {
+                    vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*3+0, (char)0);
+                    vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*3+1, 255);
+                    vram_poke(vram, PCG_OFFSET+((PCG_SCREEN_HEIGHT-1)*(PCG_SCREEN_WIDTH)+x)*3+2, (uint8_t)0);
+                }
             }
         }
     }
 
     void clearPCG(uint8_t color) {
-        for (int i = 0; i < CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT / 96; ++i) {
-            vram_poke(vram, PCG_OFFSET + i * 3 + 0, (char)0);
-            vram_poke(vram, PCG_OFFSET + i * 3 + 1, 255);
-            vram_poke(vram, PCG_OFFSET + i * 3 + 2, (uint8_t)color);
+        if (screenMode == 2) {
+            for (int i = 0; i < CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT / 96; ++i) {
+                vram_poke(vram, PCG_OFFSET + i * 4 + 0, (char)0);
+                vram_poke(vram, PCG_OFFSET + i * 4 + 1, (char)0);
+                vram_poke(vram, PCG_OFFSET + i * 4 + 2, 255);
+                vram_poke(vram, PCG_OFFSET + i * 4 + 3, (uint8_t)color);
+            }
+        } else {
+            for (int i = 0; i < CPT_SCREEN_WIDTH * CPT_SCREEN_HEIGHT / 96; ++i) {
+                vram_poke(vram, PCG_OFFSET + i * 3 + 0, (char)0);
+                vram_poke(vram, PCG_OFFSET + i * 3 + 1, 255);
+                vram_poke(vram, PCG_OFFSET + i * 3 + 2, (uint8_t)color);
+            }
         }
     }
 
 
-    void print(const std::string text, int x = 0, int y = 0, Byte color = 255) {
+    void print(const std::string text, int x = 0, int y = 0, uint16_t color = 255) {
         for (size_t i = 0; i < text.length(); ++i) {
             drawChar((char)text[i], (x + 8 * i) % CPT_SCREEN_WIDTH, y + (i / 48) * 12, color);
+        }
+    }
+
+    void printUnicode16(const std::u16string text, int x = 0, int y = 0, uint16_t color = 255) {
+        for (size_t i = 0; i < text.length(); ++i) {
+            drawCharUnicode16((uint16_t)text[i], (x + 8 * i) % CPT_SCREEN_WIDTH, y + (i / 48) * 12, color);
         }
     }
 

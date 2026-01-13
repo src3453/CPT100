@@ -57,3 +57,10 @@ function S_IMAGE_RGB2HSV(r, g, b)
 
     return h, s, v
 end
+
+function S_IMAGE_PrintShadow(txt, x, y, color, color2)
+    color = color or rgb(255,255,255)
+    color2 = color2 or rgb(0,0,0)
+    print(txt,x+1,y+1,color2)
+    print(txt,x,y,color)
+end

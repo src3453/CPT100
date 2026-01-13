@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CPT200 Blockly Lua Builder</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    <!-- Luaジェネレーターを追加（Blocky本体とは別配布） -->
+    <script src="https://unpkg.com/blockly/lua_compressed.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>CPT200 Blockly Lua Builder</h1>
+      <div class="actions">
+        <button id="btnExport">Luaをエクスポート</button>
+        <button id="btnImport">ワークスペースを読み込み</button>
+        <button id="btnReset">リセット</button>
+      </div>
+    </header>
+
+    <main>
+      <div id="toolbox" style="display:none">
+        <xml id="cptToolbox" style="display:none">
+          <category name="Program" colour="#5b80a5">
+            <block type="cpt_program_root"></block>
+          </category>
+          <category name="Display" colour="#a55b80">
+            <block type="cpt_screen"></block>
+            <block type="cpt_cls"></block>
+          </category>
+          <category name="Drawing" colour="#5ba58c">
+            <block type="cpt_pix"></block>
+            <block type="cpt_rect"></block>
+            <block type="cpt_line"></block>
+            <block type="cpt_rgb"></block>
+            <block type="cpt_rgbd"></block>
+          </category>
+          <category name="Text" colour="#a5a55b">
+            <block type="cpt_print"></block>
+          </category>
+          <category name="Sprites" colour="#8c5ba5">
+            <block type="cpt_spr"></block>
+          </category>
+          <category name="Input" colour="#5b8ca5">
+            <block type="cpt_mouse_assign"></block>
+            <block type="cpt_key"></block>
+          </category>
+          <category name="Time" colour="#a55b5b">
+            <block type="cpt_time"></block>
+          </category>
+          <sep></sep>
+          <category name="Logic" colour="#5b80a5" categorystyle="logic_category"></category>
+          <category name="Loops" colour="#5b80a5" categorystyle="loop_category"></category>
+          <category name="Math" colour="#5b80a5" categorystyle="math_category"></category>
+          <category name="Text (generic)" colour="#5b80a5" categorystyle="text_category"></category>
+          <category name="Variables" colour="#a55b80" categorystyle="variable_category"></category>
+          <category name="Functions" colour="#5b80a5" categorystyle="procedure_category"></category>
+        </xml>
+      </div>
+      <div id="workspace"></div>
+      <section id="export">
+        <h2>生成Luaコード</h2>
+        <textarea id="output" readonly></textarea>
+      </section>
+    </main>
+
+    <footer>
+      <small>このビルダーはCPT200のLua API（print, pix, cls, screen, rect, line, rgb, rgbd, spr, mouse, key, time など）を対象にしています。</small>
+    </footer>
+
+    <script src="blocks.js"></script>
+    <script src="generator.js"></script>
+    <script>
+      const toolbox = document.getElementById('cptToolbox');
+      const workspace = Blockly.inject('workspace', {
+        toolbox,
+        grid: {spacing: 20, length: 3, colour: '#ccc', snap: true},
+        scrollbars: true,
+        trashcan: true,
+        zoom: {controls: true, wheel: true}
+      });
+
+      // 初期ルートブロックを配置
+      const rootBlock = workspace.newBlock('cpt_program_root');
+      rootBlock.initSvg();
+      rootBlock.render();
+      rootBlock.setMovable(false);
+
+      function updateOutput() {
+        try {
+          const code = Blockly.Lua.workspaceToCode(workspace);
+          document.getElementById('output').value = code;
+          return code;
+        } catch (e) {
+          document.getElementById('output').value = 'Generator error: ' + e.message;
+          return '';
+        }
+      }
+
+      workspace.addChangeListener(() => updateOutput());
+      updateOutput();
+
+      // エクスポート（ダウンロード）
+      document.getElementById('btnExport').addEventListener('click', () => {
+        const code = updateOutput();
+        const blob = new Blob([code], {type: 'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'blockly.lua';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+
+      // インポート（XML）
+      document.getElementById('btnImport').addEventListener('click', async () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.xml';
+        input.onchange = () => {
+          const file = input.files[0];
+          const reader = new FileReader();
+          reader.onload = () => {
+            const xml = Blockly.Xml.textToDom(reader.result);
+            workspace.clear();
+            Blockly.Xml.domToWorkspace(xml, workspace);
+            updateOutput();
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      });
+
+      // リセット
+      document.getElementById('btnReset').addEventListener('click', () => {
+        workspace.clear();
+        const root = workspace.newBlock('cpt_program_root');
+        root.initSvg();
+        root.render();
+        root.setMovable(false);
+        updateOutput();
+      });
+
+      // ワークスペース保存（XML）補助
+      window.saveWorkspaceXml = function() {
+        const xml = Blockly.Xml.workspaceToDom(workspace);
+        const text = Blockly.Xml.domToText(xml);
+        const blob = new Blob([text], {type: 'text/xml'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'workspace.xml';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      };
+    </script>
+  </body>
+</html>

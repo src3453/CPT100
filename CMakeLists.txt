@@ -81,6 +81,8 @@ else()
     message("Python3 not found.")
 endif()
 
+add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
 
 project(cpt200 LANGUAGES C CXX)
 set(EXECUTABLE_NAME cpt200)

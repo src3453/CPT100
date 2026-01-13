@@ -74,7 +74,7 @@ public:
         vWrite8(0x1D000 + spriteIndex * 12 + 9, attr);
         uint8_t rotValue = static_cast<uint8_t>(rotation / 1.40625f) & 0xFF;
         vWrite8(0x1D000 + spriteIndex * 12 + 11, rotValue);
-        printf("Sprite %d set to (%d,%d), enabled=%d, rotation=%.2f (raw=%d)\n", spriteIndex, x, y, enabled?1:0, rotation, rotValue);
+        //printf("Sprite %d set to (%d,%d), enabled=%d, rotation=%.2f (raw=%d)\n", spriteIndex, x, y, enabled?1:0, rotation, rotValue);
     }
 
     void updateSprites() {
@@ -142,7 +142,7 @@ public:
         // Load image from local file and upload to VRAM at sprite texture offset
         // This is a placeholder implementation
         Sprite& sprite = sprites[spriteIndex];
-        printf("Loading sprite %d from file: %s\n", spriteIndex, filepath.c_str());
+        //printf("Loading sprite %d from file: %s\n", spriteIndex, filepath.c_str());
         // Load image file using stb_image
         int width, height, channels;
         unsigned char* data = stbi_load(filepath.c_str(), &width, &height, &channels, 3);
@@ -177,7 +177,7 @@ public:
             vWrite8(0x1D000 + spriteIndex * 12 + 4, sprite.texture.width);
             vWrite8(0x1D000 + spriteIndex * 12 + 5, sprite.texture.height);
             stbi_image_free(data);
-            printf("Loaded sprite %d from %s (%dx%d)\n", spriteIndex, filepath.c_str(), width, height);
+            //printf("Loaded sprite %d from %s (%dx%d)\n", spriteIndex, filepath.c_str(), width, height);
         } else {
             printf("Failed to load image: %s\n", filepath.c_str());
         }

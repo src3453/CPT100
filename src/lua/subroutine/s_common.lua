@@ -1,8 +1,11 @@
 
+-- Common subroutines
+-- Clip value v to the range [a,b]
 function S_COMMON_clip(v,a,b)
     return math.min(math.max(v,a),b)
 end
 
+-- Find the maximum value in the tables
 function S_COMMON_tableMax(tbl)
     local max = nil
     for _, v in pairs(tbl) do
@@ -13,6 +16,20 @@ function S_COMMON_tableMax(tbl)
     return max
 end
 
+-- Find the key of the maximum value in the table
+function S_COMMON_tableArgMax(tbl)
+    local max = nil
+    local argmax = nil
+    for k, v in pairs(tbl) do
+        if max == nil or v > max then
+            max = v
+            argmax = k
+        end
+    end
+    return argmax
+end
+
+-- Find the minimum value in the table
 function S_COMMON_tableMin(tbl)
     local min = nil
     for _, v in pairs(tbl) do
@@ -23,6 +40,20 @@ function S_COMMON_tableMin(tbl)
     return min
 end
 
+-- Find the key of the minimum value in the table
+function S_COMMON_tableArgMin(tbl)
+    local min = nil
+    local argmin = nil
+    for k, v in pairs(tbl) do
+        if min == nil or v < min then
+            min = v
+            argmin = k
+        end
+    end
+    return argmin
+end
+
+-- Calculate average of the values in the table
 function S_COMMON_tableAvg(tbl)
     local sum = 0
     local count = 0
@@ -36,16 +67,17 @@ function S_COMMON_tableAvg(tbl)
     return sum / count
 end
 
-function S_COMMON_avg_abs(sample)
+-- Calculate RMS of the values in the table
+function S_COMMON_rms(sample)
     local sum = 0
     for i=1,#sample do
-        sum = sum + math.abs(sample[i])
+        sum = sum + math.pow(sample[i],2)
     end
-    return sum / #sample
+    return math.sqrt(sum / #sample)
 end
 
-function S_COMMON_peek4(addr)
 -- Peek a 4bit nibble from memory, addr is 2x aligned
+function S_COMMON_peek4(addr)
     local byte = peek(addr/2)
     if addr % 2 == 0 then
         return bit.band(byte / 16, 0x0F)
@@ -54,8 +86,8 @@ function S_COMMON_peek4(addr)
     end
 end
 
-function S_COMMON_poke4(addr, val)
 -- Poke a 4bit nibble into memory, addr is 2x aligned
+function S_COMMON_poke4(addr, val)
     local byte = peek(addr/2)
     if addr % 2 == 0 then
         byte = bit.bor(bit.band(byte, 0x0F), bit.lshift(bit.band(val, 0x0F), 4))
@@ -65,8 +97,8 @@ function S_COMMON_poke4(addr, val)
     poke(addr/2, byte)
 end
 
-function S_COMMON_vpeek4(addr)
 -- Peek a 4bit nibble from video memory, addr is 2x aligned
+function S_COMMON_vpeek4(addr)
     local byte = vpeek(addr/2)
     if addr % 2 == 0 then
         return bit.band(byte / 16, 0x0F)
@@ -75,8 +107,8 @@ function S_COMMON_vpeek4(addr)
     end
 end
 
-function S_COMMON_vpoke4(addr, val)
 -- Poke a 4bit nibble into video memory, addr is 2x aligned
+function S_COMMON_vpoke4(addr, val)
     local byte = vpeek(addr/2)
     if addr % 2 == 0 then
         byte = bit.bor(bit.band(byte, 0x0F), bit.lshift(bit.band(val, 0x0F), 4))
