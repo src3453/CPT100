@@ -1,4 +1,4 @@
-// Generated font data
+// Generated font data, processed from "k8x12" bitmap font.
 // Each character: 12 bytes bitmap (8x12)
 
 #include <map>

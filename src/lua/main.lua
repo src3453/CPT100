@@ -1,75 +1,78 @@
--- CPT200 Disk Operating System
-
-Button = {}
-Button.new = function(self, x, y, width, height, text)
-    local obj = {}
-    setmetatable(obj, self)
-    self.__index = self
-    obj.x = x
-    obj.y = y
-    obj.width = width
-    obj.height = height
-    obj.text = text or "Button"
-    obj.color = rgb(200, 200, 200)
-    obj.textColor = rgb(0, 0, 0)
-    obj.hoverColor = rgb(220, 220, 220)
-    obj.hoverTextColor = rgb(0, 0, 0)
-    obj.isHovered = false
-    obj.onClick = function() end  -- Default click handler
-    obj.draw = function()
-        local color = obj.isHovered and obj.hoverColor or obj.color
-        local textColor = obj.isHovered and obj.hoverTextColor or obj.textColor
-        rect(obj.x, obj.y, obj.x + obj.width, obj.y + obj.height, color)
-        rectb(obj.x, obj.y, obj.x + obj.width, obj.y + obj.height, textColor)
-        print(obj.text, obj.x + (obj.width / 2) - int((#obj.text / 2)*8), obj.y + (obj.height / 2), textColor)
+-- [AdvFramework - Text based Adventure Game Framework for CPT200]
+AdvFramework = {}
+local af = AdvFramework -- shorthand
+af.SCREEN_X = 48 -- text width in characters
+af.SCREEN_Y = 24 -- text height in characters
+af.IS_SCREEN3 = false -- Controls rendering method and charsets (false: cp437, true: utf-16be)
+af.DEBUG = false -- debug mode
+af.init = function ()
+    screen(1) -- set to PCG mode
+    cls(0)
+    colorfg(255)
+    colorbg(0)
+    lc(0,0) 
+    setpwrap(false) -- disable print wrapping
+    showcurp(0) -- hide cursor
+end
+af.draw = {}
+af.draw.genericWindow = function (type, x, y, w, h, color1, color2)
+    color1 = color1 or 255
+    color2 = color2 or 0
+    colorfg(color1)
+    colorbg(color2)
+    for xi = x, x+w do -- horizontal lines 
+        lc(xi,y)
+        printp(0xc4)
+        lc(xi,y+h)
+        printp(0xc4)
     end
-    obj.update = function()
-        local mx, my, ms = mouse()
-        obj.isHovered = mx >= obj.x and mx <= (obj.x + obj.width) and my >= obj.y and my <= (obj.y + obj.height)
-        if obj.isHovered and ms==1 then
-            obj.onClick()  -- Call the click handler if the button is hovered and clicked
+    for yi = y, y+h do -- vertical lines
+        lc(x,yi)
+        printp(0xb3)
+        lc(x+w,yi)
+        printp(0xb3)
+    end
+    lc(x,y) -- corners
+    printp(0xda)
+    lc(x+w,y)
+    printp(0xbf)
+    lc(x,y+h)
+    printp(0xc0)
+    lc(x+w,y+h)
+    printp(0xd9)
+    for xi = x+1, x+w-1 do
+        for yi = y+1, y+h-1 do
+            lc(xi,yi)
+            printp(0x20)
         end
     end
-    return obj
 end
-
-_PODOS_VERSION="0.1"
-CurX = 0
-CurY = 2
+af.draw.dialogWindow = function (title, content, color1, color2)
+    color1 = color1 or 255
+    color2 = color2 or 0
+    af.draw.genericWindow("dialog", 0, af.SCREEN_Y-8, af.SCREEN_X-1, 7, color1, color2)
+    lc(1, af.SCREEN_Y-8) -- title
+    --colorbg(color2)
+    --colorfg(color1)
+    printp(title)
+    lc(2, af.SCREEN_Y-6) -- contents
+    --colorbg(color2)
+    --colorfg(color1)
+    printp(content)
+    lc(af.SCREEN_X-2,af.SCREEN_Y-2) -- page feed mark
+    printp(0x1f)
+end
 
 function BOOT()
-    screen(1)
-    cls(0)
-    printlnp("PoDOS: Primitive oldskool Disk Operating System")
-    printlnp("Version ".._PODOS_VERSION.." (c) 2025 src3453 MIT License")
-    printlnp("")
-    printp("0:/>")
-end
-
-inputchar = ""
-
-function ONINPUT(c)
-    inputchar = inputchar..c
-    printp(c)
-    if c == string.char(0x0a)then
-        -- Process the input command
-        local cmd = inputchar:match("^(%S+)")
-        if cmd == "load" then
-            local index = tonumber(inputchar:match("%s+(%d+)"))
-            if index then
-                loadentrypoint(index)
-            else
-                printp("Invalid index", CurX, CurY, 255, 0)
-            end
-        elseif cmd == "dir" then
-            DIR()
-        else
-            printp("Unknown command: " .. cmd, CurX, CurY, 255, 0)
-        end
-        inputchar = ""  -- Reset input after processing
-    end
+    af.init()
+    af.draw.dialogWindow("Test", "This is a test")
+    af.draw.genericWindow("generic",2,2,5,3,0,255)
 end
 
 function LOOP()
-    
+    --showcur(0)
+    --mx, my, _ = mouse()
+    --cls(0)
+    --af.draw.genericWindow("generic",2,2,int(mx/8-2),int(my/12-2),255,0)
+    --lc(2,2)
 end

@@ -98,6 +98,10 @@ public:
         cursor_visible = visible;
     }
 
+    void setAutoWrapPCG(bool enable) {
+        auto_wrap = enable;
+    }
+
     void drawCharPCG(int mode) {
         if (mode == 1) {
             // Draw a character in mode 1
@@ -183,11 +187,11 @@ public:
                 }
                 cursor_x += 1;
             }
-            if (cursor_x >= (PCG_SCREEN_WIDTH)) {
+            if (cursor_x >= (PCG_SCREEN_WIDTH) && auto_wrap) {
                 cursor_x =  0; // carriage return
                 cursor_y += 1; // line feed
             }
-            if (cursor_y >= PCG_SCREEN_HEIGHT) {
+            if (cursor_y >= PCG_SCREEN_HEIGHT && auto_wrap) {
                 cursor_y = PCG_SCREEN_HEIGHT - 1;
                 scrollPCG(1);
             }
@@ -272,6 +276,7 @@ private:
     int colorFG = 255;
     int colorBG = 0;
     int blinktimer = 0;
+    bool auto_wrap = true;
     bool cursor_visible = true;
 
 };

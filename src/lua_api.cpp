@@ -319,6 +319,10 @@ std::vector<float> api_acquire_sound_input_fft(int fft_size) {
     return acquireSoundInputFFT(fft_size);
 }
 
+void setpwrap(bool enable) {
+    font.setAutoWrapPCG(enable);
+}
+
 void register_functions() {
     // Register all API functions
     lua.set_function("_maincall",api__maincall);
@@ -382,6 +386,7 @@ void register_functions() {
     lua.set_function("init_sound_input", api_init_sound_input);
     lua.set_function("acquire_sound_input", api_acquire_sound_input);
     lua.set_function("acquire_sound_input_fft", api_acquire_sound_input_fft);
+    lua.set_function("setpwrap", setpwrap);
 
 }
 
