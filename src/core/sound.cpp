@@ -1,6 +1,8 @@
 #include <math.h>
 #include <random>
 #include <iostream>
+#undef min
+#undef max
 #define M_PI 3.14159265358979323846
 #include "lib/effecter.cpp"
 #define Byte unsigned char

@@ -4,21 +4,52 @@
 #define SOL_EXCEPTIONS_SAFE_PROPAGATION 1
 
 
+
 #include "sol/sol.hpp"
 #include <time.h>
+#include "SDL_timer.h"
+#include <locale>
+#include <codecvt>
 
 sol::state lua;
 int timerStart = 0;
+unsigned int timerCounter = 0;
 std::string LuaSrcPath = "";
+
+// Thread-safe timer event queue
+#include <queue>
+#include <mutex>
+struct TimerEvent {
+    unsigned int count;
+    unsigned int timestamp;
+};
+std::queue<TimerEvent> timerEventQueue;
+std::mutex timerQueueMutex;
 
 #include "lua/main.lua.hpp"
 #include "lua/opening.lua.hpp"
-
+#include "lua/opening_ja.lua.hpp"
 #define Byte unsigned char
 
 // API functions, these are called from Lua frontend
 
 // Function to halt the main loop by removing LOOP and POSTDRAW functions
+
+std::u16string convU8toU16(std::string utf8text) {
+    std::u16string u16text;
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+    try {
+        u16text = convert.from_bytes(utf8text);
+    } catch (const std::range_error& e) {
+        // Conversion failed, replace with placeholder
+        u16text = u"?"; // Replacement character
+    }
+    return u16text;
+}
+
+void printAsU16(std::string utf8text) {
+    font.printPCG(convU8toU16(utf8text));
+}
 
 // placeholder, does nothing (because NULL or nullptr as Lua function will make exception)
 void api__NULL() {
@@ -29,31 +60,72 @@ void api__NULL() {
 void haltLoop() {
     lua.set_function("LOOP", api__NULL);    // Remove LOOP function to stop further calls
     lua.set_function("POSTDRAW", api__NULL);// Remove POSTDRAW function to stop further calls
+    lua.set_function("ONKEYDOWN", api__NULL); // Remove input handlers
+    lua.set_function("ONKEYUP", api__NULL);
+    lua.set_function("ONINPUT", api__NULL);
+    lua.set_function("TIMERINT", api__NULL); // Remove timer handler
+}
+
+void api_resetvram() {
+    scr.init(); // reset palette
+    font.loadFontData(); // Reload font data
 }
 
 // Helper function to report Lua errors
 void report_lua_error(const sol::error& e) {
     std::cerr << "Lua error: " << e.what() << std::endl;
     haltLoop(); // Stop the main loop
-    screenMode = 1; // Switch to text mode
-    font.clearPCG(0); // Clear screen
+    api_resetvram();
+    screenMode = 2; // Switch to text mode
+    font.clearPCG(fromRGB(192,0,0));
     font.locatePCG(0,0);
-    font.setFGColor(fromRGB(255,0,0)); // Red
-    font.setBGColor(fromRGB(0,0,0));  // Black
-    font.printPCG("Lua error:");
-    font.printPCG(e.what());
+    font.setFGColor(fromRGB(192,0,0));
+    font.setBGColor(255);
+    printAsU16(TR_STR("致命的な問題が発生しました\n", "A fatal error has occurred\n"));
+    font.setBGColor(fromRGB(192,0,0));
+    font.setFGColor(255);
+    printAsU16(TR_STR("\nスクリプト エラー: ", "\nScript error: "));
+    if (e.what() == nullptr) {
+        printAsU16(TR_STR("エラーの詳細情報を特定できませんでした。", "Could not determine detailed error information."));
+
+    } else {
+        printAsU16(e.what());
+    }
+    printAsU16(TR_STR("\n\nプログラムの実行を停止しました。\n", "\n\nThe program has been halted.\n"));
+    font.locatePCG(0, PCG_SCREEN_HEIGHT - 2);
+    printAsU16(CPT_PRODUCT_NAME);
+    printAsU16((std::string)TR_STR("\nバージョン ", "\nVersion ") + (std::string)(VERSION_MAJOR "." VERSION_MINOR "." VERSION_REVISION VERSION_STATUS " (" VERSION_HASH  ")"));
 }
 
 // Helper to call Lua functions safely
 template<typename... Args>
 void safe_lua_call(const std::string& name, Args&&... args) {
-    sol::protected_function func = lua[name];
-    if (func.valid()) {
-        auto result = func(std::forward<Args>(args)...);
+    try {
+        // First, safely check if the value exists and is a function
+        sol::object obj = lua[name];
+        if (!obj.valid() || obj.get_type() != sol::type::function) {
+            // Not a function or doesn't exist, silently return
+            return;
+        }
+        
+        // Now safely get the protected function
+        sol::optional<sol::protected_function> maybe_func = lua[name];
+        if (!maybe_func) {
+            return;
+        }
+        
+        sol::protected_function func = *maybe_func;
+        sol::protected_function_result result = func(std::forward<Args>(args)...);
         if (!result.valid()) {
             sol::error err = result;
             report_lua_error(err);
         }
+    } catch (const std::exception& e) {
+        std::cerr << "Exception in safe_lua_call(" << name << "): " << e.what() << std::endl;
+        haltLoop();
+    } catch (...) {
+        std::cerr << "Unknown exception in safe_lua_call(" << name << ")" << std::endl;
+        haltLoop();
     }
 }
 
@@ -81,9 +153,19 @@ int api_vpeek(float addr) {
 void api_vpoke(float addr, float value) {
     vram_poke(vram, (int)addr, (Byte)((int)value%256));
 }
+void api_print(std::string text, float x, float y, float color, float flag) {
+    if ((int)flag == 1) {
+        std::u16string u16text = convU8toU16(text);
+        font.printUnicode16(u16text, (int)x, (int)y, (int)color);
+    } else {
+        font.print((std::string)text, (int)x, (int)y, (int)color);
+    }
+}
+
 void api_print(std::string text, float x, float y, float color) {
     font.print((std::string)text, (int)x, (int)y, (int)color);
 }
+
 void api_pix(float x, float y, float color) {
     scr.pix((int)x, (int)y, (int)color);
 }
@@ -96,7 +178,7 @@ void api_trace(float num) {
 }
 
 void api_cls(float color) {
-    if (screenMode == 1) {
+    if (screenMode == 1 || screenMode == 2) {
         font.clearPCG((int)color);
     } else {
         scr.cls((int)color);
@@ -251,7 +333,11 @@ void api_screen(int mode) {
 } 
 
 void api_printp(std::string text) {
-    font.printPCG((std::string)text);
+    if (screenMode == 2) {
+        printAsU16(text);
+    } else {
+        font.printPCG(text);
+    }
 }
 
 void api_printp(float c) {
@@ -262,7 +348,7 @@ void api_printp(float c) {
 }
 
 void api_printlnp(std::string text) {
-    font.printPCG((std::string)text+"\n");
+    api_printp(text + "\n");
 }
 
 void api_lc(float x, float y) {
@@ -319,9 +405,47 @@ std::vector<float> api_acquire_sound_input_fft(int fft_size) {
     return acquireSoundInputFFT(fft_size);
 }
 
-void setpwrap(bool enable) {
+void api_setpwrap(bool enable) {
     font.setAutoWrapPCG(enable);
 }
+
+void Lua_TimerInt(unsigned int count) {
+    // Add timer event to thread-safe queue instead of calling directly
+    {
+        std::lock_guard<std::mutex> lock(timerQueueMutex);
+        timerEventQueue.push({count, SDL_GetTicks()});
+    }
+}
+
+uint32_t timerCallback(uint32_t interval, void* param) {
+    timerCounter += 1;
+    Lua_TimerInt(interval);
+    return interval; // continue the timer
+}
+
+int api_settimerint(float interval_ms) {
+    int timerID = SDL_AddTimer((uint32_t)interval_ms, timerCallback, nullptr);
+    if (timerID == 0) {
+        std::cerr << "Failed to create timer: " << SDL_GetError() << std::endl;
+    }
+    return timerID;
+}
+
+bool api_disposetimerint(int timerID) {
+    return SDL_RemoveTimer((SDL_TimerID)timerID);
+    // タイマを破棄したときSDL_TRUE, タイマがないときSDL_FALSEを戻す. 
+}
+
+// BitBlt (linear to block)
+void api_bitblt_lb(float addr, float x, float y, float w, float h, float transparent_color=-1) {
+    scr.bitblt((int)addr, (int)x, (int)y, (int)w, (int)h, (int)transparent_color);
+}
+
+// BitBlt (block to block)
+void api_bitblt_bb(float base_addr, float block_x, float block_y, float block_w, float block_h, float x, float y, float w, float h, float transparent_color=-1) {
+    scr.bitblt_block_to_block((int)base_addr, (int)block_x, (int)block_y, (int)block_w, (int)block_h, (int)x, (int)y, (int)w, (int)h, (int)transparent_color);
+}
+
 
 void register_functions() {
     // Register all API functions
@@ -330,7 +454,10 @@ void register_functions() {
     lua.set_function("poke",api_poke);
     lua.set_function("vpeek",api_vpeek);
     lua.set_function("vpoke",api_vpoke);
-    lua.set_function("print",api_print);
+    lua.set_function("print",sol::overload(
+        static_cast<void(*)(std::string, float, float, float, float)>(&api_print),
+        static_cast<void(*)(std::string, float, float, float)>(&api_print)
+    ));
     lua.set_function("pix",api_pix);
     lua.set_function("trace",sol::overload(
         static_cast<void(*)(std::string)>(&api_trace),
@@ -386,8 +513,12 @@ void register_functions() {
     lua.set_function("init_sound_input", api_init_sound_input);
     lua.set_function("acquire_sound_input", api_acquire_sound_input);
     lua.set_function("acquire_sound_input_fft", api_acquire_sound_input_fft);
-    lua.set_function("setpwrap", setpwrap);
-
+    lua.set_function("setpwrap", api_setpwrap);
+    lua.set_function("settimerint", api_settimerint);
+    lua.set_function("disposetimerint", api_disposetimerint);
+    lua.set_function("resetvram", api_resetvram);
+    lua.set_function("bitblt_lb", api_bitblt_lb);
+    lua.set_function("bitblt_bb", api_bitblt_bb);
 }
 
 void init_lua() {
@@ -416,6 +547,9 @@ void init_lua() {
     #else 
     lua["_CPT_IS_WASM"] = 0;
     #endif
+    lua["_CPT_PRODUCT_NAME"] = CPT_PRODUCT_NAME;
+    lua["_CPT_LANG"] = (std::string)APP_LANG;
+    lua["_CPT_IS_LUAJIT"] = std::string(IS_LUAJIT) == "ON" ? 1 : 0;
 
     std::string subroutines_source = "";
     #include "lua/subroutine/s_io.lua.hpp"
@@ -433,7 +567,7 @@ void init_lua() {
         report_lua_error(err);
     }
     
-    result = lua.safe_script(opening_source);
+    result = lua.safe_script(APP_LANG == "ja" ? opening_ja_source : opening_source);
     if (!result.valid()) {
         sol::error err = result;
         report_lua_error(err);
@@ -450,7 +584,21 @@ void Lua_OnKeyUp(int key) {
     safe_lua_call("ONKEYUP", key);
 }
 
+// Process all pending timer events from the queue (call from main thread only)
+void ProcessTimerEvents() {
+    std::lock_guard<std::mutex> lock(timerQueueMutex);
+    while (!timerEventQueue.empty()) {
+        TimerEvent event = timerEventQueue.front();
+        timerEventQueue.pop();
+        // Now safely call Lua from main thread
+        safe_lua_call("TIMERINT", (float)event.count);
+    }
+}
+
 void Lua_MainLoop() {
+    // Process any pending timer events first
+    ProcessTimerEvents();
+    // Then call the main loop
     safe_lua_call("LOOP");
 }
 

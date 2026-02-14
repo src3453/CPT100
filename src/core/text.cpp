@@ -8,6 +8,9 @@
 
 #include "res/font8x12.hpp"
 #include "res/fontuni16_k8x12.hpp"
+#include "res/cp437tou16table.hpp"
+
+// Forward declaration or include the appropriate header
 
 /*
 SCREEN MODES (can be changed by screen(mode) API):
@@ -131,18 +134,20 @@ public:
                     if (cursor_visible && x == cursor_x && y == cursor_y && blinktimer % (BLINK_INTERVAL*2) < BLINK_INTERVAL) {
                         screen.rect(x * 8, y * 12, 8, 12, vram_peek(vram, PCG_OFFSET+i*4+2));
                         uint16_t unicode = (vram_peek(vram, PCG_OFFSET+i*4) << 8) | vram_peek(vram, PCG_OFFSET+i*4+1);
-                        if (unicode >= 256) {
+                        try{
+                            uint8_t cp437_mapped_char = cp437tou16table.at(unicode);
+                            drawChar((char)(cp437_mapped_char), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*4+3));
+                        } catch (const std::out_of_range& e) {
                             drawCharUnicode16(unicode, x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*4+3));
-                        }else{
-                            drawChar((char)(unicode & 0xFF), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*4+3));
                         }
                     } else {
                         screen.rect(x * 8, y * 12, 8, 12, vram_peek(vram, PCG_OFFSET+i*4+3));
                         uint16_t unicode = (vram_peek(vram, PCG_OFFSET+i*4) << 8) | vram_peek(vram, PCG_OFFSET+i*4+1);
-                        if (unicode >= 256) {
+                        try{
+                            uint8_t cp437_mapped_char = cp437tou16table.at(unicode);
+                            drawChar((char)(cp437_mapped_char), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*4+2));
+                        } catch (const std::out_of_range& e) {
                             drawCharUnicode16(unicode, x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*4+2));
-                        } else {
-                            drawChar((char)(unicode & 0xFF), x * 8, y * 12, vram_peek(vram, PCG_OFFSET+i*4+2));
                         }
                     }
                 
@@ -174,16 +179,47 @@ public:
                 cursor_x += 4; // tab, move 4 spaces
             } else {
                 if (screenMode == 2) {
-                    // Unicode mode
-                    uint16_t unicode = static_cast<uint16_t>(text[i]);
-                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+0, (unicode >> 8) & 0xFF);
-                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+1, unicode & 0xFF);
-                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+2, colorFG);
-                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+3, colorBG);
+                    throw std::runtime_error("Unicode PCG print not supported in this function with String type. (you misused lua api?)");
                 } else {
                     vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+0, text[i]);
                     vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+1, colorFG);
                     vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*3+2, colorBG);
+                }
+                cursor_x += 1;
+            }
+            if (cursor_x >= (PCG_SCREEN_WIDTH) && auto_wrap) {
+                cursor_x =  0; // carriage return
+                cursor_y += 1; // line feed
+            }
+            if (cursor_y >= PCG_SCREEN_HEIGHT && auto_wrap) {
+                cursor_y = PCG_SCREEN_HEIGHT - 1;
+                scrollPCG(1);
+            }
+        }
+    }
+
+    void printPCG(std::u16string text) {
+        for (size_t i = 0; i < text.length(); ++i) {
+            if (text[i] == u'\n') {
+                cursor_x = 0; // reset to start of line
+                cursor_y += 1; // move to next line
+            } else if (text[i] == u'\r') {
+                cursor_x = 0; // carriage return
+            }
+            else if (text[i] == u'\t') {
+                cursor_x += 4; // tab, move 4 spaces
+            } else {
+                if (screenMode != 2) {
+                    throw std::runtime_error("Unicode PCG print only supported in mode 2 with Unicode16 type.");
+                } else {
+                    // CPT200 uses UTF-16BE encoding for Unicode characters
+                    int n = 1;
+                    uint16_t be_char;
+                    be_char = text[i];
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+0, (be_char >> 8) & 0xFF);
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+1, be_char & 0xFF);
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+2, colorFG);
+                    vram_poke(vram, PCG_OFFSET+(cursor_y*(PCG_SCREEN_WIDTH)+cursor_x)*4+3, colorBG);
                 }
                 cursor_x += 1;
             }
@@ -258,13 +294,20 @@ public:
 
     void print(const std::string text, int x = 0, int y = 0, uint16_t color = 255) {
         for (size_t i = 0; i < text.length(); ++i) {
-            drawChar((char)text[i], (x + 8 * i) % CPT_SCREEN_WIDTH, y + (i / 48) * 12, color);
+            drawChar((char)text[i], (x + 8 * i), y, color);
         }
     }
 
     void printUnicode16(const std::u16string text, int x = 0, int y = 0, uint16_t color = 255) {
         for (size_t i = 0; i < text.length(); ++i) {
-            drawCharUnicode16((uint16_t)text[i], (x + 8 * i) % CPT_SCREEN_WIDTH, y + (i / 48) * 12, color);
+            //printf("Printing Unicode char: U+%04X\n", text[i]);
+            uint16_t unicode = text[i];
+            try{
+                uint8_t cp437_mapped_char = cp437tou16table.at(unicode);
+                drawChar((char)(cp437_mapped_char), (x + 8 * i), y, color);
+            } catch (const std::out_of_range& e) {
+                drawCharUnicode16(unicode, (x + 8 * i), y, color);
+            }
         }
     }
 

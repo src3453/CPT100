@@ -15,6 +15,12 @@ int mode1_cursorShow = 1;
 std::string inputText = "";
 
 #define Byte unsigned char
+#ifndef APP_LANG
+#define APP_LANG "ja"
+#endif
+#define TR_STR(str_jp, str_en) (std::string(APP_LANG) == "ja" ? str_jp : str_en)
+
+#define CPT_PRODUCT_NAME TR_STR("CPT200 ハイスペック ファンタジーコンソール", "CPT200 High-spec Fantasy Console")
 
 #include "core/header/spec.hpp"
 #include "core/ram.cpp"
@@ -47,9 +53,9 @@ void cpt_init(int argv, char** args) {
     std::string opening_msg = 
     (std::string)
     "+-----------------------------------------------------+\n"
-    "|  CPT200 High-spec Fantasy Console                   |\n"
+    "|  " +padTo("CPT200 16bit Retro Game Framework",44)+(std::string)"       |\n"
     "|  " + padTo(version,44) +       (std::string)"       |\n"
-    "|  (c) src3453 2023-2025 Released under MIT Licence.  |\n"
+    "|  (c) src3453 2023-2026 Released under MIT Licence.  |\n"
     "+-----------------------------------------------------+\n";
     std::cout << opening_msg << std::endl;
     ram_boot(ram, vram);
@@ -82,7 +88,9 @@ void MainTick() {
     // Upload 2D texture
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, finalPixels);
-    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     // Draw 2D Quad over 3D
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -91,7 +99,7 @@ void MainTick() {
     glLoadIdentity();
     
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ZERO);
     glEnable(GL_TEXTURE_2D);
     
     double aspect_ratio = (double)CPT_SCREEN_WIDTH / (double)CPT_SCREEN_HEIGHT;
@@ -105,9 +113,22 @@ void MainTick() {
     }
     rx = (w - rw) / 2;
     ry = (h - rh) / 2;
+
+    #define INTEGER_SCALING
+    #ifdef INTEGER_SCALING
+    int int_rw = (CPT_SCREEN_WIDTH * (rw / CPT_SCREEN_WIDTH));
+    int int_rh = (CPT_SCREEN_HEIGHT * (rh / CPT_SCREEN_HEIGHT));
+    rx = (w - int_rw) / 2;
+    ry = (h - int_rh) / 2;
+    rw = int_rw;
+    rh = int_rh;
+    #endif
     
     wx = rx; wy = ry; ww = rw; wh = rh;
-
+    #define BACKGROUND_COLOR 0.1f, 0.1f, 0.1f, 1.0f
+    
+    glClearColor(BACKGROUND_COLOR);
+    glClear(GL_COLOR_BUFFER_BIT);
     glColor4f(1, 1, 1, 1);
     glBegin(GL_QUADS);
     glTexCoord2f(0, 0); glVertex2i(rx, ry);
@@ -195,7 +216,7 @@ int main(int argv, char** args) {
         printf("SDL Window could not be initialized. SDL_Error: %s\n", SDL_GetError());
         return 1;
     }
-    
+    SDL_SetWindowMinimumSize(window, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT);
     glContext = SDL_GL_CreateContext(window);
     if (!glContext) {
         printf("OpenGL Context could not be created. SDL_Error: %s\n", SDL_GetError());

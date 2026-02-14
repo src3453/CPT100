@@ -1,147 +1,120 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <string>
 
 // Music controller implementation
-// CTMF: CPTTracker Music Format (*.ctm; *.ctmf) is a dedicated music format used in this project.
+// SxMML (S3HS Extended Music Macro Language, MML方言)
 
-#define CTMF_MAGIC 0x464D5443 // 'CTMF'
 #define SOUND_REGISTER_OFFSET 0x400000
+#define SOUND_REGISTER_SIZE 0x400
 
-class CTMFFormat {
+// SxMML Compiler, converts SxMML data into sound register commands
+class SxMMLCompiler
+{
 public:
+    // Constructor
+    SxMMLCompiler(const char *mmlData) {
 
-    struct Pattern {
-        uint8_t NumRows;           // Number of rows in the pattern
-        struct Note {
-            enum NoteValueEnum {
-                NOTE_NULL = 0,
-                // Notes from D-(-1) (1) to B-10 (127)
-                NOTE_CUT = 253,
-                NOTE_OFF = 254,
-                REST = 255
-            };
-            enum EffectTypeEnum {
-                EFFECT_NONE = 0
-            }; // Effect types (stabs for now)
-            uint8_t NoteValue;     // Note value (0-127, 255 means rest)
-            uint8_t Instrument;    // Instrument index
-            uint8_t Volume;        // Volume (0-127)
-            uint8_t EffectType;    // Effect type (0-255)
-            uint8_t EffectParam1;   // Effect parameter 1
-            uint8_t EffectParam2;   // Effect parameter 2
-        };
-        Note Row[256];   // Rows in the pattern
     };
-
-    struct Instument {
-        struct Operator {
-            uint8_t Attack;       // Attack time
-            uint8_t Decay;        // Decay time
-            uint8_t Sustain;      // Sustain level
-            uint8_t Release;      // Release time
-            uint8_t Waveform;     // Waveform type (4bit)
-            uint16_t Frequency; // Frequency (multiplier)
-            uint8_t Volume;    // Volume
-        };
-        struct LFOEnvelope {
-            bool IsLFO;          // False: Envelope, True: LFO
-            uint8_t Waveform;    // Waveform type (if LFO)
-            uint8_t Rate;        // Rate (if LFO)
-            uint8_t Delay;       // Delay time (both)
-            uint8_t Attack;      // Attack (if Envelope)
-            uint8_t Decay;       // Decay (if Envelope)
-            uint8_t Sustain;     // Sustain (if Envelope)
-            uint8_t Release;     // Release (if Envelope)
-            uint8_t Depth;       // Depth (both)
-            uint8_t Offset;      // Offset (both)
-        };
-        int8_t KeyShift;             // Keyshift (in semitones)
-        int8_t Feedback;             // Feedback amount
-        uint8_t ModulationMode;     // Modulation mode
-        LFOEnvelope LFOEnvPitch;        // LFO Envelope for Pitch
-        LFOEnvelope LFOEnvAmplitude;    // LFO Envelope for Amplitude
-        uint8_t NumOperators;        // Number of operators in the instrument
-        Operator Operators[8];      // 8 Operators per instrument
-    };
-
-    struct InstrumentSet {
-        Instument Instruments[64]; // Up to 64 instruments per set
-        uint8_t NumInstruments;    // Number of instruments in the set
-    };
-
-    struct Track {
-        uint8_t Frames[256]; // Pattern indices for each Frame (up to 256 frames, 255 patterns, 0x00 means empty)
-        uint8_t NumFrames;         // Number of frames in the track
-        uint16_t Tempo;            // Tempo of the track
-    };
-
-    struct Trackset {
-        Track Tracks[8];       // Up to 8 tracks (because of sound channels limitation)
-        uint8_t NumTracks;     // Number of tracks in the set
-    };
-
-    
-    struct MusicData {
-        uint32_t Magic;          // 'CTMF' magic number
-        uint8_t Version;         // Format version
-        char Title[32];          // Title of the music
-        char Author[32];         // Author of the music
-        char Description[64];    // Description of the music
-        InstrumentSet instrumentSet; // Instrument set
-        Trackset trackset;      // Trackset
-    };
-
-    MusicData musicData;
-
+    // Compiles SxMML data into sound register commands (returns: Error string or "OK")
+    std::string compile(std::string mmlData)
+    {
+        // Placeholder implementation
+        return "NOT_IMPLEMENTED";
+    }
 };
 
-class MusicPlayer {
+// Primitive driver, Reads register commands and writes to sound registers in proper timing
+class MusicDriver
+{
 public:
-    MusicPlayer() {
-        // Constructor implementation (if needed)
+    MusicDriver(uint8_t *soundRegisters)
+        : soundRegisters(soundRegisters), isPlaying(false), tickCounter(0) {}
+
+    // Starts music playback from the beginning
+    void play(const uint8_t *musicData, size_t dataSize)
+    {
+        this->musicData = musicData;
+        this->dataSize = dataSize;
+        this->tickCounter = 0;
+        this->waitTicks = 0;
+        this->loopCounter = 0;
+        this->dataPointer = 0;
+        this->isPlaying = true;
     }
 
-    ~MusicPlayer() {
-        // Destructor implementation (if needed)
+    // Stops music playback
+    void stop()
+    {
+        this->isPlaying = false;
     }
 
-    bool loadCTMF(const uint8_t* data, size_t dataSize) {
-        if (data == nullptr) {
-            return false;
+    // Opcodes
+    enum registerCommands
+    {                                             // Operation, (operands)
+        CMD_NOOP = 0x00,                          // No operation ()
+        CMD_WRITE_REG = 0x01,                     // Write to sound register (addr_hi, addr_lo, value)
+        CMD_WAIT = 0x02,                          // Wait for specified number of ticks (tick_count_hi, tick_count_lo)
+        CMD_JUMP = 0x03,                          // Jump to position (cmd_addr_hi, cmd_addr_lo)
+        CMD_JUMP_IF_LOOP_COUNTER_NOT_ZERO = 0x04, // Jump if loop counter not zero (also decrements loop counter) (cmd_addr_hi, cmd_addr_lo)
+        CMD_SET_LOOP_COUNTER = 0x05,              // Set loop counter (count)
+        CMD_SET_TICK_RATE = 0x06,                 // Set tick rate in Hz (ticks_per_second)
+        CMD_END = 0xFF                            // End of music data ()
+    };
+
+    // Updates the music driver (should be called every tick)
+    void update()
+    {
+        if (waitTicks > 0)
+        {   // do nothing until waitTicks reaches 0
+            waitTicks--;
+            return;
         }
+        if (!isPlaying)
+            return; // not playing
 
-        if (dataSize < sizeof(CTMFFormat::MusicData)) {
-            return false;
+        // runs continuously until waitTicks is set
+        while (waitTicks > 0)
+        {
+            uint8_t command = musicData[dataPointer];
+            switch (command)
+            {
+            case CMD_NOOP:
+                dataPointer += 1;
+                break;
+            case CMD_WRITE_REG:
+            {
+                if (dataPointer + 3 > dataSize)
+                {
+                    printf("Error in SoundDriver: Out of bounds on WRITE_REG\n");
+                    isPlaying = false; // Error: Out of bounds
+                    return;
+                }
+                uint16_t addr = (musicData[dataPointer] << 8) | musicData[dataPointer + 1];
+                uint8_t value = musicData[dataPointer + 2];
+                if (addr >= SOUND_REGISTER_OFFSET && addr < SOUND_REGISTER_OFFSET + SOUND_REGISTER_SIZE)
+                {
+                    // TODO: Write to sound register
+                }
+                dataPointer += 3;
+                break;
+            }
+            default:
+                printf("Error in SoundDriver: Unknown command: 0x%02X\n", command);
+                dataPointer += 1;
+                break;
+            }
         }
-
-        CTMFFormat::MusicData parsed{};
-        std::memcpy(&parsed, data, sizeof(CTMFFormat::MusicData));
-
-        if (parsed.Magic != CTMF_MAGIC) {
-            return false;
-        }
-
-        ctmfFormat_.musicData = parsed;
-        return true;
-    }
-
-    void play() {
-        // Start playback
-    }
-
-    void stop() {
-        // Stop playback
-    }
-
-    void pause() {
-        // Pause playback
-    }
-
-    void resume() {
-        // Resume playback
     }
 
 private:
-    CTMFFormat ctmfFormat_;
+    uint8_t *soundRegisters;
+    const uint8_t *musicData;
+    size_t dataSize;
+    size_t dataPointer;
+    bool isPlaying;
+    int tickCounter;
+    int waitTicks;
+    int loopCounter;
 };

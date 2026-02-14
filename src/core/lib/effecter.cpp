@@ -17,7 +17,6 @@ private:
 public:
   inline SlewLimitedEnvelope(float upper, float lower)
       : slewRateUpper(upper), slewRateLower(lower), currentValue(0.0f), targetValue(0.0f), delta(0.0f) {}
-
   float process(float target)
   {
     targetValue = target;

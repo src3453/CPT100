@@ -4,7 +4,7 @@
 #include "../lib/pocketfft/pocketfft_hdronly.h"
 
 // バッファサイズを増やして安定性を向上
-#define SOUND_CHUNK 1024
+#define SOUND_CHUNK 256
 #define SAMPLE_FREQ 48000
 
 SDL_AudioSpec want, have;
@@ -112,9 +112,10 @@ std::vector<float> acquireSoundInputFFT(int fft_size) {
     return fft_result; // Not enough data
   }
   
+  // Copy data and normalize to [-1.0, 1.0]
   std::vector<float> real_data(fft_size);
   for (int i = 0; i < fft_size; i++) {
-    real_data[i] = static_cast<float>(input_buffer[i]);
+    real_data[i] = static_cast<float>(input_buffer[i]) / 32768.0f;
   }
   
   std::vector<std::complex<float>> data(fft_size / 2 + 1);
@@ -131,8 +132,13 @@ std::vector<float> acquireSoundInputFFT(int fft_size) {
     fft_result.push_back(magnitude);
   }
   
-  if (input_mutex) SDL_UnlockMutex(input_mutex);
+  // Clear consumed data（DO NOT clear entire buffer, only consumed part）
+  if (fft_size <= (int)input_buffer.size()) {
+    input_buffer.erase(input_buffer.begin(), input_buffer.begin() + fft_size);
+  }
   
+  if (input_mutex) SDL_UnlockMutex(input_mutex);
+  //printf("Acquired FFT result with %zu bins\n", fft_result.size());
   return fft_result;
 }
 

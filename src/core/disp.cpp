@@ -143,6 +143,33 @@ public:
             }
         }
     }
+
+    // BitBlt (linear to block)
+    void bitblt(int addr, int x, int y, int w, int h, int transparent_color=-1) {
+        std::vector<uint8_t> tmp = vram_peek2array(vram, addr, w * h);
+        int i = 0;
+        for (int j = 0; j < h; ++j) {
+            for (int i = 0; i < w; ++i) {
+                uint8_t color = tmp[j * w + i];
+                if (transparent_color == -1 || color != transparent_color) {
+                    pix(x + i, y + j, color);
+                }
+            }
+        }
+    }
+
+    // BitBlt (block to block)
+    void bitblt_block_to_block(int base_addr, int src_x, int src_y, int image_w, int image_h, int x, int y, int w, int h, int transparent_color=-1) {
+        for (int j = 0; j < h; ++j) {
+            for (int i = 0; i < w; ++i) {
+                int src_addr = base_addr + (src_y + j) * image_w + (src_x + i);
+                uint8_t color = vram_peek(vram, src_addr);
+                if (transparent_color == -1 || color != transparent_color) {
+                    pix(x + i, y + j, color);
+                }
+            }
+        }
+    }
     
     void spr(int num, int x, int y, int w=1, int h=1) {
         //FIXME: adopt to 16bpp mode

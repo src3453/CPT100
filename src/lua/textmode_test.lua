@@ -1,11 +1,4 @@
-lc(0,0)
-cls(0)
-printlnp("This is a test of text mode")
-colorfg(rgb(0,255,0))
-printlnp("This is a another test of text mode")
-lc(0,1)
-startinput()
-colorfg(255)
+screen(2)
 
 function ONINPUT(c)
     printp(c)
@@ -28,7 +21,7 @@ function ONKEYDOWN(k)
         movecursor(-1, 0)
     elseif to_key_name(k) == "Right" then
         movecursor(1, 0)
-    elseif to_key_name(k) == "Enter" then
+    elseif to_key_name(k) == "Return" then
         printlnp("")
     end
 end

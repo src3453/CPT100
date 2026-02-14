@@ -4,3 +4,5 @@ src/config.h
 converted.lua
 **.bk
 **.f12
+**.lua.min
+lib/boost/**

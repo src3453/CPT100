@@ -1,8 +1,9 @@
 # CMakeのバージョンを設定
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 4.0)
 
 option(WASM_BUILD "Build wasm" OFF) 
 option(USE_LUAJIT "Use LuaJIT. if not, use Lua 5.4" ON)
+option(MINIFY_SCRIPT "Minify script files with lua-minify. node.js module luamin required" ON)
 
 if(EMSCRIPTEN)
 # 共有ライブラリのサポートを有効にする
@@ -61,18 +62,94 @@ message("- VERSION_REVISION: ${VERSION_REVISION}")
 message("- VERSION_STATUS: ${VERSION_STATUS}")
 message("- VERSION_HASH: ${VERSION_HASH}")
 
-find_package(PythonInterp REQUIRED)
-if(PythonInterp_FOUND)
-    message("Python3 found: ${PYTHON_EXECUTABLE}")
+if (MINIFY_SCRIPT)
+    message("Minifying Lua scripts...")
+    
+    # Get all *.lua files in src/lua directory recursively
+    file(GLOB_RECURSE LUA_FILES "${CMAKE_SOURCE_DIR}/src/lua/*.lua")
+    
+    # Try to find npm executable
+    find_program(NPM_EXECUTABLE npm)
+    
+    if(NPM_EXECUTABLE)
+        message(STATUS "Found npm: ${NPM_EXECUTABLE}")
+        
+        # Install npm dependencies first
+        message(STATUS "Installing npm dependencies...")
+        if(WIN32)
+            execute_process(
+                COMMAND cmd /c "${NPM_EXECUTABLE}" install
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/build
+                ERROR_VARIABLE npm_install_error
+                RESULT_VARIABLE npm_install_code
+            )
+        else()
+            execute_process(
+                COMMAND ${NPM_EXECUTABLE} install
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/build
+                ERROR_VARIABLE npm_install_error
+                RESULT_VARIABLE npm_install_code
+            )
+        endif()
+        
+        if(NOT npm_install_code EQUAL 0)
+            message(WARNING "npm install failed: ${npm_install_error}")
+        else()
+            message(STATUS "npm dependencies installed successfully")
+        endif()
+        
+        # Process each file
+        foreach(LUA_FILE ${LUA_FILES})
+            message(STATUS "Minifying: ${LUA_FILE}")
+            if(WIN32)
+                # On Windows, use cmd /c to ensure proper environment inheritance
+                execute_process(
+                    COMMAND cmd /c "cd ${CMAKE_SOURCE_DIR}/build && npx luamin -f ${LUA_FILE}"
+                    OUTPUT_FILE "${LUA_FILE}.min"
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/build
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_VARIABLE error_output
+                    RESULT_VARIABLE result_code
+                )
+            else()
+                execute_process(
+                    COMMAND "npx luamin -f ${LUA_FILE}"
+                    OUTPUT_FILE ${LUA_FILE}.min
+                    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/build
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_VARIABLE error_output
+                    RESULT_VARIABLE result_code
+                )
+            endif()
+            if(NOT result_code EQUAL 0)
+                message(WARNING "Minification failed for ${LUA_FILE}. Error: ${error_output}")
+            else()
+                message(STATUS "Successfully minified: ${LUA_FILE}")
+            endif()
+        endforeach()
+    else()
+        message(WARNING "npm not found in PATH. Skipping Lua script minification. Ensure Node.js is installed and in your PATH.")
+    endif()
+endif()
+
+find_package(Python3 REQUIRED)
+if(Python3_FOUND)
+    message("Python3 found: ${Python3_EXECUTABLE}")
     
     # Get all *.lua files in src/lua directory recursively
     file(GLOB_RECURSE LUA_FILES "${CMAKE_SOURCE_DIR}/src/lua/*.lua")
     
     # Process each file
     foreach(LUA_FILE ${LUA_FILES})
-        message(STATUS "Processing: ${LUA_FILE}")
+        if(MINIFY_SCRIPT)
+            # Use the minified version if minification is enabled
+            set(_LUA_FILE "${LUA_FILE}.min")
+        else()
+            set(_LUA_FILE "${LUA_FILE}")
+        endif()
+        message(STATUS "Processing: ${_LUA_FILE}")
         execute_process(
-            COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${LUA_FILE}
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/toCFormat.py ${_LUA_FILE} ${LUA_FILE}.hpp
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
@@ -178,7 +255,15 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_DIR}/include)
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SOL_DIR}/include)
 
-target_link_libraries(${EXECUTABLE_NAME} lua SDL2main SDL2-static opengl32)
+#target_include_directories(${EXECUTABLE_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+
+# Boost のリンク方法を柔軟に対応
+if(TARGET Boost::system)
+    target_link_libraries(${EXECUTABLE_NAME} lua SDL2main SDL2-static opengl32 Boost::system)
+else()
+    # Boost::system ターゲットが無い場合は直接ライブラリをリンク
+    target_link_libraries(${EXECUTABLE_NAME} lua SDL2main SDL2-static opengl32 ${Boost_LIBRARIES})
+endif()
 
 if(USE_LUAJIT)
     set(LUA_DLL_NAME "lua51.dll")
