@@ -6,3 +6,7 @@ converted.lua
 **.f12
 **.lua.min
 lib/boost/**
+.DS_Store
+*/__MACOSX
+*.log
+*.tmp

@@ -1,7 +1,7 @@
 #include "sound.cpp"
 #include "SDL.h"
 #include "SDL_audio.h"
-#include "../lib/pocketfft/pocketfft_hdronly.h"
+#include "../../../lib/pocketfft/pocketfft_hdronly.h"
 
 // バッファサイズを増やして安定性を向上
 #define SOUND_CHUNK 256

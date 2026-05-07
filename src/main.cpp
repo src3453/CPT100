@@ -5,6 +5,7 @@
 #endif
 #include <iostream>
 #include <stdio.h>
+#include <cmath>
 #include <SDL.h>
 #include <SDL_opengl.h>
 //#include "boost/tuple/tuple.hpp"
@@ -12,12 +13,13 @@
 int mouseState = 0;
 int screenMode = 0;
 int mode1_cursorShow = 1;
+bool isRunning = true;
 std::string inputText = "";
 
 #define Byte unsigned char
-#ifndef APP_LANG
+//#ifndef APP_LANG
 #define APP_LANG "ja"
-#endif
+//#endif
 #define TR_STR(str_jp, str_en) (std::string(APP_LANG) == "ja" ? str_jp : str_en)
 
 #define CPT_PRODUCT_NAME TR_STR("CPT200 ハイスペック ファンタジーコンソール", "CPT200 High-spec Fantasy Console")
@@ -81,10 +83,12 @@ void MainTick() {
     //font.drawCharUnicode16(0x3042, 0, 0, 0xFFFF); // Draw 'あ' at (0,0)
     scr.update(finalPixels);
     
-    int w, h;
-    SDL_GetWindowSize(window, &w, &h);
-    glViewport(0, 0, w, h);
-    
+    int win_w, win_h;
+    int draw_w, draw_h;
+    SDL_GetWindowSize(window, &win_w, &win_h);
+    SDL_GL_GetDrawableSize(window, &draw_w, &draw_h);
+    glViewport(0, 0, draw_w, draw_h);
+
     // Upload 2D texture
     glBindTexture(GL_TEXTURE_2D, screenTexture);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, finalPixels);
@@ -94,7 +98,7 @@ void MainTick() {
     // Draw 2D Quad over 3D
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, w, h, 0, -1, 1);
+    glOrtho(0, draw_w, draw_h, 0, -1, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
@@ -104,29 +108,40 @@ void MainTick() {
     
     double aspect_ratio = (double)CPT_SCREEN_WIDTH / (double)CPT_SCREEN_HEIGHT;
     int rw, rh, rx, ry;
-    if ((double)w / aspect_ratio <= (double)h) {
-        rw = w;
-        rh = (int)((double)w / aspect_ratio);
+    if ((double)draw_w / aspect_ratio <= (double)draw_h) {
+        rw = draw_w;
+        rh = (int)((double)draw_w / aspect_ratio);
     } else {
-        rh = h;
-        rw = (int)((double)h * aspect_ratio);
+        rh = draw_h;
+        rw = (int)((double)draw_h * aspect_ratio);
     }
-    rx = (w - rw) / 2;
-    ry = (h - rh) / 2;
+    rx = (draw_w - rw) / 2;
+    ry = (draw_h - rh) / 2;
 
     #define INTEGER_SCALING
     #ifdef INTEGER_SCALING
-    int int_rw = (CPT_SCREEN_WIDTH * (rw / CPT_SCREEN_WIDTH));
-    int int_rh = (CPT_SCREEN_HEIGHT * (rh / CPT_SCREEN_HEIGHT));
-    rx = (w - int_rw) / 2;
-    ry = (h - int_rh) / 2;
+    int scale = rw / CPT_SCREEN_WIDTH;
+    if (scale < 1) scale = 1;
+    int int_rw = scale * CPT_SCREEN_WIDTH;
+    int int_rh = scale * CPT_SCREEN_HEIGHT;
+    rx = (draw_w - int_rw) / 2;
+    ry = (draw_h - int_rh) / 2;
     rw = int_rw;
     rh = int_rh;
     #endif
-    
-    wx = rx; wy = ry; ww = rw; wh = rh;
+
+    // Convert drawable (framebuffer) coords back to window coords for input mapping
+    double pixel_ratio_x = (double)draw_w / (double)win_w;
+    double pixel_ratio_y = (double)draw_h / (double)win_h;
+    double pixel_ratio = (pixel_ratio_x + pixel_ratio_y) * 0.5; // usually identical
+
+    wx = (int)round((double)rx / pixel_ratio);
+    wy = (int)round((double)ry / pixel_ratio);
+    ww = (int)round((double)rw / pixel_ratio);
+    wh = (int)round((double)rh / pixel_ratio);
+
     #define BACKGROUND_COLOR 0.1f, 0.1f, 0.1f, 1.0f
-    
+
     glClearColor(BACKGROUND_COLOR);
     glClear(GL_COLOR_BUFFER_BIT);
     glColor4f(1, 1, 1, 1);
@@ -145,7 +160,8 @@ void MainLoop() {
     SDL_Event event;
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
-                exit(0);
+                isRunning = false;
+                return;
             }
             if (event.type == SDL_KEYDOWN) {
                 Lua_OnKeyDown((int)SDL_GetScancodeFromKey(event.key.keysym.sym));
@@ -230,8 +246,6 @@ int main(int argv, char** args) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-    bool isRunning = true;
-
     cpt_init(argv,args);
     
     #ifdef WASM_BUILD
@@ -240,7 +254,7 @@ int main(int argv, char** args) {
     #ifndef WASM_BUILD
     const int desired_fps = 60;
     int desired_frame_duration = 1000/desired_fps;
-    while(1) {
+    while(isRunning) {
         int ticks_before = SDL_GetTicks();
         MainLoop();
         int ticks_after = SDL_GetTicks();
@@ -255,7 +269,6 @@ int main(int argv, char** args) {
     closeSound();
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
-    SDL_CloseAudioDevice(dev);
     SDL_Quit();
     
     return 0;
