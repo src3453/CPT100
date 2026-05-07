@@ -1,5 +1,5 @@
 # CMakeのバージョンを設定
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 3.5)
 
 option(WASM_BUILD "Build wasm" OFF) 
 option(USE_LUAJIT "Use LuaJIT. if not, use Lua 5.4" ON)
@@ -216,10 +216,19 @@ if(APPLE AND USE_LUAJIT)
 else()
     add_library(lua SHARED IMPORTED)
     if(USE_LUAJIT)
-        set_target_properties(lua PROPERTIES
-            IMPORTED_LOCATION "${LUA_DIR}/libluajit.so"
-            IMPORTED_IMPLIB "${LUA_DIR}/libluajit.a"
-        )
+        if(UNIX AND NOT APPLE)
+            set_target_properties(lua PROPERTIES
+                IMPORTED_LOCATION "${LUA_DIR}/libluajit.so"
+                IMPORTED_IMPLIB "${LUA_DIR}/libluajit.a"
+            )
+        elseif(WIN32)
+            set_target_properties(lua PROPERTIES
+                IMPORTED_LOCATION "${LUA_DIR}/lua51.dll"
+                IMPORTED_IMPLIB "${LUA_DIR}/lua51.lib"
+            )
+        else()
+            message(FATAL_ERROR "Unsupported platform for LuaJIT")
+        endif()
     else()
         set_target_properties(lua PROPERTIES
             IMPORTED_LOCATION "${LUA_DIR}/lua54.dll"
