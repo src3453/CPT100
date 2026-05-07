@@ -5,6 +5,9 @@ option(WASM_BUILD "Build wasm" OFF)
 option(USE_LUAJIT "Use LuaJIT. if not, use Lua 5.4" ON)
 option(MINIFY_SCRIPT "Minify script files with lua-minify. node.js module luamin required" ON)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 if(EMSCRIPTEN)
 # 共有ライブラリのサポートを有効にする
 set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
@@ -204,28 +207,29 @@ add_subdirectory(${SDL2_DIR})
 
 file(GLOB_RECURSE SOL_SRC ${SOL_DIR}/include/sol/*.hpp)
 
-file(GLOB_RECURSE SDL2_SRC ${SDL2_DIR}/include/*.h)
-
-add_library(lua SHARED IMPORTED)
-if(USE_LUAJIT)
+if(APPLE AND USE_LUAJIT)
+    # macOS: use static library for LuaJIT
+    add_library(lua STATIC IMPORTED)
     set_target_properties(lua PROPERTIES
-        IMPORTED_LOCATION "${LUA_DIR}/lua51.dll"
-        IMPORTED_IMPLIB "${LUA_DIR}/lua51.lib"
+        IMPORTED_LOCATION "${LUA_DIR}/libluajit.a"
     )
 else()
-    set_target_properties(lua PROPERTIES
-        IMPORTED_LOCATION "${LUA_DIR}/lua54.dll"
-        IMPORTED_IMPLIB "${LUA_DIR}/lua54.lib"
-    )
+    add_library(lua SHARED IMPORTED)
+    if(USE_LUAJIT)
+        set_target_properties(lua PROPERTIES
+            IMPORTED_LOCATION "${LUA_DIR}/libluajit.so"
+            IMPORTED_IMPLIB "${LUA_DIR}/libluajit.a"
+        )
+    else()
+        set_target_properties(lua PROPERTIES
+            IMPORTED_LOCATION "${LUA_DIR}/lua54.dll"
+            IMPORTED_IMPLIB "${LUA_DIR}/lua54.lib"
+        )
+    endif()
 endif()
 
 add_library(sol INTERFACE)
 target_include_directories(sol INTERFACE ${SOL_DIR}/include)
-
-add_library(SDL2 STATIC ${SDL2_SRC})
-
-set_target_properties(SDL2 PROPERTIES LINKER_LANGUAGE CXX)
-
 
 #実行ファイルを作成
 add_executable(${EXECUTABLE_NAME} 
@@ -249,6 +253,10 @@ if(USE_LUAJIT)
     target_compile_definitions(${EXECUTABLE_NAME} PRIVATE SOL_LUAJIT)
 endif()
 
+target_compile_definitions(${EXECUTABLE_NAME} PRIVATE SOL_STD_OPTIONAL=0
+SOL_ALL_SAFETIES_ON=1
+)
+
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LUA_DIR})
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_DIR}/include)
@@ -256,13 +264,20 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_DIR}/include)
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SOL_DIR}/include)
 
 #target_include_directories(${EXECUTABLE_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
-
+if (WIN32)
+    target_link_libraries(${EXECUTABLE_NAME} opengl32)
+elseif(APPLE)
+    find_library(OPENGL_LIBRARY OpenGL)
+    target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARY})
+elseif(UNIX)
+    target_link_libraries(${EXECUTABLE_NAME} GL)
+endif()
 # Boost のリンク方法を柔軟に対応
 if(TARGET Boost::system)
-    target_link_libraries(${EXECUTABLE_NAME} lua SDL2main SDL2-static opengl32 Boost::system)
+    target_link_libraries(${EXECUTABLE_NAME} lua SDL2main SDL2-static Boost::system)
 else()
     # Boost::system ターゲットが無い場合は直接ライブラリをリンク
-    target_link_libraries(${EXECUTABLE_NAME} lua SDL2main SDL2-static opengl32 ${Boost_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} lua SDL2main SDL2-static ${Boost_LIBRARIES})
 endif()
 
 if(USE_LUAJIT)
@@ -271,9 +286,13 @@ else()
     set(LUA_DLL_NAME "lua54.dll")
 endif()
 
+if (WIN32)
 add_custom_command(TARGET ${EXECUTABLE_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${LUA_DIR}/${LUA_DLL_NAME}"
     "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>"
 )
+elseif (UNIX OR APPLE)
+endif()
+
 

@@ -1,6 +1,15 @@
 {
 "configurations": [
   {
+    "name": "(lldb) 起動",
+    "type": "lldb",
+    "request": "launch",
+    "program": "${workspaceFolder}/build/cpt200",
+    "args": [],
+    "cwd": "${fileDirname}",
+  },
+
+  {
     "name": "(Windows) 起動",
     "type": "cppvsdbg",
     "request": "launch",
@@ -10,6 +19,6 @@
     "cwd": "${fileDirname}",
     "environment": [],
     "console": "externalTerminal"
-  }
+  },
 ]
 }

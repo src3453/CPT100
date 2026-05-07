@@ -101,25 +101,19 @@ void report_lua_error(const sol::error& e) {
 template<typename... Args>
 void safe_lua_call(const std::string& name, Args&&... args) {
     try {
-        // First, safely check if the value exists and is a function
         sol::object obj = lua[name];
-        if (!obj.valid() || obj.get_type() != sol::type::function) {
-            // Not a function or doesn't exist, silently return
+        if (!obj.is<sol::function>()) {
             return;
         }
-        
-        // Now safely get the protected function
-        sol::optional<sol::protected_function> maybe_func = lua[name];
-        if (!maybe_func) {
-            return;
-        }
-        
-        sol::protected_function func = *maybe_func;
+
+        sol::protected_function func = obj.as<sol::protected_function>();
+
         sol::protected_function_result result = func(std::forward<Args>(args)...);
         if (!result.valid()) {
             sol::error err = result;
             report_lua_error(err);
         }
+
     } catch (const std::exception& e) {
         std::cerr << "Exception in safe_lua_call(" << name << "): " << e.what() << std::endl;
         haltLoop();
