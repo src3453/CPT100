@@ -8,6 +8,8 @@
 #include <cmath>
 #include <SDL.h>
 #include <SDL_opengl.h>
+#define MICROPROFILE_USE_CONFIG 0
+#include "microprofile.h"
 //#include "boost/tuple/tuple.hpp"
 
 int mouseState = 0;
@@ -74,90 +76,109 @@ SDL_GLContext glContext;
 GLuint screenTexture;
 
 void MainTick() {
-    Lua_MainLoop(); //60Hz
-    font.drawCharPCG(screenMode);
-    sc.updateSprites();
-    sc.renderSprites();
-    Lua_PostDraw(); //after sprite render
+    {
+        MICROPROFILE_SCOPEI("MainTick", "LuaMainLoop", 0xFF0000);
+        Lua_MainLoop(); //60Hz
+    }
+    {
+        MICROPROFILE_SCOPEI("MainTick", "RenderPCG", 0x00FF00);
+        font.drawCharPCG(screenMode);
+    }
+    {
+        MICROPROFILE_SCOPEI("MainTick", "UpdateAndRenderSprites", 0x0000FF);
+        sc.updateSprites();
+        sc.renderSprites();
+    }
+    {
+        MICROPROFILE_SCOPEI("MainTick", "LuaPostDraw", 0xFFFF00);
+        Lua_PostDraw(); //after sprite render
+    }
     // test
     //font.drawCharUnicode16(0x3042, 0, 0, 0xFFFF); // Draw 'あ' at (0,0)
-    scr.update(finalPixels);
-    
-    int win_w, win_h;
-    int draw_w, draw_h;
-    SDL_GetWindowSize(window, &win_w, &win_h);
-    SDL_GL_GetDrawableSize(window, &draw_w, &draw_h);
-    glViewport(0, 0, draw_w, draw_h);
-
-    // Upload 2D texture
-    glBindTexture(GL_TEXTURE_2D, screenTexture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, finalPixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    // Draw 2D Quad over 3D
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, draw_w, draw_h, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ZERO);
-    glEnable(GL_TEXTURE_2D);
-    
-    double aspect_ratio = (double)CPT_SCREEN_WIDTH / (double)CPT_SCREEN_HEIGHT;
-    int rw, rh, rx, ry;
-    if ((double)draw_w / aspect_ratio <= (double)draw_h) {
-        rw = draw_w;
-        rh = (int)((double)draw_w / aspect_ratio);
-    } else {
-        rh = draw_h;
-        rw = (int)((double)draw_h * aspect_ratio);
+    {
+        MICROPROFILE_SCOPEI("MainTick", "ScreenUpdate", 0xFF00FF);
+        scr.update(finalPixels);
     }
-    rx = (draw_w - rw) / 2;
-    ry = (draw_h - rh) / 2;
+    {
+        MICROPROFILE_SCOPEI("MainTick", "GLRender", 0x00FFFF);
+        int win_w, win_h;
+        int draw_w, draw_h;
+        SDL_GetWindowSize(window, &win_w, &win_h);
+        SDL_GL_GetDrawableSize(window, &draw_w, &draw_h);
+        glViewport(0, 0, draw_w, draw_h);
 
-    #define INTEGER_SCALING
-    #ifdef INTEGER_SCALING
-    int scale = rw / CPT_SCREEN_WIDTH;
-    if (scale < 1) scale = 1;
-    int int_rw = scale * CPT_SCREEN_WIDTH;
-    int int_rh = scale * CPT_SCREEN_HEIGHT;
-    rx = (draw_w - int_rw) / 2;
-    ry = (draw_h - int_rh) / 2;
-    rw = int_rw;
-    rh = int_rh;
-    #endif
+        // Upload 2D texture
+        glBindTexture(GL_TEXTURE_2D, screenTexture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, CPT_SCREEN_WIDTH, CPT_SCREEN_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, finalPixels);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        // Draw 2D Quad over 3D
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, draw_w, draw_h, 0, -1, 1);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ZERO);
+        glEnable(GL_TEXTURE_2D);
+        
+        double aspect_ratio = (double)CPT_SCREEN_WIDTH / (double)CPT_SCREEN_HEIGHT;
+        int rw, rh, rx, ry;
+        if ((double)draw_w / aspect_ratio <= (double)draw_h) {
+            rw = draw_w;
+            rh = (int)((double)draw_w / aspect_ratio);
+        } else {
+            rh = draw_h;
+            rw = (int)((double)draw_h * aspect_ratio);
+        }
+        rx = (draw_w - rw) / 2;
+        ry = (draw_h - rh) / 2;
 
-    // Convert drawable (framebuffer) coords back to window coords for input mapping
-    double pixel_ratio_x = (double)draw_w / (double)win_w;
-    double pixel_ratio_y = (double)draw_h / (double)win_h;
-    double pixel_ratio = (pixel_ratio_x + pixel_ratio_y) * 0.5; // usually identical
+        #define INTEGER_SCALING
+        #ifdef INTEGER_SCALING
+        int scale = rw / CPT_SCREEN_WIDTH;
+        if (scale < 1) scale = 1;
+        int int_rw = scale * CPT_SCREEN_WIDTH;
+        int int_rh = scale * CPT_SCREEN_HEIGHT;
+        rx = (draw_w - int_rw) / 2;
+        ry = (draw_h - int_rh) / 2;
+        rw = int_rw;
+        rh = int_rh;
+        #endif
 
-    wx = (int)round((double)rx / pixel_ratio);
-    wy = (int)round((double)ry / pixel_ratio);
-    ww = (int)round((double)rw / pixel_ratio);
-    wh = (int)round((double)rh / pixel_ratio);
+        // Convert drawable (framebuffer) coords back to window coords for input mapping
+        double pixel_ratio_x = (double)draw_w / (double)win_w;
+        double pixel_ratio_y = (double)draw_h / (double)win_h;
+        double pixel_ratio = (pixel_ratio_x + pixel_ratio_y) * 0.5; // usually identical
 
-    #define BACKGROUND_COLOR 0.1f, 0.1f, 0.1f, 1.0f
+        wx = (int)round((double)rx / pixel_ratio);
+        wy = (int)round((double)ry / pixel_ratio);
+        ww = (int)round((double)rw / pixel_ratio);
+        wh = (int)round((double)rh / pixel_ratio);
 
-    glClearColor(BACKGROUND_COLOR);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glColor4f(1, 1, 1, 1);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0, 0); glVertex2i(rx, ry);
-    glTexCoord2f(1, 0); glVertex2i(rx + rw, ry);
-    glTexCoord2f(1, 1); glVertex2i(rx + rw, ry + rh);
-    glTexCoord2f(0, 1); glVertex2i(rx, ry + rh);
-    glEnd();
-    
-    glDisable(GL_BLEND);
+        #define BACKGROUND_COLOR 0.1f, 0.1f, 0.1f, 1.0f
+
+        glClearColor(BACKGROUND_COLOR);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glColor4f(1, 1, 1, 1);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0, 0); glVertex2i(rx, ry);
+        glTexCoord2f(1, 0); glVertex2i(rx + rw, ry);
+        glTexCoord2f(1, 1); glVertex2i(rx + rw, ry + rh);
+        glTexCoord2f(0, 1); glVertex2i(rx, ry + rh);
+        glEnd();
+        
+        glDisable(GL_BLEND);
+    }
 }
 
 
 void MainLoop() {
     SDL_Event event;
+    {
+        MICROPROFILE_SCOPEI("MainLoop", "SDLEventHandling", 0xFFFFFF);
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) {
                 isRunning = false;
@@ -199,18 +220,23 @@ void MainLoop() {
                 Lua_OnInput((std::string)(event.text.text));
             }
         }
+    }
 
-        glClearColor(0, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        MainTick();
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    MainTick();
 
-        SDL_GL_SwapWindow(window);
+    SDL_GL_SwapWindow(window);
+    MicroProfileFlip(nullptr);
 }
 
 int main(int argv, char** args) {
     
-    
+    MicroProfileOnThreadCreate("Main");
+    MicroProfileSetEnableAllGroups(true);
+    //MicroProfileSetForceEnable(true);
+
     SDL_Init(SDL_INIT_EVERYTHING);
     
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
@@ -271,5 +297,7 @@ int main(int argv, char** args) {
     SDL_DestroyWindow(window);
     SDL_Quit();
     
+    MicroProfileShutdown();
+
     return 0;
 }

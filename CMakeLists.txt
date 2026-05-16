@@ -244,6 +244,7 @@ target_include_directories(sol INTERFACE ${SOL_DIR}/include)
 add_executable(${EXECUTABLE_NAME} 
 
 ${CMAKE_PROJECT_DIR}src/main.cpp
+${CMAKE_PROJECT_DIR}lib/microprofile/microprofile.cpp
 )
 
 if (EMSCRIPTEN)
@@ -272,9 +273,11 @@ target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SDL2_DIR}/include)
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${SOL_DIR}/include)
 
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_PROJECT_DIR}lib/microprofile)
+
 #target_include_directories(${EXECUTABLE_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
 if (WIN32)
-    target_link_libraries(${EXECUTABLE_NAME} opengl32)
+    target_link_libraries(${EXECUTABLE_NAME} opengl32 ws2_32)
 elseif(APPLE)
     find_library(OPENGL_LIBRARY OpenGL)
     target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARY})

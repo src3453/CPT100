@@ -13,9 +13,12 @@ S3HS_sound chip(ram);
 
 void wrapper(void *unused, Uint8 *stream, int len) {
   // ストリームバッファをクリア（音声のノイズ防止に重要）
+  std::vector<std::vector<std::vector<float>>> result;
   SDL_memset(stream, 0, len);
-  
-  std::vector<std::vector<std::vector<float>>> result = chip.AudioCallBack(len / 4);
+  {
+    MICROPROFILE_SCOPEI("AudioCallbackOutput", "ChipGenerateAudio", 0x00FF00);
+    result = chip.AudioCallBack(len / 4);
+  }
   // 出力バッファのサンプル数を計算（ステレオint16_t形式）
   size_t samples = len / (2 * sizeof(int16_t));
   
@@ -42,16 +45,20 @@ static std::vector<int16_t> input_buffer;
 static SDL_mutex* input_mutex = nullptr;
 
 void input_callback(void* userdata, Uint8* stream, int len) {
-  if (input_mutex) SDL_LockMutex(input_mutex);
-  
-  int16_t* samples = (int16_t*)stream;
-  int sample_count = len / sizeof(int16_t);
-  
-  for (int i = 0; i < sample_count; i++) {
-    input_buffer.push_back(samples[i]);
+  {
+    MICROPROFILE_SCOPEI("AudioCallbackInput", "AudioInputCapture", 0x0000FF);
+    // 入力バッファに新しいサンプルを追加
+    if (input_mutex) SDL_LockMutex(input_mutex);
+    
+    int16_t* samples = (int16_t*)stream;
+    int sample_count = len / sizeof(int16_t);
+    
+    for (int i = 0; i < sample_count; i++) {
+      input_buffer.push_back(samples[i]);
+    }
+    
+    if (input_mutex) SDL_UnlockMutex(input_mutex);
   }
-  
-  if (input_mutex) SDL_UnlockMutex(input_mutex);
 }
 
 void initSoundInput(int samples=1024) {
